@@ -1,22 +1,37 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
-using ProductServiceApp.Api.Controllers.Base;
+using ProductServiceApp.Api.Controllers.Base.BaseCrudApiController;
 using ProductServiceApp.Application.ApiResponse;
 
 namespace ProductServiceApp.Api.Controllers;
 
 [ApiVersion("1.0")]
-public class WeatherForecastController : BaseApiController
+public class WeatherForecastController : BaseCrudApiController<
+    WeatherForecast,
+    WeatherForecast,
+    WeatherForecast,
+    WeatherForecast,
+    WeatherForecast>
 {
-    private static readonly string[] Summaries =
-    [
-        "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-    ];
 
-    [HttpGet(Name = "GetWeatherForecast")]
-    [ProducesResponseType(typeof(ApiResponse<IEnumerable<WeatherForecast>>), StatusCodes.Status200OK)]
-    public IActionResult Get()
+    public override async Task<IActionResult> Create([FromBody] WeatherForecast request)
     {
+        throw new NotImplementedException();
+    }
+
+    public override async Task<IActionResult> Delete(Guid id)
+    {
+        throw new NotImplementedException();
+    }
+
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<WeatherForecast>>), StatusCodes.Status200OK)]
+    public override async Task<IActionResult> GetAll()
+    {
+        string[] Summaries =
+            [
+                "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
+            ];
+
         var result = Enumerable.Range(1, 5).Select(index => new WeatherForecast
         {
             Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
@@ -26,5 +41,15 @@ public class WeatherForecastController : BaseApiController
         .ToArray();
 
         return Ok(ApiResponse<IEnumerable<WeatherForecast>>.Success(result));
+    }
+
+    public override async Task<IActionResult> GetById(Guid id)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override async Task<IActionResult> Update(Guid id, [FromBody] WeatherForecast request)
+    {
+        throw new NotImplementedException();
     }
 }
