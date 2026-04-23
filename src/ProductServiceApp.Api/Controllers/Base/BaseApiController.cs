@@ -30,15 +30,25 @@ public class BaseApiController : ControllerBase
         {
             await writeToChannel(tcs, linkedCts.Token);
 
-            try
-            {
-                var result = await tcs.Task;
-                return Ok(ApiResponse<T>.Success(result));
-            }
-            catch (OperationCanceledException)
-            {
-                return StatusCode(408, ApiResponse<T>.SingleFailure(408, "Request timeout."));
-            }
+            return await ExecuteWithTimeoutAsync(tcs.Task);
         }
+    }
+
+    private async Task<IActionResult> ExecuteWithTimeoutAsync<T>(Task<T> task)
+    {
+        try
+        {
+            var result = await task;
+            return Ok(ApiResponse<T>.Success(result));
+        }
+        catch (OperationCanceledException)
+        {
+            return BuildTimeoutResponse<T>();
+        }
+    }
+
+    private ObjectResult BuildTimeoutResponse<T>()
+    {
+        return StatusCode(408, ApiResponse<T>.SingleFailure(408, "Request timeout."));
     }
 }

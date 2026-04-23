@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace ProductServiceApp.Application.Products.Dtos;
 
-public class CreateProductRequest : ProductItem, IIdentifiableLong
+public class CreateProductRequest : ProductEntity, IIdentifiableLong
 {
     [JsonIgnore]
     public long Id { get; set; } = 0;

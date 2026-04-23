@@ -1,5 +1,5 @@
 ﻿using ProductServiceApp.Application.Products.Dtos;
-using ProductServiceApp.Domain.Commom;
+using ProductServiceApp.Domain.Mappers;
 
 namespace ProductServiceApp.Application.Products.Commands.CreateProduct;
 

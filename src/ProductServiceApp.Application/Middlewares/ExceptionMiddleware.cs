@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Hosting;
 using ProductServiceApp.Application.ApiResponseCommom;
 using System.Net;
+using System.Text.Json;
 
 namespace ProductServiceApp.Application.Middlewares;
 
@@ -44,7 +45,7 @@ public class ExceptionMiddleware
                 errors = response.Errors
             };
 
-            await context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(finalResponse));
+            await context.Response.WriteAsync(JsonSerializer.Serialize(finalResponse));
         }
     }
 }

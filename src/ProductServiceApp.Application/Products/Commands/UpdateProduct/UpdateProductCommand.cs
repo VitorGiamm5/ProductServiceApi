@@ -1,11 +1,12 @@
 ﻿using ProductServiceApp.Application.Products.Dtos;
 using ProductServiceApp.Domain.Commom;
+using ProductServiceApp.Domain.Mappers;
 using ProductServiceApp.Domain.Products.Entities;
 using System.ComponentModel.DataAnnotations;
 
 namespace ProductServiceApp.Application.Products.Commands.UpdateProduct;
 
-public class UpdateProductCommand : ProductItem, IIdentifiableLong, IFromMapper<UpdateProductCommand, UpdateProductRequest>
+public class UpdateProductCommand : ProductEntity, IIdentifiableLong, IFromMapper<UpdateProductCommand, UpdateProductRequest>
 {
     [Required]
     public long Id { get; set; }

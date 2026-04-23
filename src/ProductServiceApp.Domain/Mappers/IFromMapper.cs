@@ -1,4 +1,4 @@
-﻿namespace ProductServiceApp.Domain.Commom;
+﻿namespace ProductServiceApp.Domain.Mappers;
 
 public interface IFromMapper<out TOutput, in TInput> where TOutput : class where TInput : class
 {

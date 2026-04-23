@@ -2,7 +2,7 @@
 
 namespace ProductServiceApp.Domain.Products.Entities;
 
-public class ProductItem
+public class ProductEntity
 {
     [Required]
     [MaxLength(150)]

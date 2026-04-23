@@ -3,7 +3,7 @@ using ProductServiceApp.Domain.Products.Entities;
 
 namespace ProductServiceApp.Application.Products.Dtos;
 
-public class ProductResponse : ProductItem, IIdentifiableLong
+public class ProductResponse : ProductEntity, IIdentifiableLong
 {
     public long Id { get; set; }
 }
