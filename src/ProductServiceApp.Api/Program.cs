@@ -1,8 +1,11 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Polly;
 using ProductServiceApp.Api.Conveters;
 using ProductServiceApp.Application;
 using ProductServiceApp.Application.Middlewares;
+using ProductServiceApp.Infrastructure.Database.Contexts;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -72,6 +75,32 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// Aplica as migrations automaticamente ao iniciar a aplicação
+await using (var scope = app.Services.CreateAsyncScope())
+{
+    var retryPipeline = new ResiliencePipelineBuilder()
+        .AddRetry(new Polly.Retry.RetryStrategyOptions
+        {
+            MaxRetryAttempts = 10,
+            Delay = TimeSpan.FromSeconds(5),
+            BackoffType = DelayBackoffType.Constant,
+            OnRetry = args =>
+            {
+                Console.WriteLine($"[Migration] Tentativa {args.AttemptNumber + 1} — aguardando banco subir... ({args.Outcome.Exception?.Message})");
+                return ValueTask.CompletedTask;
+            }
+        })
+        .Build();
+
+    await retryPipeline.ExecuteAsync(async ct =>
+    {
+        Console.WriteLine("Aplicando migrations...");
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        await db.Database.MigrateAsync(ct);
+        Console.WriteLine("Migrations aplicadas com sucesso.");
+    });
+}
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -86,7 +115,7 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 
-app.Run();
+await app.RunAsync();
 
 #region Addictional functions
 
