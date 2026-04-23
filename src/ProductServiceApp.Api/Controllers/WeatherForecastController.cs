@@ -1,7 +1,7 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using ProductServiceApp.Api.Controllers.Base.BaseCrudApiController;
-using ProductServiceApp.Application.ApiResponse;
+using ProductServiceApp.Application.ApiResponseCommom;
 
 namespace ProductServiceApp.Api.Controllers;
 
@@ -14,18 +14,18 @@ public class WeatherForecastController : BaseCrudApiController<
     WeatherForecast>
 {
 
-    public override async Task<IActionResult> Create([FromBody] WeatherForecast request)
+    public override async Task<IActionResult> Create([FromBody] WeatherForecast request, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
 
-    public override async Task<IActionResult> Delete(Guid id)
+    public override async Task<IActionResult> Delete(long id, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
 
     [ProducesResponseType(typeof(ApiResponse<IEnumerable<WeatherForecast>>), StatusCodes.Status200OK)]
-    public override async Task<IActionResult> GetAll()
+    public override async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
         string[] Summaries =
             [
@@ -43,12 +43,12 @@ public class WeatherForecastController : BaseCrudApiController<
         return Ok(ApiResponse<IEnumerable<WeatherForecast>>.Success(result));
     }
 
-    public override async Task<IActionResult> GetById(Guid id)
+    public override async Task<IActionResult> GetById(long id, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
 
-    public override async Task<IActionResult> Update(Guid id, [FromBody] WeatherForecast request)
+    public override async Task<IActionResult> Update(long id, [FromBody] WeatherForecast request, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }

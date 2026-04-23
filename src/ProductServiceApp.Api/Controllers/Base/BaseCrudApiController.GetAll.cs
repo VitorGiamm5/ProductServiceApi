@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using ProductServiceApp.Application.ApiResponse;
+using ProductServiceApp.Application.ApiResponseCommom;
 
 namespace ProductServiceApp.Api.Controllers.Base.BaseCrudApiController;
 
@@ -7,5 +7,6 @@ public abstract partial class BaseCrudApiController<TGetResponse, TCreateRequest
 {
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<IEnumerable<object>>), StatusCodes.Status200OK)]
-    public abstract Task<IActionResult> GetAll();
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    public abstract Task<IActionResult> GetAll(CancellationToken cancellationToken);
 }

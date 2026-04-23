@@ -1,4 +1,4 @@
-﻿namespace ProductServiceApp.Application.ApiResponse;
+﻿namespace ProductServiceApp.Application.ApiResponseCommom;
 
 public sealed class ApiErrorDetail
 {

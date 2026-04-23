@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Hosting;
 
-namespace ProductServiceApp.Application.ApiResponse;
+namespace ProductServiceApp.Application.ApiResponseCommom;
 
 public class ApiResponseFilter : IAsyncResultFilter
 {
@@ -30,7 +30,7 @@ public class ApiResponseFilter : IAsyncResultFilter
                         {
                             Code = statusCode,
                             Message = GetDefaultMessage(statusCode),
-                            Details = details   
+                            Details = details
                         }
                     }
                 };
