@@ -1,0 +1,101 @@
+networks:
+  6137_webnet:
+    driver: bridge
+
+services:
+
+  # ─── PRIMARY ───────────────────────────────────────────────
+  6137_postgres_primary:
+    image: postgres:17
+    container_name: 6137_postgres_primary
+    environment:
+      POSTGRES_USER: randandan
+      POSTGRES_PASSWORD: randandan_XLR
+      POSTGRES_DB: dbproducts
+    command: >
+      postgres
+        -c wal_level=replica
+        -c max_wal_senders=10
+        -c max_replication_slots=10
+        -c hot_standby=on
+        -c hba_file=/etc/postgresql/pg_hba.conf
+    ports:
+      - "9000:5432"
+    volumes:
+      - 6137_pgdata_primary:/var/lib/postgresql/data
+      - ./pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
+      - ./init-replica-users.sh:/docker-entrypoint-initdb.d/init-replica-users.sh:ro
+    networks:
+      - 6137_webnet
+
+  # ─── REPLICA 1 ─────────────────────────────────────────────
+  6137_postgres_replica1:
+    image: postgres:17
+    container_name: 6137_postgres_replica1
+    environment:
+      PGUSER: repl_user
+      PGPASSWORD: repl_XLR
+    command: >
+      bash -c "
+        until pg_basebackup -h 6137_postgres_primary -D /var/lib/postgresql/data -U repl_user -Fp -Xs -P -R; do
+          echo 'Aguardando primary...'; sleep 3;
+        done &&
+        postgres -c hot_standby=on
+      "
+    ports:
+      - "9001:5432"
+    volumes:
+      - 6137_pgdata_replica1:/var/lib/postgresql/data
+    depends_on:
+      - 6137_postgres_primary
+    networks:
+      - 6137_webnet
+
+  # ─── REPLICA 2 ─────────────────────────────────────────────
+  6137_postgres_replica2:
+    image: postgres:17
+    container_name: 6137_postgres_replica2
+    environment:
+      PGUSER: repl_user
+      PGPASSWORD: repl_XLR
+    command: >
+      bash -c "
+        until pg_basebackup -h 6137_postgres_primary -D /var/lib/postgresql/data -U repl_user -Fp -Xs -P -R; do
+          echo 'Aguardando primary...'; sleep 3;
+        done &&
+        postgres -c hot_standby=on
+      "
+    ports:
+      - "9002:5432"
+    volumes:
+      - 6137_pgdata_replica2:/var/lib/postgresql/data
+    depends_on:
+      - 6137_postgres_primary
+    networks:
+      - 6137_webnet
+
+  # ─── API ────────────────────────────────────────────────────
+  6137_api_product_service:
+    build:
+      context: ..
+      dockerfile: deploy-docker/Dockerfile
+    container_name: 6137_api_product_service
+    ports:
+      - "9005:9005"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - Kestrel__Port=9005
+      - DOTNET_RUNNING_IN_CONTAINER=true   
+      - ConnectionStrings__PostgresWrite=Host=6137_postgres_primary;Port=5432;Database=dbgodelivery;Username=randandan;Password=randandan_XLR;
+      - ConnectionStrings__PostgresRead=Host=6137_postgres_replica1,6137_postgres_replica2;Port=5432;Database=dbgodelivery;Username=read_user;Password=read_XLR;Load Balance Hosts=true;Target Session Attributes=prefer-standby;
+    depends_on:
+      - 6137_postgres_primary
+      - 6137_postgres_replica1
+      - 6137_postgres_replica2
+    networks:
+      - 6137_webnet
+
+volumes:
+  6137_pgdata_primary:
+  6137_pgdata_replica1:
+  6137_pgdata_replica2:
