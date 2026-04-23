@@ -4,9 +4,9 @@ using Microsoft.Extensions.Hosting;
 using ProductServiceApp.Application.Products.Commands.CreateProduct;
 using ProductServiceApp.Application.Products.Commands.DeleteProduct;
 using ProductServiceApp.Application.Products.Commands.UpdateProduct;
-using ProductServiceApp.Application.Products.Dtos;
 using ProductServiceApp.Application.Products.Queries.GetAll;
 using ProductServiceApp.Application.Products.Queries.GetById;
+using ProductServiceApp.Domain.Products.Dtos;
 using ProductServiceApp.Infrastructure;
 using System.Threading.Channels;
 
@@ -80,9 +80,9 @@ public static class SetupApplication
         }
 
         // Uso:
-        AddWorkers<CreateProductCommandHandler>(services, 3);
-        AddWorkers<UpdateProductCommandHandler>(services, 3);
-        AddWorkers<DeleteProductCommandHandler>(services, 3);
+        AddWorkers<CreateProductCommandHandler>(services, 2);
+        AddWorkers<UpdateProductCommandHandler>(services, 2);
+        AddWorkers<DeleteProductCommandHandler>(services, 2);
         AddWorkers<GetAllProductsQueryHandler>(services, 1);
         AddWorkers<GetProductByIdQueryHandler>(services, 1);
 

@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace ProductServiceApp.Infrastructure.Database;
 
-namespace ProductServiceApp.Infrastructure.Database
+public class SetupDatabase
 {
-    internal class SetupDatabase
-    {
-    }
 }

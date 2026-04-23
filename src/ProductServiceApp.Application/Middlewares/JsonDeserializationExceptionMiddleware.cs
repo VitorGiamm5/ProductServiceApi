@@ -1,5 +1,4 @@
-﻿using Azure;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using System.Net;
 using System.Text.Json;
@@ -57,7 +56,7 @@ public class JsonDeserializationExceptionMiddleware
         catch { }
 
         //if (rawBody is not null)
-            //_logger.LogDebug("Malformed JSON body: {Body}", rawBody);
+        //_logger.LogDebug("Malformed JSON body: {Body}", rawBody);
 
         string message = ExtractMessage(ex);
         string detail = ExtractDetail(ex);

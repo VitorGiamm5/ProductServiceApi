@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using ProductServiceApp.Application.Products.Dtos;
 using ProductServiceApp.Domain.Products;
+using ProductServiceApp.Domain.Products.Dtos;
 using System.Threading.Channels;
 
 namespace ProductServiceApp.Application.Products.Queries.GetById;

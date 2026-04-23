@@ -12,8 +12,4 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.7" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="EntitiesBase\" />
-  </ItemGroup>
-
 </Project>

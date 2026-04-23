@@ -1,4 +1,4 @@
-﻿using ProductServiceApp.Domain.Commom;
+﻿using ProductServiceApp.Domain.Identifications;
 using System.ComponentModel.DataAnnotations;
 
 namespace ProductServiceApp.Application.Products.Queries.GetById;

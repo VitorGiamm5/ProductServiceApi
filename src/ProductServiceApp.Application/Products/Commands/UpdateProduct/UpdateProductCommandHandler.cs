@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using ProductServiceApp.Application.Products.Dtos;
+using ProductServiceApp.Domain.Products.Dtos;
 using System.Threading.Channels;
 
 namespace ProductServiceApp.Application.Products.Commands.UpdateProduct;
@@ -10,7 +10,7 @@ public class UpdateProductCommandHandler : BackgroundService
     private readonly Channel<(UpdateProductCommand, TaskCompletionSource<ProductResponse>, CancellationToken)> _channel;
     private readonly IServiceScopeFactory _scopeFactory;
 
-    public UpdateProductCommandHandler(Channel<(UpdateProductCommand, TaskCompletionSource<ProductResponse>, CancellationToken)> channel, 
+    public UpdateProductCommandHandler(Channel<(UpdateProductCommand, TaskCompletionSource<ProductResponse>, CancellationToken)> channel,
         IServiceScopeFactory scopeFactory)
     {
         _channel = channel;

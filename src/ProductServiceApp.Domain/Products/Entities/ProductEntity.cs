@@ -1,16 +1,19 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using ProductServiceApp.Domain.EntitiesBase;
+using ProductServiceApp.Domain.Identifications;
+using System.ComponentModel.DataAnnotations;
 
 namespace ProductServiceApp.Domain.Products.Entities;
 
-public class ProductEntity
+public class ProductEntity : BaseAuditEntity, IIdentifiableLong
 {
-    [Required]
+    public long Id { get; set; } = 0L;
+
     [MaxLength(150)]
-    public string Name { get; set; }
+    public string? Name { get; set; } = string.Empty;
 
     [Required]
-    public decimal Price { get; set; }
+    public decimal? Price { get; set; } = decimal.Zero;
 
     [Required]
-    public ProductTypeEnum Type { get; set; }
+    public ProductTypeEnum? Type { get; set; } = ProductTypeEnum.Unknown;
 }

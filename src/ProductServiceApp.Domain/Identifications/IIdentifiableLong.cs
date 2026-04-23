@@ -1,4 +1,4 @@
-﻿namespace ProductServiceApp.Domain.Commom;
+﻿namespace ProductServiceApp.Domain.Identifications;
 
 public interface IIdentifiableLong
 {

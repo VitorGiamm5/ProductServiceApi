@@ -1,13 +1,12 @@
 ﻿using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using ProductServiceApp.Api.Controllers.Base.BaseCrudApiController;
-using ProductServiceApp.Application.ApiResponseCommom;
 using ProductServiceApp.Application.Products.Commands.CreateProduct;
 using ProductServiceApp.Application.Products.Commands.DeleteProduct;
 using ProductServiceApp.Application.Products.Commands.UpdateProduct;
-using ProductServiceApp.Application.Products.Dtos;
 using ProductServiceApp.Application.Products.Queries.GetAll;
 using ProductServiceApp.Application.Products.Queries.GetById;
+using ProductServiceApp.Domain.Products.Dtos;
 using System.Threading.Channels;
 
 namespace ProductServiceApp.Api.Controllers;
@@ -60,6 +59,8 @@ public class ProductsController : BaseCrudApiController<
 
     public override async Task<IActionResult> Create([FromBody] CreateProductRequest request, CancellationToken cancellationToken)
     {
+        request.Id = 0; // Ensure ID is not set by the client
+
         return await ExecuteAsync<ProductResponse>(
             (tcs, token) => _createChannel.Writer
                 .WriteAsync((new CreateProductCommand(request), tcs, token), token)
