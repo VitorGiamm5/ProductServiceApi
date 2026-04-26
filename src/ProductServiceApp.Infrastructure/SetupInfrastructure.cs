@@ -1,70 +1,85 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Npgsql;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Polly;
+using Polly.Retry;
+using ProductServiceApp.Domain.Products.Entities;
+using ProductServiceApp.Domain.Repositories.Products;
 using ProductServiceApp.Infrastructure.Database.ConnectionFactory;
 using ProductServiceApp.Infrastructure.Database.Contexts;
 using ProductServiceApp.Infrastructure.Database.Interceptors;
+using ProductServiceApp.Infrastructure.Database.Repositories.Products.Commands;
+using ProductServiceApp.Infrastructure.Database.Repositories.Products.Queries;
 
 namespace ProductServiceApp.Infrastructure;
 
 public static class SetupInfrastructure
 {
     private static readonly int _maxRetryCount = 3;
-    private static readonly int _maxRetryDelay = 8;
-    private static readonly int _secondsToTimeout = 3;
+    private static readonly int _maxRetryDelay = 2;
 
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        #region Write Application
+        #region Interceptors
+
         services.AddSingleton<ResilienceInterceptor>();
 
-        services.AddDbContext<ReadOnlyDbContext>((provider, options) =>
-        {
-            var connectionString = BuildSafeReadConnectionString(
-                configuration.GetConnectionString("PostgresRead")!);
+        #endregion
 
-            var dataSource = new NpgsqlDataSourceBuilder(connectionString).Build();
+        #region Repositories
 
-            options
-                .UseNpgsql(dataSource, npgsql =>
+        AddRepositories(services);
+
+        #endregion
+
+        #region Polly Retry Policy
+
+        RetryPolicy retryPolicy = Policy
+            .Handle<Exception>()
+            .WaitAndRetry(
+                retryCount: _maxRetryCount,
+                sleepDurationProvider: attempt => TimeSpan.FromSeconds(Math.Pow(_maxRetryDelay, attempt)),
+                onRetry: (exception, timespan, attempt, context) =>
                 {
-                    npgsql.EnableRetryOnFailure(
-                        maxRetryCount: _maxRetryCount,
-                        maxRetryDelay: TimeSpan.FromSeconds(_maxRetryDelay),
-                        errorCodesToAdd: null);
+                    Console.WriteLine($"Retry {attempt} fail with error: {exception.Message}. Lets try again {timespan}.");
+                });
 
-                    npgsql.CommandTimeout(_secondsToTimeout);
-                })
-                .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
-                .EnableDetailedErrors()
-                .AddInterceptors(provider.GetRequiredService<ResilienceInterceptor>());
+        #endregion
+
+        #region Write Context (Primary)
+
+        services.AddDbContextPool<ApplicationDbContext>((serviceProvider, options) =>
+        {
+            retryPolicy.Execute(() =>
+            {
+                var connectionString = configuration.GetConnectionString("PostgresWrite")
+                    ?? throw new InvalidOperationException("Connection string 'PostgresWrite' not found.");
+
+                options.UseNpgsql(connectionString);
+
+                var resilienceInterceptor = serviceProvider.GetRequiredService<ResilienceInterceptor>();
+                options.AddInterceptors(resilienceInterceptor);
+            });
         });
 
         #endregion
 
-        #region Read Application
+        #region Read Context (Replica)
 
-        services.AddDbContext<ReadOnlyDbContext>((provider, options) =>
+        services.AddDbContextPool<ReadOnlyDbContext>((serviceProvider, options) =>
         {
-            var connectionString = BuildSafeReadConnectionString(
-                configuration.GetConnectionString("PostgresRead")!);
+            retryPolicy.Execute(() =>
+            {
+                var connectionString = configuration.GetConnectionString("PostgresRead")
+                    ?? throw new InvalidOperationException("Connection string 'PostgresRead' not found.");
 
-            var dataSource = new NpgsqlDataSourceBuilder(connectionString).Build();
+                options.UseNpgsql(connectionString)
+                       .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
 
-            options
-                .UseNpgsql(dataSource, npgsql =>
-                {
-                    npgsql.EnableRetryOnFailure(
-                        maxRetryCount: _maxRetryCount,
-                        maxRetryDelay: TimeSpan.FromSeconds(_maxRetryDelay),
-                        errorCodesToAdd: null);
-
-                    npgsql.CommandTimeout(_secondsToTimeout);
-                })
-                .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
-                .EnableDetailedErrors()
-                .AddInterceptors(provider.GetRequiredService<ResilienceInterceptor>());
+                var resilienceInterceptor = serviceProvider.GetRequiredService<ResilienceInterceptor>();
+                options.AddInterceptors(resilienceInterceptor);
+            });
         });
 
         #endregion
@@ -74,20 +89,9 @@ public static class SetupInfrastructure
         return services;
     }
 
-    private static string BuildSafeReadConnectionString(string connectionString)
+    private static void AddRepositories(IServiceCollection services)
     {
-        var builder = new NpgsqlConnectionStringBuilder(connectionString);
-
-        // Target Session Attributes só é válido com múltiplos hosts
-        // Se tiver apenas um host, remove para não quebrar em ambiente local
-        var hasMultipleHosts = builder.Host?.Contains(',') ?? false;
-
-        if (!hasMultipleHosts)
-        {
-            builder.TargetSessionAttributes = TargetSessionAttributes.Any.ToString();
-            builder.LoadBalanceHosts = false;
-        }
-
-        return builder.ConnectionString;
+        services.TryAddScoped<IProductsCommandRepository<ProductEntity>, ProductsCommandRepository>();
+        services.TryAddScoped<IProductsQueryRepository<ProductEntity>, ProductsQueryRepository>();
     }
 }
