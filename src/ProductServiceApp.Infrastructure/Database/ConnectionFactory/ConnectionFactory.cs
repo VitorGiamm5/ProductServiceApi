@@ -12,7 +12,7 @@ public class ConnectionFactory : IConnectionFactory
     private readonly string _readConnectionString;
     private readonly AsyncRetryPolicy _retryPolicy;
 
-    public ConnectionFactory(IConfiguration configuration, ILogger<ConnectionFactory> logger)
+    public ConnectionFactory(IConfiguration configuration)
     {
         _writeConnectionString = configuration.GetConnectionString("PostgresWrite")!;
         _readConnectionString = configuration.GetConnectionString("PostgresRead")!;

@@ -1,5 +1,5 @@
-﻿using ProductServiceApp.Domain.EntitiesBase;
-using ProductServiceApp.Domain.Identifications;
+﻿using ProductServiceApp.Domain.Identifications;
+using ProductServiceApp.Domain.Repositories.EntitiesBase;
 using System.ComponentModel.DataAnnotations;
 
 namespace ProductServiceApp.Domain.Products.Entities;

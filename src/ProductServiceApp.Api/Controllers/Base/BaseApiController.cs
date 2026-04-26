@@ -1,6 +1,6 @@
 ﻿using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
-using ProductServiceApp.Application.ApiResponseCommom;
+using ProductServiceApp.Domain.ApiResponseBase;
 
 namespace ProductServiceApp.Api.Controllers.Base;
 

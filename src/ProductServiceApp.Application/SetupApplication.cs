@@ -1,9 +1,9 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using ProductServiceApp.Application.Products.Commands.CreateProduct;
-using ProductServiceApp.Application.Products.Commands.DeleteProduct;
-using ProductServiceApp.Application.Products.Commands.UpdateProduct;
+using ProductServiceApp.Application.Products.Commands.Create;
+using ProductServiceApp.Application.Products.Commands.Delete;
+using ProductServiceApp.Application.Products.Commands.Update;
 using ProductServiceApp.Application.Products.Queries.GetAll;
 using ProductServiceApp.Application.Products.Queries.GetById;
 using ProductServiceApp.Domain.Products.Dtos;
@@ -31,7 +31,7 @@ public static class SetupApplication
 
         // Commands - Bounded com backpressure
         services.AddSingleton(
-            Channel.CreateBounded<(CreateProductCommand, TaskCompletionSource<ProductsResponse>, CancellationToken)>(
+            Channel.CreateBounded<(CreateProductCommand, TaskCompletionSource<ProductResponse>, CancellationToken)>(
                 new BoundedChannelOptions(_queue_capacity)
                 {
                     FullMode = BoundedChannelFullMode.Wait,
@@ -42,7 +42,7 @@ public static class SetupApplication
         );
 
         services.AddSingleton(
-            Channel.CreateBounded<(UpdateProductCommand, TaskCompletionSource<ProductsResponse>, CancellationToken)>(
+            Channel.CreateBounded<(UpdateProductCommand, TaskCompletionSource<ProductResponse>, CancellationToken)>(
                 new BoundedChannelOptions(_queue_capacity)
                 {
                     FullMode = BoundedChannelFullMode.Wait,
@@ -64,11 +64,11 @@ public static class SetupApplication
         );
 
         services.AddSingleton(
-            Channel.CreateUnbounded<(GetAllProductsQuery, TaskCompletionSource<IEnumerable<ProductsResponse>>, CancellationToken)>()
+            Channel.CreateUnbounded<(GetAllProductQuery, TaskCompletionSource<IEnumerable<ProductResponse>>, CancellationToken)>()
         );
 
         services.AddSingleton(
-            Channel.CreateUnbounded<(GetProductByIdQuery, TaskCompletionSource<ProductsResponse>, CancellationToken)>()
+            Channel.CreateUnbounded<(GetProductByIdQuery, TaskCompletionSource<ProductResponse>, CancellationToken)>()
         );
 
         // Handlers com replicas
@@ -76,14 +76,14 @@ public static class SetupApplication
         static void AddWorkers<T>(IServiceCollection services, int count) where T : BackgroundService
         {
             for (int i = 0; i < count; i++)
-                services.AddSingleton<IHostedService>(sp => ActivatorUtilities.CreateInstance<T>(sp));
+                services.AddSingleton<IHostedService>(sp => ActivatorUtilities.CreateInstance<T>(sp)); // esse  ActivatorUtilities.CreateInstance<T>(sp) que esta dando erro
         }
 
         // Uso:
         AddWorkers<CreateProductCommandHandler>(services, 2);
         AddWorkers<UpdateProductCommandHandler>(services, 2);
         AddWorkers<DeleteProductCommandHandler>(services, 2);
-        AddWorkers<GetAllProductsQueryHandler>(services, 1);
+        AddWorkers<GetAllProductQueryHandler>(services, 1);
         AddWorkers<GetProductByIdQueryHandler>(services, 1);
 
         #endregion

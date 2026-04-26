@@ -1,4 +1,4 @@
-﻿namespace ProductServiceApp.Application.ApiResponseCommom;
+﻿namespace ProductServiceApp.Domain.ApiResponseBase;
 
 public class ApiResponse<T>
 {

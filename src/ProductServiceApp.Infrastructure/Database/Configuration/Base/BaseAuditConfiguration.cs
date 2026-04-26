@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using ProductServiceApp.Domain.EntitiesBase;
+using ProductServiceApp.Domain.Repositories.EntitiesBase;
 
 namespace ProductServiceApp.Infrastructure.Database.Configuration.Base;
 

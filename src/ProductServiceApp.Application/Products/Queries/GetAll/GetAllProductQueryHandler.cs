@@ -2,18 +2,21 @@
 using Microsoft.Extensions.Hosting;
 using ProductServiceApp.Domain.Products;
 using ProductServiceApp.Domain.Products.Dtos;
+using ProductServiceApp.Domain.Products.Entities;
+using ProductServiceApp.Domain.Repositories.Products;
 using System.Threading.Channels;
 
 namespace ProductServiceApp.Application.Products.Queries.GetAll;
 
-public class GetAllProductsQueryHandler : BackgroundService
+public class GetAllProductQueryHandler : BackgroundService
 {
-    private readonly Channel<(GetAllProductsQuery, TaskCompletionSource<IEnumerable<ProductsResponse>>, CancellationToken)> _channel;
+    private readonly Channel<(GetAllProductQuery, TaskCompletionSource<IEnumerable<ProductResponse>>, CancellationToken)> _channel;
     private readonly IServiceScopeFactory _scopeFactory;
 
-    public GetAllProductsQueryHandler(
-        Channel<(GetAllProductsQuery, TaskCompletionSource<IEnumerable<ProductsResponse>>, CancellationToken)> channel,
-        IServiceScopeFactory scopeFactory)
+    public GetAllProductQueryHandler(
+        Channel<(GetAllProductQuery, TaskCompletionSource<IEnumerable<ProductResponse>>, CancellationToken)> channel,
+        IServiceScopeFactory scopeFactory
+        )
     {
         _channel = channel;
         _scopeFactory = scopeFactory;
@@ -35,7 +38,7 @@ public class GetAllProductsQueryHandler : BackgroundService
 
                 await using var scope = _scopeFactory.CreateAsyncScope();
 
-                ProductsResponse response = new()
+                ProductResponse response = new()
                 {
                     Id = 1,
                     Name = "Sample Product",
@@ -43,7 +46,7 @@ public class GetAllProductsQueryHandler : BackgroundService
                     Type = ProductsTypeEnum.Fries
                 };
 
-                tcs.TrySetResult(new[] { response });
+                tcs.TrySetResult([response]);
             }
             catch (OperationCanceledException ex)
             {

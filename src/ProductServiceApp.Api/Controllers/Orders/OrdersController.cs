@@ -1,7 +1,7 @@
 ﻿using Asp.Versioning;
 using ProductServiceApp.Api.Controllers.Base;
 
-namespace ProductServiceApp.Api.Controllers;
+namespace ProductServiceApp.Api.Controllers.Orders;
 
 [ApiVersion("1.0")]
 public class OrdersController : BaseApiController

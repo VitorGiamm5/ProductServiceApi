@@ -9,12 +9,10 @@ namespace ProductServiceApp.Infrastructure.Database.Interceptors;
 
 public class ResilienceInterceptor : DbCommandInterceptor
 {
-    private readonly ILogger<ResilienceInterceptor> _logger;
     private readonly ResiliencePipeline _pipeline;
 
-    public ResilienceInterceptor(ILogger<ResilienceInterceptor> logger)
+    public ResilienceInterceptor()
     {
-        _logger = logger;
         _pipeline = new ResiliencePipelineBuilder()
             .AddRetry(new RetryStrategyOptions
             {
@@ -27,7 +25,7 @@ public class ResilienceInterceptor : DbCommandInterceptor
                     .Handle<TimeoutException>(),
                 OnRetry = args =>
                 {
-                    _logger.LogWarning(
+                    Console.WriteLine(
                         "[Resiliência] Banco indisponível — tentativa {Attempt}/{Max}. " +
                         "Próxima em {Delay:s}s. Erro: {Error}",
                         args.AttemptNumber + 1,

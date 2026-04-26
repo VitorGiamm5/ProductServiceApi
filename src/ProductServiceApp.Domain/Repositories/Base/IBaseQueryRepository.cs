@@ -2,6 +2,6 @@
 
 public interface IBaseQueryRepository<T> : IBaseRepository where T : class
 {
-    Task<T> GetByIdAsync(int id);
-    Task<IEnumerable<T>> GetAllAsync();
+    Task<T> GetByIdAsync(long id, CancellationToken cancellationToken);
+    Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken);
 }

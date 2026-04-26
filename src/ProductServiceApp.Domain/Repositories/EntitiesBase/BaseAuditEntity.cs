@@ -1,4 +1,4 @@
-﻿namespace ProductServiceApp.Domain.EntitiesBase;
+﻿namespace ProductServiceApp.Domain.Repositories.EntitiesBase;
 
 public class BaseAuditEntity
 {

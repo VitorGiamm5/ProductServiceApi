@@ -1,16 +1,19 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using ProductServiceApp.Domain.Products.Dtos;
+using ProductServiceApp.Domain.Products.Entities;
+using ProductServiceApp.Domain.Repositories.Products;
 using System.Threading.Channels;
 
-namespace ProductServiceApp.Application.Products.Commands.UpdateProduct;
+namespace ProductServiceApp.Application.Products.Commands.Create;
 
-public class UpdateProductCommandHandler : BackgroundService
+public class CreateProductCommandHandler : BackgroundService
 {
-    private readonly Channel<(UpdateProductCommand, TaskCompletionSource<ProductsResponse>, CancellationToken)> _channel;
+    private readonly Channel<(CreateProductCommand, TaskCompletionSource<ProductResponse>, CancellationToken)> _channel;
     private readonly IServiceScopeFactory _scopeFactory;
 
-    public UpdateProductCommandHandler(Channel<(UpdateProductCommand, TaskCompletionSource<ProductsResponse>, CancellationToken)> channel,
+    public CreateProductCommandHandler(
+        Channel<(CreateProductCommand, TaskCompletionSource<ProductResponse>, CancellationToken)> channel,
         IServiceScopeFactory scopeFactory)
     {
         _channel = channel;
@@ -32,18 +35,12 @@ public class UpdateProductCommandHandler : BackgroundService
                 using var cts = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken, requestToken);
 
                 await using var scope = _scopeFactory.CreateAsyncScope();
+                var repository = scope.ServiceProvider.GetRequiredService<IProductCommandRepository<ProductEntity>>();
 
-                ProductsResponse response = new()
-                {
-                    Id = 123,
-                    Name = command.Name,
-                    Price = command.Price,
-                    Type = command.Type
-                };
+                var entity = new CreateProductCommand(command);
+                var response = await repository.CreateAsync(entity.MapTo(), cts.Token);
 
-                await Task.Delay(10000, cts.Token);
-
-                tcs.TrySetResult(response);
+                tcs.TrySetResult(new ProductResponse());
             }
             catch (OperationCanceledException ex)
             {

@@ -1,0 +1,50 @@
+﻿using ProductServiceApp.Domain.Repositories.Base;
+using ProductServiceApp.Domain.Repositories.Exceptions;
+using ProductServiceApp.Infrastructure.Database.Contexts;
+
+namespace ProductServiceApp.Infrastructure.Database.Repositories.Base;
+
+public abstract class BaseCommandRepository<T> : IBaseCommandRepository<T> where T : class
+{
+
+    public readonly ApplicationDbContext _context;
+
+    protected BaseCommandRepository(ApplicationDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<T> CreateAsync(T entity, CancellationToken cancellationToken)
+    {
+        await _context.Set<T>().AddAsync(entity, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
+
+        return entity;
+    }
+
+    public async Task<bool> DeleteAsync(long id, CancellationToken cancellationToken)
+    {
+        var entity = await _context.Set<T>()
+            .FindAsync([id], cancellationToken)
+            ?? throw new NotFoundException(typeof(T).Name, id);
+
+        _context.Set<T>().Remove(entity);
+        await _context.SaveChangesAsync(cancellationToken);
+
+        return true;
+    }
+
+    public async Task<T> UpdateAsync(T entity, long id, CancellationToken cancellationToken)
+    {
+        var exists = await _context.Set<T>().FindAsync([id], cancellationToken);
+
+        if (exists is null)
+            await _context.Set<T>().AddAsync(entity, cancellationToken);
+        else
+            _context.Set<T>().Update(entity);
+
+        await _context.SaveChangesAsync(cancellationToken);
+
+        return entity;
+    }
+}

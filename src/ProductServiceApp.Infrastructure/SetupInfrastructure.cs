@@ -50,7 +50,7 @@ public static class SetupInfrastructure
 
         #region Write Context (Primary)
 
-        services.AddDbContextPool<ApplicationDbContext>((serviceProvider, options) =>
+        services.AddDbContext<ApplicationDbContext>((serviceProvider, options) =>
         {
             retryPolicy.Execute(() =>
             {
@@ -72,7 +72,7 @@ public static class SetupInfrastructure
                     .EnableDetailedErrors()
                     .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
                     .UseNpgsql(dataSourceBuilder.Build(), b => b
-                        .MigrationsHistoryTable("__EFMigrationsHistory", "dbproducts")
+                        .MigrationsHistoryTable("__EFMigrationsHistory", "dbSchemaGoodHamburger")
                         .MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)
                     );
 
@@ -85,7 +85,7 @@ public static class SetupInfrastructure
 
         #region Read Context (Replica)
 
-        services.AddDbContextPool<ReadOnlyDbContext>((serviceProvider, options) =>
+        services.AddDbContext<ReadOnlyDbContext>((serviceProvider, options) =>
         {
             retryPolicy.Execute(() =>
             {
@@ -102,14 +102,14 @@ public static class SetupInfrastructure
 
         #endregion
 
-        services.AddSingleton<IConnectionFactory, ConnectionFactory>();
+        //services.AddSingleton<IConnectionFactory, ConnectionFactory>();
 
         return services;
     }
 
     private static void AddRepositories(IServiceCollection services)
     {
-        services.TryAddScoped<IProductsCommandRepository<ProductEntity>, ProductsCommandRepository>();
-        services.TryAddScoped<IProductsQueryRepository<ProductEntity>, ProductsQueryRepository>();
+        services.TryAddScoped<IProductCommandRepository<ProductEntity>, ProductCommandRepository>();
+        services.TryAddScoped<IProductQueryRepository<ProductEntity>, ProductQueryRepository>();
     }
 }

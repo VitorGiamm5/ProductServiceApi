@@ -1,7 +1,7 @@
 ﻿using ProductServiceApp.Domain.Identifications;
 using System.ComponentModel.DataAnnotations;
 
-namespace ProductServiceApp.Application.Products.Commands.DeleteProduct;
+namespace ProductServiceApp.Application.Products.Commands.Delete;
 
 public class DeleteProductCommand : IIdentifiableLong
 {

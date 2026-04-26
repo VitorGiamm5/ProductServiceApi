@@ -1,15 +1,19 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using ProductServiceApp.Domain.Products.Dtos;
 using System.Threading.Channels;
 
-namespace ProductServiceApp.Application.Products.Commands.DeleteProduct;
+namespace ProductServiceApp.Application.Products.Commands.Update;
 
-public class DeleteProductCommandHandler : BackgroundService
+public class UpdateProductCommandHandler : BackgroundService
 {
-    private readonly Channel<(DeleteProductCommand, TaskCompletionSource<bool>, CancellationToken)> _channel;
+    private readonly Channel<(UpdateProductCommand, TaskCompletionSource<ProductResponse>, CancellationToken)> _channel;
     private readonly IServiceScopeFactory _scopeFactory;
 
-    public DeleteProductCommandHandler(Channel<(DeleteProductCommand, TaskCompletionSource<bool>, CancellationToken)> channel, IServiceScopeFactory scopeFactory)
+    public UpdateProductCommandHandler(
+        Channel<(UpdateProductCommand, TaskCompletionSource<ProductResponse>, CancellationToken)> channel,
+        IServiceScopeFactory scopeFactory
+        )
     {
         _channel = channel;
         _scopeFactory = scopeFactory;
@@ -31,9 +35,17 @@ public class DeleteProductCommandHandler : BackgroundService
 
                 await using var scope = _scopeFactory.CreateAsyncScope();
 
+                ProductResponse response = new()
+                {
+                    Id = 123,
+                    Name = command.Name,
+                    Price = command.Price,
+                    Type = command.Type
+                };
+
                 await Task.Delay(10000, cts.Token);
 
-                tcs.TrySetResult(true);
+                tcs.TrySetResult(response);
             }
             catch (OperationCanceledException ex)
             {
