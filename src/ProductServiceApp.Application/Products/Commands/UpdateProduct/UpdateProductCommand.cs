@@ -3,11 +3,11 @@ using ProductServiceApp.Domain.Products.Dtos;
 
 namespace ProductServiceApp.Application.Products.Commands.UpdateProduct;
 
-public class UpdateProductCommand : CreateProductRequest, IFromMapper<UpdateProductCommand, UpdateProductRequest>
+public class UpdateProductCommand : CreateProductsRequest, IFromMapper<UpdateProductCommand, UpdateProductsRequest>
 {
-    public UpdateProductCommand(UpdateProductRequest input) => MapFrom(input);
+    public UpdateProductCommand(UpdateProductsRequest input) => MapFrom(input);
 
-    public UpdateProductCommand MapFrom(UpdateProductRequest? input)
+    public UpdateProductCommand MapFrom(UpdateProductsRequest? input)
     {
         if (input != null)
         {

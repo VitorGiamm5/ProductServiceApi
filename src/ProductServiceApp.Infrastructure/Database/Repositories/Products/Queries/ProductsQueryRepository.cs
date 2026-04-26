@@ -5,7 +5,7 @@ using ProductServiceApp.Infrastructure.Database.Repositories.Base;
 
 namespace ProductServiceApp.Infrastructure.Database.Repositories.Products.Queries;
 
-public class ProductsQueryRepository : BaseQueryDb<ProductEntity>, IProductQueryRepository<ProductEntity>
+public class ProductsQueryRepository : BaseQueryDb<ProductEntity>, IProductsQueryRepository<ProductEntity>
 {
     public ProductsQueryRepository(ReadOnlyDbContext context) : base(context)
     {

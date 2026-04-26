@@ -31,7 +31,7 @@ public static class SetupApplication
 
         // Commands - Bounded com backpressure
         services.AddSingleton(
-            Channel.CreateBounded<(CreateProductCommand, TaskCompletionSource<ProductResponse>, CancellationToken)>(
+            Channel.CreateBounded<(CreateProductCommand, TaskCompletionSource<ProductsResponse>, CancellationToken)>(
                 new BoundedChannelOptions(_queue_capacity)
                 {
                     FullMode = BoundedChannelFullMode.Wait,
@@ -42,7 +42,7 @@ public static class SetupApplication
         );
 
         services.AddSingleton(
-            Channel.CreateBounded<(UpdateProductCommand, TaskCompletionSource<ProductResponse>, CancellationToken)>(
+            Channel.CreateBounded<(UpdateProductCommand, TaskCompletionSource<ProductsResponse>, CancellationToken)>(
                 new BoundedChannelOptions(_queue_capacity)
                 {
                     FullMode = BoundedChannelFullMode.Wait,
@@ -64,11 +64,11 @@ public static class SetupApplication
         );
 
         services.AddSingleton(
-            Channel.CreateUnbounded<(GetAllProductsQuery, TaskCompletionSource<IEnumerable<ProductResponse>>, CancellationToken)>()
+            Channel.CreateUnbounded<(GetAllProductsQuery, TaskCompletionSource<IEnumerable<ProductsResponse>>, CancellationToken)>()
         );
 
         services.AddSingleton(
-            Channel.CreateUnbounded<(GetProductByIdQuery, TaskCompletionSource<ProductResponse>, CancellationToken)>()
+            Channel.CreateUnbounded<(GetProductByIdQuery, TaskCompletionSource<ProductsResponse>, CancellationToken)>()
         );
 
         // Handlers com replicas

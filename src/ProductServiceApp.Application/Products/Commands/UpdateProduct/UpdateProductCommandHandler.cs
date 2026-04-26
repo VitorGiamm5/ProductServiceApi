@@ -7,10 +7,10 @@ namespace ProductServiceApp.Application.Products.Commands.UpdateProduct;
 
 public class UpdateProductCommandHandler : BackgroundService
 {
-    private readonly Channel<(UpdateProductCommand, TaskCompletionSource<ProductResponse>, CancellationToken)> _channel;
+    private readonly Channel<(UpdateProductCommand, TaskCompletionSource<ProductsResponse>, CancellationToken)> _channel;
     private readonly IServiceScopeFactory _scopeFactory;
 
-    public UpdateProductCommandHandler(Channel<(UpdateProductCommand, TaskCompletionSource<ProductResponse>, CancellationToken)> channel,
+    public UpdateProductCommandHandler(Channel<(UpdateProductCommand, TaskCompletionSource<ProductsResponse>, CancellationToken)> channel,
         IServiceScopeFactory scopeFactory)
     {
         _channel = channel;
@@ -33,7 +33,7 @@ public class UpdateProductCommandHandler : BackgroundService
 
                 await using var scope = _scopeFactory.CreateAsyncScope();
 
-                ProductResponse response = new()
+                ProductsResponse response = new()
                 {
                     Id = 123,
                     Name = command.Name,

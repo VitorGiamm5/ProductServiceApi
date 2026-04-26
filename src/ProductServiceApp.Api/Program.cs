@@ -10,7 +10,27 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers().AddJsonOptions(options =>
+#region Kestrel
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    var kestrelPort = builder.Configuration.GetValue<int>("Kestrel:Port", 5000);
+    options.ListenAnyIP(kestrelPort);
+
+    options.Limits.KeepAliveTimeout = TimeSpan.FromSeconds(30);
+    options.Limits.RequestHeadersTimeout = TimeSpan.FromSeconds(15);
+});
+
+#endregion
+
+#region Controllers
+
+// AddControllers chamado uma única vez com todas as configurações
+builder.Services.AddControllers(mvc =>
+{
+    mvc.SuppressAsyncSuffixInActionNames = false;
+})
+.AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
     options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
@@ -21,25 +41,16 @@ builder.Services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.Converters.Add(new TrimStringJsonConverter());
     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     options.JsonSerializerOptions.Converters.Add(new CustomDateTimeConverter("s"));
-});
-
-builder.Services.AddHttpContextAccessor();
-
-// Timeout global para todos os requests
-builder.WebHost.ConfigureKestrel(options =>
+})
+.ConfigureApiBehaviorOptions(options =>
 {
-    options.Limits.KeepAliveTimeout = TimeSpan.FromSeconds(3);
-    options.Limits.RequestHeadersTimeout = TimeSpan.FromSeconds(3);
+    options.InvalidModelStateResponseFactory = InvalidModelStateFactory();
 });
 
-// Add services to the container.
-builder.Services.AddControllers()
-    .ConfigureApiBehaviorOptions(options =>
-    {
-        options.InvalidModelStateResponseFactory = InvalidModelStateFactory();
-    });
+#endregion
 
-// Configuração de versionamento de API
+#region API Versioning
+
 builder.Services.AddApiVersioning(options =>
 {
     options.DefaultApiVersion = new ApiVersion(1, 0);
@@ -51,19 +62,20 @@ builder.Services.AddApiVersioning(options =>
     options.SubstituteApiVersionInUrl = true;
 });
 
-EnvironmentVariablesExtensions.AddEnvironmentVariables(builder.Configuration);
+#endregion
 
-builder.Services.AddApplication(builder.Configuration);
+#region Swagger / OpenAPI
 
-// Configuração do OpenAPI/Swagger
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Configuração de CORS
+#endregion
+
+#region CORS
+
 builder.Services.AddCors(options =>
 {
-    // Permite qualquer endereço de origem
     options.AddPolicy("AllowAll", policy =>
     {
         policy
@@ -73,9 +85,18 @@ builder.Services.AddCors(options =>
     });
 });
 
+#endregion
+
+builder.Services.AddHttpContextAccessor();
+
+EnvironmentVariablesExtensions.AddEnvironmentVariables(builder.Configuration);
+
+builder.Services.AddApplication(builder.Configuration);
+
 var app = builder.Build();
 
-// Aplica as migrations automaticamente ao iniciar a aplicação
+#region Migrations
+
 await using (var scope = app.Services.CreateAsyncScope())
 {
     var retryPipeline = new ResiliencePipelineBuilder()
@@ -94,14 +115,17 @@ await using (var scope = app.Services.CreateAsyncScope())
 
     await retryPipeline.ExecuteAsync(async ct =>
     {
-        Console.WriteLine("Aplicando migrations...");
+        Console.WriteLine("[Migration] Aplicando migrations...");
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         await db.Database.MigrateAsync(ct);
-        Console.WriteLine("Migrations aplicadas com sucesso.");
+        Console.WriteLine("[Migration] Migrations aplicadas com sucesso.");
     });
 }
 
-// Configure the HTTP request pipeline.
+#endregion
+
+#region Middleware Pipeline
+
 if (app.Environment.IsDevelopment())
 {
     UseOpenAPI(app);
@@ -111,24 +135,25 @@ app.UseMiddleware<JsonDeserializationExceptionMiddleware>();
 app.UseMiddleware<ExceptionMiddleware>();
 
 app.UseCors("AllowAll");
-app.UseHttpsRedirection();
+
 app.UseAuthorization();
 app.MapControllers();
 
+#endregion
+
 await app.RunAsync();
 
-#region Addictional functions
+#region Local functions
 
 static void UseOpenAPI(WebApplication app)
 {
-    // Redireciona a rota raiz para o Swagger
     app.MapGet("/", () => Results.Redirect("/swagger")).ExcludeFromDescription();
     app.MapOpenApi();
     app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
         options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
-        options.RoutePrefix = string.Empty; // Abre o Swagger na raiz "/"
+        options.RoutePrefix = string.Empty;
     });
 }
 
@@ -136,9 +161,6 @@ static Func<ActionContext, IActionResult> InvalidModelStateFactory()
 {
     return context =>
     {
-        //var logger = context.HttpContext.RequestServices
-        //    .GetRequiredService<ILogger<Program>>();
-
         var isJsonError = context.ModelState
             .Any(e => e.Value?.Errors
                 .Any(x => x.ErrorMessage.Contains("JSON") ||
@@ -147,10 +169,6 @@ static Func<ActionContext, IActionResult> InvalidModelStateFactory()
 
         if (isJsonError)
         {
-            //logger.LogWarning("Malformed JSON on {Method} {Path}",
-            //    context.HttpContext.Request.Method,
-            //    context.HttpContext.Request.Path);
-
             var result = new ObjectResult(new
             {
                 data = new { },
@@ -176,7 +194,6 @@ static Func<ActionContext, IActionResult> InvalidModelStateFactory()
             return result;
         }
 
-        // Erros de validação normais
         var validationResult = new ObjectResult(new
         {
             data = new { },

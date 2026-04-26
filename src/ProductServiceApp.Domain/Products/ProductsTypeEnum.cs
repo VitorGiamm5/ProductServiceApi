@@ -1,9 +1,9 @@
 ﻿namespace ProductServiceApp.Domain.Products;
 
-public enum ProductTypeEnum : byte
+public enum ProductsTypeEnum : byte
 {
     Unknown = 0,
-    Sandwiches = 1,
+    Sandwich = 1,
     Fries = 2,
-    Refreshments = 3
+    Refreshment = 3
 }

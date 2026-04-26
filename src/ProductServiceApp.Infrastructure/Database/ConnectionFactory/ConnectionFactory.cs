@@ -17,7 +17,6 @@ public class ConnectionFactory : IConnectionFactory
         _writeConnectionString = configuration.GetConnectionString("PostgresWrite")!;
         _readConnectionString = configuration.GetConnectionString("PostgresRead")!;
 
-
         _retryPolicy = Policy
             .Handle<NpgsqlException>()
             .Or<TimeoutException>()

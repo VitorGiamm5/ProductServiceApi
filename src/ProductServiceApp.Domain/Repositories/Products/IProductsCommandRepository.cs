@@ -2,7 +2,7 @@
 
 namespace ProductServiceApp.Domain.Repositories.Products;
 
-public interface IProductCommandRepository<T> : IBaseCommandRepository<T> where T : class
+public interface IProductsCommandRepository<T> : IBaseCommandRepository<T> where T : class
 {
 
 }

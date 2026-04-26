@@ -8,11 +8,11 @@ namespace ProductServiceApp.Application.Products.Queries.GetById;
 
 public class GetProductByIdQueryHandler : BackgroundService
 {
-    private readonly Channel<(GetProductByIdQuery, TaskCompletionSource<ProductResponse>, CancellationToken)> _channel;
+    private readonly Channel<(GetProductByIdQuery, TaskCompletionSource<ProductsResponse>, CancellationToken)> _channel;
     private readonly IServiceScopeFactory _scopeFactory;
 
     public GetProductByIdQueryHandler(
-        Channel<(GetProductByIdQuery, TaskCompletionSource<ProductResponse>, CancellationToken)> channel,
+        Channel<(GetProductByIdQuery, TaskCompletionSource<ProductsResponse>, CancellationToken)> channel,
         IServiceScopeFactory scopeFactory)
     {
         _channel = channel;
@@ -35,12 +35,12 @@ public class GetProductByIdQueryHandler : BackgroundService
 
                 await using var scope = _scopeFactory.CreateAsyncScope();
 
-                ProductResponse response = new()
+                ProductsResponse response = new()
                 {
                     Id = query.Id,
                     Name = "Sample Product",
                     Price = 100.0m,
-                    Type = ProductTypeEnum.Fries
+                    Type = ProductsTypeEnum.Fries
                 };
 
                 tcs.TrySetResult(response);

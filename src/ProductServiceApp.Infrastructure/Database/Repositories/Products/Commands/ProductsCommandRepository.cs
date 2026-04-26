@@ -5,7 +5,7 @@ using ProductServiceApp.Infrastructure.Database.Repositories.Base;
 
 namespace ProductServiceApp.Infrastructure.Database.Repositories.Products.Commands;
 
-public class ProductsCommandRepository : BaseCommandDb<ProductEntity>, IProductCommandRepository<ProductEntity>
+public class ProductsCommandRepository : BaseCommandDb<ProductEntity>, IProductsCommandRepository<ProductEntity>
 {
     public ProductsCommandRepository(ApplicationDbContext context) : base(context)
     {

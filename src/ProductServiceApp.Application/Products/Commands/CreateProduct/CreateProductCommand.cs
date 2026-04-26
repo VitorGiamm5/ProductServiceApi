@@ -3,11 +3,11 @@ using ProductServiceApp.Domain.Products.Dtos;
 
 namespace ProductServiceApp.Application.Products.Commands.CreateProduct;
 
-public class CreateProductCommand : CreateProductRequest, IFromMapper<CreateProductCommand, CreateProductRequest>
+public class CreateProductCommand : CreateProductsRequest, IFromMapper<CreateProductCommand, CreateProductsRequest>
 {
-    public CreateProductCommand(CreateProductRequest input) => MapFrom(input);
+    public CreateProductCommand(CreateProductsRequest input) => MapFrom(input);
 
-    public CreateProductCommand MapFrom(CreateProductRequest? input)
+    public CreateProductCommand MapFrom(CreateProductsRequest? input)
     {
         if (input != null)
         {

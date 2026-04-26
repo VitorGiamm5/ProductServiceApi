@@ -13,24 +13,24 @@ namespace ProductServiceApp.Api.Controllers;
 
 [ApiVersion("1.0")]
 public class ProductsController : BaseCrudApiController<
-    ProductResponse,
-    CreateProductRequest,
-    ProductResponse,
-    UpdateProductRequest,
-    ProductResponse>
+    ProductsResponse,
+    CreateProductsRequest,
+    ProductsResponse,
+    UpdateProductsRequest,
+    ProductsResponse>
 {
-    private readonly Channel<(CreateProductCommand, TaskCompletionSource<ProductResponse>, CancellationToken)> _createChannel;
-    private readonly Channel<(UpdateProductCommand, TaskCompletionSource<ProductResponse>, CancellationToken)> _updateChannel;
+    private readonly Channel<(CreateProductCommand, TaskCompletionSource<ProductsResponse>, CancellationToken)> _createChannel;
+    private readonly Channel<(UpdateProductCommand, TaskCompletionSource<ProductsResponse>, CancellationToken)> _updateChannel;
     private readonly Channel<(DeleteProductCommand, TaskCompletionSource<bool>, CancellationToken)> _deleteChannel;
-    private readonly Channel<(GetProductByIdQuery, TaskCompletionSource<ProductResponse>, CancellationToken)> _getByIdChannel;
-    private readonly Channel<(GetAllProductsQuery, TaskCompletionSource<IEnumerable<ProductResponse>>, CancellationToken)> _getAllChannel;
+    private readonly Channel<(GetProductByIdQuery, TaskCompletionSource<ProductsResponse>, CancellationToken)> _getByIdChannel;
+    private readonly Channel<(GetAllProductsQuery, TaskCompletionSource<IEnumerable<ProductsResponse>>, CancellationToken)> _getAllChannel;
 
     public ProductsController(
-        Channel<(CreateProductCommand, TaskCompletionSource<ProductResponse>, CancellationToken)> createChannel,
-        Channel<(UpdateProductCommand, TaskCompletionSource<ProductResponse>, CancellationToken)> updateChannel,
+        Channel<(CreateProductCommand, TaskCompletionSource<ProductsResponse>, CancellationToken)> createChannel,
+        Channel<(UpdateProductCommand, TaskCompletionSource<ProductsResponse>, CancellationToken)> updateChannel,
         Channel<(DeleteProductCommand, TaskCompletionSource<bool>, CancellationToken)> deleteChannel,
-        Channel<(GetAllProductsQuery, TaskCompletionSource<IEnumerable<ProductResponse>>, CancellationToken)> getAllChannel,
-        Channel<(GetProductByIdQuery, TaskCompletionSource<ProductResponse>, CancellationToken)> getByIdChannel)
+        Channel<(GetAllProductsQuery, TaskCompletionSource<IEnumerable<ProductsResponse>>, CancellationToken)> getAllChannel,
+        Channel<(GetProductByIdQuery, TaskCompletionSource<ProductsResponse>, CancellationToken)> getByIdChannel)
     {
         _createChannel = createChannel;
         _updateChannel = updateChannel;
@@ -41,7 +41,7 @@ public class ProductsController : BaseCrudApiController<
 
     public override async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
-        return await ExecuteAsync<IEnumerable<ProductResponse>>(
+        return await ExecuteAsync<IEnumerable<ProductsResponse>>(
             (tcs, token) => _getAllChannel.Writer
                 .WriteAsync((new GetAllProductsQuery(), tcs, token), token)
                 .AsTask(),
@@ -50,27 +50,27 @@ public class ProductsController : BaseCrudApiController<
 
     public override async Task<IActionResult> GetById(long id, CancellationToken cancellationToken)
     {
-        return await ExecuteAsync<ProductResponse>(
+        return await ExecuteAsync<ProductsResponse>(
             (tcs, token) => _getByIdChannel.Writer
                 .WriteAsync((new GetProductByIdQuery(id), tcs, token), token)
                 .AsTask(),
             cancellationToken);
     }
 
-    public override async Task<IActionResult> Create([FromBody] CreateProductRequest request, CancellationToken cancellationToken)
+    public override async Task<IActionResult> Create([FromBody] CreateProductsRequest request, CancellationToken cancellationToken)
     {
         request.Id = 0; // Ensure ID is not set by the client
 
-        return await ExecuteAsync<ProductResponse>(
+        return await ExecuteAsync<ProductsResponse>(
             (tcs, token) => _createChannel.Writer
                 .WriteAsync((new CreateProductCommand(request), tcs, token), token)
                 .AsTask(),
             cancellationToken);
     }
 
-    public override async Task<IActionResult> Update(long id, [FromBody] UpdateProductRequest request, CancellationToken cancellationToken)
+    public override async Task<IActionResult> Update(long id, [FromBody] UpdateProductsRequest request, CancellationToken cancellationToken)
     {
-        return await ExecuteAsync<ProductResponse>(
+        return await ExecuteAsync<ProductsResponse>(
             (tcs, token) => _updateChannel.Writer
                 .WriteAsync((new UpdateProductCommand(request), tcs, token), token)
                 .AsTask(),
