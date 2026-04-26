@@ -32,4 +32,8 @@
     <ProjectReference Include="..\ProductServiceApp.Domain\ProductServiceApp.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Database\Migrations\" />
+  </ItemGroup>
+
 </Project>

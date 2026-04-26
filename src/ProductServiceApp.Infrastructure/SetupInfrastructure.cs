@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Npgsql;
 using Polly;
 using Polly.Retry;
 using ProductServiceApp.Domain.Products.Entities;
@@ -56,7 +57,24 @@ public static class SetupInfrastructure
                 var connectionString = configuration.GetConnectionString("PostgresWrite")
                     ?? throw new InvalidOperationException("Connection string 'PostgresWrite' not found.");
 
+                var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString)
+                {
+                    ConnectionStringBuilder =
+                    {
+                        IncludeErrorDetail = true,
+                        Timeout = 100
+                    }
+                };
+
                 options.UseNpgsql(connectionString);
+
+                options
+                    .EnableDetailedErrors()
+                    .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
+                    .UseNpgsql(dataSourceBuilder.Build(), b => b
+                        .MigrationsHistoryTable("__EFMigrationsHistory", "dbproducts")
+                        .MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)
+                    );
 
                 var resilienceInterceptor = serviceProvider.GetRequiredService<ResilienceInterceptor>();
                 options.AddInterceptors(resilienceInterceptor);
