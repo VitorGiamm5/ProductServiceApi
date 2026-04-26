@@ -59,8 +59,6 @@ public class ProductController : BaseCrudApiController<
 
     public override async Task<IActionResult> Create([FromBody] CreateProductRequest request, CancellationToken cancellationToken)
     {
-        request.Id = 0; // Ensure ID is not set by the client
-
         return await ExecuteAsync<ProductResponse>(
             (tcs, token) => _createChannel.Writer
                 .WriteAsync((new CreateProductCommand(request), tcs, token), token)
