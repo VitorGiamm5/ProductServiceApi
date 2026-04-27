@@ -1,12 +1,14 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using ProductServiceApp.Application.Business.Products;
 using ProductServiceApp.Application.Handlers.Products.Commands.Create;
 using ProductServiceApp.Application.Handlers.Products.Commands.Delete;
 using ProductServiceApp.Application.Handlers.Products.Commands.Update;
 using ProductServiceApp.Application.Handlers.Products.Queries.GetAll;
 using ProductServiceApp.Application.Handlers.Products.Queries.GetById;
 using ProductServiceApp.Domain.Business.Base.Dtos;
+using ProductServiceApp.Domain.Business.Products.Business;
 using ProductServiceApp.Domain.Business.Products.Dtos;
 using ProductServiceApp.Domain.Business.Products.Handlers;
 using ProductServiceApp.Infrastructure;
@@ -27,6 +29,16 @@ public static class SetupApplication
 
     private static void SetupProductApplication(IServiceCollection services)
     {
+        #region Business
+
+        services.AddScoped<IGetAllProductBusiness, GetAllProductBusiness>();
+        services.AddScoped<IGetByIdProductBusiness, GetByIdProductBusiness>();
+        services.AddScoped<ICreateProductBusiness, CreateProductBusiness>();
+        services.AddScoped<IUpdateProductBusiness, UpdateProductBusiness>();
+        services.AddScoped<IDeleteProductBusiness, DeleteProductBusiness>();
+
+        #endregion
+
         #region Channels — Commands (bounded com backpressure)
 
         services.AddSingleton(Channel.CreateBounded<(CreateProductCommand, TaskCompletionSource<ProductResponse>, CancellationToken)>(
