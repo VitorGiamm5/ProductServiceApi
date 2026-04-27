@@ -1,5 +1,5 @@
-﻿using ProductServiceApp.Domain.Repositories.Base;
-using ProductServiceApp.Domain.Repositories.Exceptions;
+﻿using ProductServiceApp.Domain.Exceptions;
+using ProductServiceApp.Domain.Repositories.Base;
 using ProductServiceApp.Infrastructure.Database.Contexts;
 
 namespace ProductServiceApp.Infrastructure.Database.Repositories.Base;

@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using ProductServiceApp.Domain.ApiResponseBase;
+using ProductServiceApp.Domain.Controller.BaseApiResponse;
 
 namespace ProductServiceApp.Api.Controllers.Base.BaseCrudApiController;
 

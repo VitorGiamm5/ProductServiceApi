@@ -1,6 +1,7 @@
 ﻿using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
-using ProductServiceApp.Domain.ApiResponseBase;
+using ProductServiceApp.Domain.Controller.BaseApiResponse;
+using System.Threading.Channels;
 
 namespace ProductServiceApp.Api.Controllers.Base;
 
@@ -15,13 +16,27 @@ namespace ProductServiceApp.Api.Controllers.Base;
 [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
 public class BaseApiController : ControllerBase
 {
+    private const int SecondsToTimeoutRequest = 3;
+
+    protected Task<IActionResult> ExecuteChannelAsync<TMessage, TResponse>(
+        Channel<(TMessage, TaskCompletionSource<TResponse>, CancellationToken)> channel,
+        TMessage message,
+        CancellationToken cancellationToken)
+        where TMessage : class
+        where TResponse : class
+        => ExecuteAsync<TResponse>(
+            (tcs, token) => channel.Writer
+                .WriteAsync((message, tcs, token), token)
+                .AsTask(),
+            cancellationToken);
+
     protected async Task<IActionResult> ExecuteAsync<T>(
         Func<TaskCompletionSource<T>, CancellationToken, Task> writeToChannel,
         CancellationToken cancellationToken)
     {
         var tcs = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+        using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(SecondsToTimeoutRequest));
         using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
 
         var registration = linkedCts.Token.Register(() => tcs.TrySetCanceled(linkedCts.Token));
@@ -48,7 +63,5 @@ public class BaseApiController : ControllerBase
     }
 
     private ObjectResult BuildTimeoutResponse<T>()
-    {
-        return StatusCode(408, ApiResponse<T>.SingleFailure(408, "Request timeout."));
-    }
+        => StatusCode(408, ApiResponse<T>.SingleFailure(408, "Request timeout."));
 }

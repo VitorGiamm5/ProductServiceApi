@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
-using ProductServiceApp.Domain.ApiResponseBase;
+using ProductServiceApp.Domain.Controller.BaseApiResponse;
 using System.Net;
 using System.Text.Json;
 

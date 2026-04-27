@@ -1,7 +1,7 @@
 ﻿namespace ProductServiceApp.Domain.Repositories.Base;
 
-public interface IBaseQueryRepository<T> : IBaseRepository where T : class
+public interface IBaseQueryRepository<TEntity> : IBaseRepository where TEntity : class
 {
-    Task<T> GetByIdAsync(long id, CancellationToken cancellationToken);
-    Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken);
+    Task<TEntity> GetByIdAsync(long id, CancellationToken cancellationToken);
+    Task<IEnumerable<TEntity>> GetAllAsync(CancellationToken cancellationToken);
 }

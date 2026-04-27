@@ -1,55 +1,33 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
-using ProductServiceApp.Api.Controllers.Base.BaseCrudApiController;
-using ProductServiceApp.Domain.ApiResponseBase;
+using ProductServiceApp.Api.Controllers.Base.Operations;
+using ProductServiceApp.Domain.Controller.BaseApiResponse;
+using System.Threading.Channels;
 
 namespace ProductServiceApp.Api.Controllers;
 
 [ApiVersion("1.0")]
-public class WeatherForecastController : BaseCrudApiController<
-    WeatherForecast,
-    WeatherForecast,
-    WeatherForecast,
-    WeatherForecast,
-    WeatherForecast>
+public class WeatherForecastController(
+    Channel<(WeatherForecast, TaskCompletionSource<IEnumerable<WeatherForecast>>, CancellationToken)> getAllChannel)
+    : BaseGetAllController<WeatherForecast, WeatherForecast>(getAllChannel)
 {
-
-    public override async Task<IActionResult> Create([FromBody] WeatherForecast request, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override async Task<IActionResult> Delete(long id, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-    }
+    protected override WeatherForecast BuildGetAllQuery() => new();
 
     [ProducesResponseType(typeof(ApiResponse<IEnumerable<WeatherForecast>>), StatusCodes.Status200OK)]
-    public override async Task<IActionResult> GetAll(CancellationToken cancellationToken)
+    public override async Task<IActionResult> GetAll(CancellationToken ct)
     {
-        string[] Summaries =
-            [
-                "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-            ];
+        string[] summaries =
+        [
+            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
+        ];
 
         var result = Enumerable.Range(1, 5).Select(index => new WeatherForecast
         {
             Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
             TemperatureC = Random.Shared.Next(-20, 55),
-            Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-        })
-        .ToArray();
+            Summary = summaries[Random.Shared.Next(summaries.Length)]
+        }).ToArray();
 
         return Ok(ApiResponse<IEnumerable<WeatherForecast>>.Success(result));
-    }
-
-    public override async Task<IActionResult> GetById(long id, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override async Task<IActionResult> Update(long id, [FromBody] WeatherForecast request, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
     }
 }

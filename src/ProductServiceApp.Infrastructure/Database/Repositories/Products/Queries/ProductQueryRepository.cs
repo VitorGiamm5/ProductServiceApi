@@ -1,4 +1,4 @@
-﻿using ProductServiceApp.Domain.Products.Entities;
+﻿using ProductServiceApp.Domain.Entities.Products;
 using ProductServiceApp.Domain.Repositories.Products;
 using ProductServiceApp.Infrastructure.Database.Contexts;
 using ProductServiceApp.Infrastructure.Database.Repositories.Base;

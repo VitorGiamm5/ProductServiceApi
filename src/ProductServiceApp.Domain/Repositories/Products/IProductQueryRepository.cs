@@ -2,6 +2,6 @@
 
 namespace ProductServiceApp.Domain.Repositories.Products;
 
-public interface IProductQueryRepository<T> : IBaseQueryRepository<T> where T : class
+public interface IProductQueryRepository<TEntity> : IBaseQueryRepository<TEntity> where TEntity : class
 {
 }
