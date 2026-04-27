@@ -10,9 +10,6 @@ namespace ProductServiceApp.Api.Controllers.Base;
 [Route("api/v{version:apiVersion}/[controller]")]
 [Produces("application/json")]
 [Consumes("application/json")]
-[ProducesResponseType(StatusCodes.Status200OK)]
-[ProducesResponseType(StatusCodes.Status404NotFound)]
-[ProducesResponseType(StatusCodes.Status400BadRequest)]
 public abstract class BaseCrudApiController<
     TGetResponse,
     TCreateRequest, TCreateResponse, TCreateCommand,
