@@ -7,14 +7,18 @@ namespace ProductServiceApp.Infrastructure.Database.ConnectionFactory;
 
 public class ConnectionFactory : IConnectionFactory
 {
-    private readonly string _writeConnectionString;
-    private readonly string _readConnectionString;
+    private readonly string _writeConnectionString = string.Empty;
+    private readonly string _readConnectionString = string.Empty;
     private readonly AsyncRetryPolicy _retryPolicy;
 
     public ConnectionFactory(IConfiguration configuration)
     {
-        _writeConnectionString = configuration.GetConnectionString("PostgresWrite")!;
-        _readConnectionString = configuration.GetConnectionString("PostgresRead")!;
+        // Valida obrigatoriedade antes de subir a aplicação
+        _writeConnectionString = configuration.GetConnectionString("PostgresWrite")
+            ?? throw new InvalidOperationException("ConnectionStrings:PostgresWrite não configurada.");
+
+        _readConnectionString = configuration.GetConnectionString("PostgresRead")
+            ?? throw new InvalidOperationException("ConnectionStrings:PostgresRead não configurada.");
 
         _retryPolicy = Policy
             .Handle<NpgsqlException>()
@@ -31,7 +35,7 @@ public class ConnectionFactory : IConnectionFactory
     }
 
     public NpgsqlConnection CreateWriteConnection() =>
-    new(_writeConnectionString);
+        new(_writeConnectionString);
 
     public NpgsqlConnection CreateReadConnection() =>
         new(_readConnectionString);

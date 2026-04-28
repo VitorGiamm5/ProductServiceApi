@@ -64,6 +64,19 @@ services:
       - DOTNET_RUNNING_IN_CONTAINER=true
       - ConnectionStrings__PostgresWrite=Server=6137_postgres_primary;Port=5432;Database=dbproducts;Username=randandan;Password=randandan_XLR;
       - ConnectionStrings__PostgresRead=Server=6137_postgres_replica;Port=5433;Database=dbproducts;Username=read_randandan;Password=read_randandan_XLR;
+      - DatabaseSettings__EnableLoadBalancing=true
+      - WorkersReplicas__ReplicasCreateProduct=2
+      - WorkersReplicas__ReplicasUpdateProduct=2
+      - WorkersReplicas__ReplicasDeleteProduct=2
+      - WorkersReplicas__ReplicasGetAllProduct=1
+      - WorkersReplicas__ReplicasGetByIdProduct=1
+      - QueueCapacity__QueueCreateProduct=100
+      - QueueCapacity__QueueUpdateProduct=100
+      - QueueCapacity__QueueDeleteProduct=100
+      - RetryPolicy__MaxRetryAttempts=3
+      - RetryPolicy__DelayBetweenRetriesInSeconds=2
+      - KeepAliveTimeoutSeconds=30
+      - RequestTimeoutSeconds=15
     depends_on:
       6137_postgres_primary:
         condition: service_healthy

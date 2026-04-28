@@ -27,19 +27,22 @@ public static class SetupInfrastructure
 
         #endregion
 
-        #region Repositories
-
-        AddRepositories(services);
-
-        #endregion
-
         #region Polly Retry Policy
+
+        int retryCount = configuration.GetSection("RetryPolicy:DelayBetweenRetriesInSeconds").Value is not null
+            ? int.Parse(configuration.GetSection("RetryPolicy:DelayBetweenRetriesInSeconds").Value!)
+            : _maxRetryDelay;
+
+        int maxRetryCount = configuration.GetSection("RetryPolicy:MaxRetryCount").Value is not null
+            ? int.Parse(configuration.GetSection("RetryPolicy:MaxRetryCount").Value!)
+            : _maxRetryCount;
 
         RetryPolicy retryPolicy = Policy
             .Handle<Exception>()
             .WaitAndRetry(
-                retryCount: _maxRetryCount,
-                sleepDurationProvider: attempt => TimeSpan.FromSeconds(Math.Pow(_maxRetryDelay, attempt)),
+                retryCount: maxRetryCount,
+                sleepDurationProvider: attempt => 
+                    TimeSpan.FromSeconds(Math.Pow(retryCount, attempt)),
                 onRetry: (exception, timespan, attempt, context) =>
                 {
                     Console.WriteLine($"Retry {attempt} fail with error: {exception.Message}. Lets try again {timespan}.");
@@ -101,12 +104,16 @@ public static class SetupInfrastructure
 
         #endregion
 
-        //services.AddSingleton<IConnectionFactory, ConnectionFactory>();
+        #region Repositories
+
+        AddProductsRepositories(services);
+
+        #endregion
 
         return services;
     }
 
-    private static void AddRepositories(IServiceCollection services)
+    private static void AddProductsRepositories(IServiceCollection services)
     {
         services.TryAddScoped<IProductCommandRepository<ProductEntity>, ProductCommandRepository>();
         services.TryAddScoped<IProductQueryRepository<ProductEntity>, ProductQueryRepository>();

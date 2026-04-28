@@ -5,16 +5,30 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
-      "dotnetRunMessages": true,
-      "applicationUrl": "http://localhost:5004"
+      "dotnetRunMessages": true
     },
     "https": {
       "commandName": "Project",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "Kestrel__Port": "9005",
+        "ConnectionStrings__PostgresWrite": "Server=localhost;Port=9000;Database=dbproducts;Username=randandan;Password=randandan_XLR;",
+        "ConnectionStrings__PostgresRead": "Server=localhost;Port=9001;Database=dbproducts;Username=read_randandan;Password=read_randandan_XLR;",
+        "DatabaseSettings__EnableLoadBalancing": "true",
+        "WorkersReplicas__ReplicasCreateProduct": "2",
+        "WorkersReplicas__ReplicasUpdateProduct": "2",
+        "WorkersReplicas__ReplicasDeleteProduct": "2",
+        "WorkersReplicas__ReplicasGetAllProduct": "1",
+        "WorkersReplicas__ReplicasGetByIdProduct": "1",
+        "QueueCapacity__QueueCreateProduct": "100",
+        "QueueCapacity__QueueUpdateProduct": "100",
+        "QueueCapacity__QueueDeleteProduct": "100",
+        "RetryPolicy__MaxRetryAttempts": "3",
+        "RetryPolicy__DelayBetweenRetriesInSeconds": "2",
+        "KeepAliveTimeoutSeconds": "30",
+        "RequestTimeoutSeconds": "15"
       },
-      "dotnetRunMessages": true,
-      "applicationUrl": "https://localhost:7197;http://localhost:5004"
+      "dotnetRunMessages": true
     }
   },
   "$schema": "https://json.schemastore.org/launchsettings.json"

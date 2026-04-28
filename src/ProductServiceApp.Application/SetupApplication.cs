@@ -23,39 +23,37 @@ namespace ProductServiceApp.Application;
 
 public static class SetupApplication
 {
-    private static readonly int _queueCapacity = 1000;
-
     public static IServiceCollection AddApplication(this IServiceCollection services, IConfiguration configuration)
     {
-        SetupProductApplication(services);
         services.AddInfrastructure(configuration);
-        return services;
-    }
 
-    private static void SetupProductApplication(IServiceCollection services)
-    {
-        #region Validators — reflexão automática
+        #region Validators — Auto reflection
 
         services.AddValidatorsFromAssembly(typeof(SetupApplication).Assembly);
 
         #endregion
 
-        #region Business
+        // Setup application
+        SetupProductApplication(services, configuration);
 
-        AddServices(services);
+        return services;
+    }
 
-        #endregion
+    #region Product application setup
 
-        #region Channels — Commands (bounded com backpressure)
+    private static void SetupProductApplication(IServiceCollection services, IConfiguration configuration)
+    {
+        #region Channels — Commands (bounded with backpressure)
+        var queueCapacity = configuration.GetSection("QueueCapacity");
 
         services.AddSingleton(Channel.CreateBounded<(CreateProductCommand, TaskCompletionSource<ProductResponse>, CancellationToken)>(
-            BoundedOptions(_queueCapacity)));
+            BoundedOptions(queueCapacity.GetValue<int>("QueueCreateProduct", 100))));
 
         services.AddSingleton(Channel.CreateBounded<(UpdateProductCommand, TaskCompletionSource<ProductResponse>, CancellationToken)>(
-            BoundedOptions(_queueCapacity)));
+            BoundedOptions(queueCapacity.GetValue<int>("QueueUpdateProduct", 100))));
 
         services.AddSingleton(Channel.CreateBounded<(DeleteProductCommand, TaskCompletionSource<BooleanResponse>, CancellationToken)>(
-            BoundedOptions(_queueCapacity)));
+            BoundedOptions(queueCapacity.GetValue<int>("QueueDeleteProduct", 100))));
 
         #endregion
 
@@ -67,26 +65,32 @@ public static class SetupApplication
 
         #endregion
 
-        #region Handlers — Workers com réplicas
+        #region Handlers — Workers with replicas
 
-        services.AddWorkers<CreateProductCommandHandler>(2);
-        services.AddWorkers<UpdateProductCommandHandler>(2);
-        services.AddWorkers<DeleteProductCommandHandler>(2);
-        services.AddWorkers<GetAllProductQueryHandler>(1);
-        services.AddWorkers<GetByIdProductQueryHandler>(1);
+        var workersReplicasSection = configuration.GetSection("WorkersReplicas");
 
+        services.AddWorkers<CreateProductCommandHandler>(workersReplicasSection.GetValue<int>("ReplicasCreateProduct", 2));
+        services.AddWorkers<UpdateProductCommandHandler>(workersReplicasSection.GetValue<int>("ReplicasUpdateProduct", 2));
+        services.AddWorkers<DeleteProductCommandHandler>(workersReplicasSection.GetValue<int>("ReplicasDeleteProduct", 2));
+        services.AddWorkers<GetAllProductQueryHandler>(workersReplicasSection.GetValue<int>("ReplicasGetAllProduct", 1));
+        services.AddWorkers<GetByIdProductQueryHandler>(workersReplicasSection.GetValue<int>("ReplicasGetByIdProduct", 1));   
+        
         #endregion
 
-    }
+        #region Services — Business
 
-    private static void AddServices(IServiceCollection services)
-    {
         services.AddScoped<IGetAllProductBusiness, GetAllProductBusiness>();
         services.AddScoped<IGetByIdProductBusiness, GetByIdProductBusiness>();
         services.AddScoped<ICreateProductBusiness, CreateProductBusiness>();
         services.AddScoped<IUpdateProductBusiness, UpdateProductBusiness>();
         services.AddScoped<IDeleteProductBusiness, DeleteProductBusiness>();
+
+        #endregion
     }
+
+    #endregion
+
+    #region Private methods
 
     private static BoundedChannelOptions BoundedOptions(int capacity) => new(capacity)
     {
@@ -101,4 +105,6 @@ public static class SetupApplication
         for (int i = 0; i < count; i++)
             services.AddSingleton<IHostedService, T>();
     }
+
+    #endregion
 }
