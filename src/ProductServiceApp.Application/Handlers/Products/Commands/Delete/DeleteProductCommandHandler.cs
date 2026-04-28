@@ -10,15 +10,15 @@ namespace ProductServiceApp.Application.Handlers.Products.Commands.Delete;
 public class DeleteProductCommandHandler(
     Channel<(DeleteProductCommand, TaskCompletionSource<BooleanResponse>, CancellationToken)> channel,
     IServiceScopeFactory scopeFactory)
-    : BaseChannelHandler<DeleteProductCommand, BooleanResponse>(channel, scopeFactory)
+    : BaseCommandHandler<DeleteProductCommand, BooleanResponse>(channel, scopeFactory)
 {
-    protected override async Task<BooleanResponse> HandleAsync(
-        DeleteProductCommand query,
+    protected override async Task<BooleanResponse> ExecuteCommandAsync(
+        DeleteProductCommand command,
         IServiceProvider services,
         CancellationToken ct)
     {
         var business = services.GetRequiredService<IDeleteProductBusiness>();
 
-        return await business.ExecuteAsync(query, ct);
+        return await business.ExecuteAsync(command, ct);
     }
 }

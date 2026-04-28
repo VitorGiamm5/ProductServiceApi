@@ -27,9 +27,30 @@ public class ProductController(
         getAllChannel,
         getByIdChannel)
 {
-    protected override GetAllProductQuery BuildGetAllQuery() => new();
-    protected override GetByIdProductQuery BuildGetByIdQuery(long id) => new(id);
-    protected override CreateProductCommand BuildCreateCommand(CreateProductRequest request) => new(request);
-    protected override UpdateProductCommand BuildUpdateCommand(long id, UpdateProductRequest request) => new(request);
-    protected override DeleteProductCommand BuildDeleteCommand(long id) => new(id);
+    protected override GetAllProductQuery BuildGetAllQuery()
+    {
+        return new();
+    }
+
+    protected override GetByIdProductQuery BuildGetByIdQuery(long id)
+    {
+        return new(id);
+    }
+
+    protected override CreateProductCommand BuildCreateCommand(CreateProductRequest request)
+    {
+        return new(request);
+    }
+
+    protected override UpdateProductCommand BuildUpdateCommand(long id, UpdateProductRequest request)
+    {
+        request.Id = id;
+
+        return new(request);
+    }
+
+    protected override DeleteProductCommand BuildDeleteCommand(long id)
+    {
+        return new(id);
+    }
 }

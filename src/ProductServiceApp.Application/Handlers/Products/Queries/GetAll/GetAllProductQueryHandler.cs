@@ -10,10 +10,12 @@ namespace ProductServiceApp.Application.Handlers.Products.Queries.GetAll;
 public class GetAllProductQueryHandler(
     Channel<(GetAllProductQuery, TaskCompletionSource<IEnumerable<ProductResponse>>, CancellationToken)> channel,
     IServiceScopeFactory scopeFactory)
-    : BaseChannelHandler<GetAllProductQuery, IEnumerable<ProductResponse>>(channel, scopeFactory)
+    : BaseQueryHandler<GetAllProductQuery, IEnumerable<ProductResponse>>(channel, scopeFactory)
 {
-    protected override async Task<IEnumerable<ProductResponse>> HandleAsync(
-        GetAllProductQuery query, IServiceProvider services, CancellationToken ct)
+    protected override async Task<IEnumerable<ProductResponse>> ExecuteQueryAsync(
+        GetAllProductQuery query,
+        IServiceProvider services,
+        CancellationToken ct)
     {
         var business = services.GetRequiredService<IGetAllProductBusiness>();
 

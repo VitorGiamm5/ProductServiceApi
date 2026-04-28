@@ -5,9 +5,9 @@ namespace ProductServiceApp.Api.Controllers.Base;
 
 public abstract class BaseCrudApiController<
     TGetResponse,
-    TCreateRequest,  TCreateResponse,  TCreateCommand,
-    TUpdateRequest,  TUpdateResponse,  TUpdateCommand,
-    TDeleteRequest,  TDeleteResponse,  TDeleteCommand,
+    TCreateRequest, TCreateResponse, TCreateCommand,
+    TUpdateRequest, TUpdateResponse, TUpdateCommand,
+    TDeleteRequest, TDeleteResponse, TDeleteCommand,
     TGetByIdQuery,
     TGetAllQuery>(
         Channel<(TCreateCommand, TaskCompletionSource<TCreateResponse>, CancellationToken)> createChannel,
@@ -17,18 +17,18 @@ public abstract class BaseCrudApiController<
         Channel<(TGetByIdQuery, TaskCompletionSource<TGetResponse>, CancellationToken)> getByIdChannel
     )
     : BaseApiController
-    where TGetResponse    : class
-    where TCreateRequest  : class
+    where TGetResponse : class
+    where TCreateRequest : class
     where TCreateResponse : class
-    where TCreateCommand  : class
-    where TUpdateRequest  : class
+    where TCreateCommand : class
+    where TUpdateRequest : class
     where TUpdateResponse : class
-    where TUpdateCommand  : class
-    where TDeleteRequest  : class
+    where TUpdateCommand : class
+    where TDeleteRequest : class
     where TDeleteResponse : class
-    where TDeleteCommand  : class
-    where TGetByIdQuery   : class
-    where TGetAllQuery    : class
+    where TDeleteCommand : class
+    where TGetByIdQuery : class
+    where TGetAllQuery : class
 {
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]

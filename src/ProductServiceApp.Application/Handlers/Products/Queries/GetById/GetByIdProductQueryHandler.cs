@@ -10,9 +10,9 @@ namespace ProductServiceApp.Application.Handlers.Products.Queries.GetById;
 public class GetByIdProductQueryHandler(
     Channel<(GetByIdProductQuery, TaskCompletionSource<ProductResponse>, CancellationToken)> channel,
     IServiceScopeFactory scopeFactory)
-    : BaseChannelHandler<GetByIdProductQuery, ProductResponse>(channel, scopeFactory)
+    : BaseQueryHandler<GetByIdProductQuery, ProductResponse>(channel, scopeFactory)
 {
-    protected override async Task<ProductResponse> HandleAsync(
+    protected override async Task<ProductResponse> ExecuteQueryAsync(
         GetByIdProductQuery query, IServiceProvider services, CancellationToken ct)
     {
         var business = services.GetRequiredService<IGetByIdProductBusiness>();

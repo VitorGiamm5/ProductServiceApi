@@ -2,7 +2,7 @@
 
 public enum ProductsTypeEnum : byte
 {
-    Unknown = 0,
+    Default = 0,
     Sandwich = 1,
     Fries = 2,
     Refreshment = 3

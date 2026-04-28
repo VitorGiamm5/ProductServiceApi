@@ -4,6 +4,7 @@ using ProductServiceApp.Domain.Business.Products.Handlers;
 
 namespace ProductServiceApp.Domain.Business.Products.Business;
 
-public interface IGetAllProductBusiness : IBaseProductBusinessService<GetAllProductQuery, IEnumerable<ProductResponse>>
+public interface IGetAllProductBusiness
+    : IBaseProductBusinessService<GetAllProductQuery, IEnumerable<ProductResponse>>
 {
 }

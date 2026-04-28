@@ -1,7 +1,12 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using FluentValidation;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using ProductServiceApp.Application.Business.Products;
+using ProductServiceApp.Application.Business.Products.Create;
+using ProductServiceApp.Application.Business.Products.Delete;
+using ProductServiceApp.Application.Business.Products.GetAll;
+using ProductServiceApp.Application.Business.Products.GetById;
+using ProductServiceApp.Application.Business.Products.Update;
 using ProductServiceApp.Application.Handlers.Products.Commands.Create;
 using ProductServiceApp.Application.Handlers.Products.Commands.Delete;
 using ProductServiceApp.Application.Handlers.Products.Commands.Update;
@@ -29,13 +34,15 @@ public static class SetupApplication
 
     private static void SetupProductApplication(IServiceCollection services)
     {
+        #region Validators — reflexão automática
+
+        services.AddValidatorsFromAssembly(typeof(SetupApplication).Assembly);
+
+        #endregion
+
         #region Business
 
-        services.AddScoped<IGetAllProductBusiness, GetAllProductBusiness>();
-        services.AddScoped<IGetByIdProductBusiness, GetByIdProductBusiness>();
-        services.AddScoped<ICreateProductBusiness, CreateProductBusiness>();
-        services.AddScoped<IUpdateProductBusiness, UpdateProductBusiness>();
-        services.AddScoped<IDeleteProductBusiness, DeleteProductBusiness>();
+        AddServices(services);
 
         #endregion
 
@@ -69,6 +76,16 @@ public static class SetupApplication
         services.AddWorkers<GetByIdProductQueryHandler>(1);
 
         #endregion
+
+    }
+
+    private static void AddServices(IServiceCollection services)
+    {
+        services.AddScoped<IGetAllProductBusiness, GetAllProductBusiness>();
+        services.AddScoped<IGetByIdProductBusiness, GetByIdProductBusiness>();
+        services.AddScoped<ICreateProductBusiness, CreateProductBusiness>();
+        services.AddScoped<IUpdateProductBusiness, UpdateProductBusiness>();
+        services.AddScoped<IDeleteProductBusiness, DeleteProductBusiness>();
     }
 
     private static BoundedChannelOptions BoundedOptions(int capacity) => new(capacity)

@@ -16,5 +16,5 @@ public class ProductEntity : BaseAuditEntity, IIdentifiableLong
     public decimal? Price { get; set; } = decimal.Zero;
 
     [Required]
-    public ProductsTypeEnum? Type { get; set; } = ProductsTypeEnum.Unknown;
+    public ProductsTypeEnum? Type { get; set; } = (byte)ProductsTypeEnum.Default;
 }

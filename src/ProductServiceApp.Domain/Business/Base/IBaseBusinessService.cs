@@ -7,8 +7,5 @@ public interface IBaseBusinessService<TInObject, TOutObject>
     where TInObject : class
     where TOutObject : class
 {
-    Task<TOutObject> ExecuteAsync(
-        TInObject input,
-        CancellationToken ct = default
-    );
+    Task<TOutObject> ExecuteAsync(TInObject input, CancellationToken ct = default);
 }

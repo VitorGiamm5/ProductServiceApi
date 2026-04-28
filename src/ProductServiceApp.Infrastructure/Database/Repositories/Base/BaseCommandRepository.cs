@@ -36,12 +36,7 @@ public abstract class BaseCommandRepository<T> : IBaseCommandRepository<T> where
 
     public async Task<T> UpdateAsync(T entity, long id, CancellationToken cancellationToken)
     {
-        var exists = await _context.Set<T>().FindAsync([id], cancellationToken);
-
-        if (exists is null)
-            await _context.Set<T>().AddAsync(entity, cancellationToken);
-        else
-            _context.Set<T>().Update(entity);
+        _context.Set<T>().Update(entity);
 
         await _context.SaveChangesAsync(cancellationToken);
 

@@ -24,6 +24,9 @@ public class CreateProductCommand : CreateProductRequest,
         return this;
     }
 
+    /// <summary>
+    /// To entity mapping
+    /// </summary>
     public ProductEntity MapTo()
     {
         return new ProductEntity

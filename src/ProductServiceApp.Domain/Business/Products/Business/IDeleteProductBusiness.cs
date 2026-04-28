@@ -4,6 +4,7 @@ using ProductServiceApp.Domain.Business.Products.Handlers;
 
 namespace ProductServiceApp.Domain.Business.Products.Business;
 
-public interface IDeleteProductBusiness : IBaseProductBusinessService<DeleteProductCommand, BooleanResponse>
+public interface IDeleteProductBusiness
+    : IBaseProductBusinessService<DeleteProductCommand, BooleanResponse>
 {
 }

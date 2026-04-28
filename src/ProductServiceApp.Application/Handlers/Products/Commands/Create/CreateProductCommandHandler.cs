@@ -10,9 +10,9 @@ namespace ProductServiceApp.Application.Handlers.Products.Commands.Create;
 public class CreateProductCommandHandler(
     Channel<(CreateProductCommand, TaskCompletionSource<ProductResponse>, CancellationToken)> channel,
     IServiceScopeFactory scopeFactory)
-    : BaseChannelHandler<CreateProductCommand, ProductResponse>(channel, scopeFactory)
+    : BaseCommandHandler<CreateProductCommand, ProductResponse>(channel, scopeFactory)
 {
-    protected override async Task<ProductResponse> HandleAsync(
+    protected override async Task<ProductResponse> ExecuteCommandAsync(
         CreateProductCommand command,
         IServiceProvider services,
         CancellationToken ct)
@@ -22,4 +22,3 @@ public class CreateProductCommandHandler(
         return await business.ExecuteAsync(command, ct);
     }
 }
-
