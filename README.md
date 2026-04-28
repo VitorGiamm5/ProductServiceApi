@@ -1,8 +1,10 @@
-# Go Core Delivery
-Main application for managing motorcycles, rentals and drivers.
+# Products
+CRUD Products
 
 ## Specifications:
 - Dotnet Core 10 LTS
+- Clean Architecture
+- In box/ Out box pattern
 - CQRS
 - System.Threading.Channels (Local messagery)
 - Entity Framework (ORM)
@@ -11,6 +13,7 @@ Main application for managing motorcycles, rentals and drivers.
 - Docker
 - Docker compose
 - Polly (Circuit break and as a connection factory)
+- FluentAssertions (validator)
 - xUnit with Moq (Unit test and mock data)
 
 ## Tech Features
