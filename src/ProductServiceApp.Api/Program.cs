@@ -1,16 +1,29 @@
 using Asp.Versioning;
 using ProductServiceApp.Api.Conveters;
 using ProductServiceApp.Application;
+using ProductServiceApp.Application.Metrics;
 using ProductServiceApp.Application.Middlewares;
 using ProductServiceApp.Infrastructure.Database.Services;
+using Prometheus;
+using Serilog;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ------------------------------------------------------------------ //
-// Reading environment variables and replacing them in appsettings
-// ------------------------------------------------------------------ //
+// Bootstrap logger — It catches errors BEFORE the host comes up.
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .CreateBootstrapLogger();
+
+Log.Information("Iniciando aplicação...");
+
 builder.Configuration.AddEnvironmentVariables();
+
+builder.Host.UseSerilog((context, services, configuration) =>
+    configuration
+        .ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext());
 
 #region Kestrel
 
@@ -100,9 +113,29 @@ builder.Services.AddApplication(builder.Configuration);
 
 var app = builder.Build();
 
+#region Logging
+
+app.UseMiddleware<MetricsMiddleware>();
+app.UseMetricServer();      // /metrics
+app.UseHttpMetrics();       // Collect automatic HTTP measurements (status, duration, size)
+
+// Logs each HTTP request automatically.
+app.UseSerilogRequestLogging(options =>
+{
+    options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} respondeu {StatusCode} em {Elapsed:0.0000}ms";
+    options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+    {
+        diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
+        diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
+        diagnosticContext.Set("UserAgent", httpContext.Request.Headers.UserAgent.ToString());
+    };
+});
+
+#endregion
+
 #region Migrations
 
-await ExecutePendingMigration.ExecuteAsync(builder.Services);
+await ExecutePendingMigration.ExecuteAsync(app.Services);
 
 #endregion
 

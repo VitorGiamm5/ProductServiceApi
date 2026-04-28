@@ -68,12 +68,11 @@ public static class SetupInfrastructure
                     }
                 };
 
-                options.UseNpgsql(connectionString);
-
                 options
                     .EnableDetailedErrors()
                     .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
                     .UseNpgsql(dataSourceBuilder.Build(), b => b
+                        .EnableRetryOnFailure(maxRetryCount, TimeSpan.FromSeconds(_maxRetryDelay), null)
                         .MigrationsHistoryTable("__EFMigrationsHistory", "dbSchemaGoodHamburger")
                         .MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)
                     );
@@ -94,7 +93,8 @@ public static class SetupInfrastructure
                 var connectionString = configuration.GetConnectionString("PostgresRead")
                     ?? throw new InvalidOperationException("Connection string 'PostgresRead' not found.");
 
-                options.UseNpgsql(connectionString)
+                options.UseNpgsql(connectionString, b =>
+                        b.EnableRetryOnFailure(maxRetryCount, TimeSpan.FromSeconds(_maxRetryDelay), null))
                        .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
 
                 var resilienceInterceptor = serviceProvider.GetRequiredService<ResilienceInterceptor>();

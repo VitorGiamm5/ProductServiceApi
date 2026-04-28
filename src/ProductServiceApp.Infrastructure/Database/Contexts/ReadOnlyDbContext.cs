@@ -5,7 +5,7 @@ namespace ProductServiceApp.Infrastructure.Database.Contexts;
 // Contexto dedicado para leitura — aponta para a réplica
 public class ReadOnlyDbContext : ApplicationDbContext
 {
-    public ReadOnlyDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
+    public ReadOnlyDbContext(DbContextOptions<ReadOnlyDbContext> options) : base(options)
     {
     }
 

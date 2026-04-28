@@ -8,6 +8,10 @@ public class ApplicationDbContext : DbContext
     {
     }
 
+    protected ApplicationDbContext(DbContextOptions options) : base(options)
+    {
+    }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema("dbSchemaGoodHamburger");

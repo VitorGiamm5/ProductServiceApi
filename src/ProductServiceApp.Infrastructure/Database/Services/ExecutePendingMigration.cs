@@ -7,7 +7,7 @@ namespace ProductServiceApp.Infrastructure.Database.Services;
 
 public static class ExecutePendingMigration
 {
-    public static async Task ExecuteAsync(IServiceCollection services)
+    public static async Task ExecuteAsync(IServiceProvider serviceProvider)
     {
         var retryPipeline = new ResiliencePipelineBuilder()
             .AddRetry(new Polly.Retry.RetryStrategyOptions
@@ -25,8 +25,6 @@ public static class ExecutePendingMigration
 
         try
         {
-            var serviceProvider = services.BuildServiceProvider();
-
             using var scope = serviceProvider.CreateScope();
 
             var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -35,13 +33,11 @@ public static class ExecutePendingMigration
             {
                 Console.WriteLine("[Migration] Validating if there are pending migrations...");
 
-                var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
                 var migrations = await dbContext.Database.GetPendingMigrationsAsync(ct);
 
                 if (migrations.Any())
                 {
-                    await db.Database.MigrateAsync(ct);
+                    await dbContext.Database.MigrateAsync(ct);
 
                     Console.WriteLine("[Migration] Applied migrations!");
                 }

@@ -12,6 +12,7 @@ using ProductServiceApp.Application.Handlers.Products.Commands.Delete;
 using ProductServiceApp.Application.Handlers.Products.Commands.Update;
 using ProductServiceApp.Application.Handlers.Products.Queries.GetAll;
 using ProductServiceApp.Application.Handlers.Products.Queries.GetById;
+using ProductServiceApp.Application.Metrics;
 using ProductServiceApp.Domain.Business.Base.Dtos;
 using ProductServiceApp.Domain.Business.Products.Business;
 using ProductServiceApp.Domain.Business.Products.Dtos;
@@ -30,6 +31,13 @@ public static class SetupApplication
         #region Validators — Auto reflection
 
         services.AddValidatorsFromAssembly(typeof(SetupApplication).Assembly);
+
+        #endregion
+
+        #region Metrics
+
+        services.AddSingleton<ChannelMetricsService>();
+        services.AddHostedService(sp => sp.GetRequiredService<ChannelMetricsService>());
 
         #endregion
 

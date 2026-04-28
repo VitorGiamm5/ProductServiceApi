@@ -12,8 +12,8 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "Kestrel__Port": "9005",
-        "ConnectionStrings__PostgresWrite": "Server=localhost;Port=9000;Database=dbproducts;Username=randandan;Password=randandan_XLR;",
-        "ConnectionStrings__PostgresRead": "Server=localhost;Port=9001;Database=dbproducts;Username=read_randandan;Password=read_randandan_XLR;",
+        "ConnectionStrings__PostgresWrite": "Server=localhost;Port=9000;Database=dbproducts;Username=randandan;Password=randandan_XLR;SSL Mode=Disable;",
+        "ConnectionStrings__PostgresRead": "Server=localhost;Port=9001;Database=dbproducts;Username=read_randandan;Password=read_randandan_XLR;SSL Mode=Disable;",
         "DatabaseSettings__EnableLoadBalancing": "true",
         "WorkersReplicas__ReplicasCreateProduct": "2",
         "WorkersReplicas__ReplicasUpdateProduct": "2",
@@ -26,7 +26,9 @@
         "RetryPolicy__MaxRetryAttempts": "3",
         "RetryPolicy__DelayBetweenRetriesInSeconds": "2",
         "KeepAliveTimeoutSeconds": "30",
-        "RequestTimeoutSeconds": "15"
+        "RequestTimeoutSeconds": "15",
+        "Serilog__MinimumLevel__Default": "Debug",
+        "Serilog__MinimumLevel__Override__Microsoft.EntityFrameworkCore.Database.Command": "Information"
       },
       "dotnetRunMessages": true
     }

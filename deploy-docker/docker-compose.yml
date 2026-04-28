@@ -47,6 +47,11 @@ services:
     depends_on:
       6137_postgres_primary:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h localhost -p 5433 -U randandan -d dbproducts"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
     networks:
       - 6137_webnet
 
@@ -62,8 +67,8 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - Kestrel__Port=9005
       - DOTNET_RUNNING_IN_CONTAINER=true
-      - ConnectionStrings__PostgresWrite=Server=6137_postgres_primary;Port=5432;Database=dbproducts;Username=randandan;Password=randandan_XLR;
-      - ConnectionStrings__PostgresRead=Server=6137_postgres_replica;Port=5433;Database=dbproducts;Username=read_randandan;Password=read_randandan_XLR;
+      - ConnectionStrings__PostgresWrite=Server=6137_postgres_primary;Port=5432;Database=dbproducts;Username=randandan;Password=randandan_XLR;SSL Mode=Disable;
+      - ConnectionStrings__PostgresRead=Server=6137_postgres_replica;Port=5433;Database=dbproducts;Username=read_randandan;Password=read_randandan_XLR;SSL Mode=Disable;
       - DatabaseSettings__EnableLoadBalancing=true
       - WorkersReplicas__ReplicasCreateProduct=2
       - WorkersReplicas__ReplicasUpdateProduct=2
@@ -77,9 +82,36 @@ services:
       - RetryPolicy__DelayBetweenRetriesInSeconds=2
       - KeepAliveTimeoutSeconds=30
       - RequestTimeoutSeconds=15
+      - Serilog__MinimumLevel__Default=Warning
+      - Serilog__Properties__Environment=Production
     depends_on:
       6137_postgres_primary:
         condition: service_healthy
+      6137_postgres_replica:
+        condition: service_healthy
+    networks:
+      - 6137_webnet
+
+  # ─── Monitoring and metrics
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on:
+      - 6137_api_product_service
+    networks:
+      - 6137_webnet
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
     networks:
       - 6137_webnet
 
