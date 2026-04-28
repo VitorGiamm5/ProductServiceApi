@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Polly;
 using ProductServiceApp.Infrastructure.Database.Contexts;
 
@@ -9,6 +10,10 @@ public static class ExecutePendingMigration
 {
     public static async Task ExecuteAsync(IServiceProvider serviceProvider)
     {
+        var logger = serviceProvider
+            .GetRequiredService<ILoggerFactory>()
+            .CreateLogger(typeof(ExecutePendingMigration).FullName!);
+
         var retryPipeline = new ResiliencePipelineBuilder()
             .AddRetry(new Polly.Retry.RetryStrategyOptions
             {
@@ -17,7 +22,11 @@ public static class ExecutePendingMigration
                 BackoffType = DelayBackoffType.Constant,
                 OnRetry = args =>
                 {
-                    Console.WriteLine($"[Migration] Tentativa {args.AttemptNumber + 1} — aguardando banco subir... ({args.Outcome.Exception?.Message})");
+                    logger.LogWarning(
+                        args.Outcome.Exception,
+                        "[Migration] Tentativa {AttemptNumber} aguardando banco subir. Proxima tentativa em {RetryDelay}.",
+                        args.AttemptNumber + 1,
+                        args.RetryDelay);
                     return ValueTask.CompletedTask;
                 }
             })
@@ -31,7 +40,7 @@ public static class ExecutePendingMigration
 
             await retryPipeline.ExecuteAsync(async ct =>
             {
-                Console.WriteLine("[Migration] Validating if there are pending migrations...");
+                logger.LogInformation("[Migration] Validating if there are pending migrations...");
 
                 var migrations = await dbContext.Database.GetPendingMigrationsAsync(ct);
 
@@ -39,11 +48,11 @@ public static class ExecutePendingMigration
                 {
                     await dbContext.Database.MigrateAsync(ct);
 
-                    Console.WriteLine("[Migration] Applied migrations!");
+                    logger.LogInformation("[Migration] Applied migrations: {Migrations}", migrations);
                 }
                 else
                 {
-                    Console.WriteLine("[Migration] Has no pending migrations.");
+                    logger.LogInformation("[Migration] Has no pending migrations.");
                 }
 
             });
@@ -51,7 +60,7 @@ public static class ExecutePendingMigration
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error to apply migrations: {ex.Message}");
+            logger.LogError(ex, "Error to apply migrations.");
 
             throw;
         }
