@@ -2,9 +2,6 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 
 WORKDIR /source
 
-COPY ../ProductServiceApp.slnx .
-COPY ../src/ProductServiceApp.Api/ProductServiceApp.Api.csproj src/ProductServiceApp.Api/
-
 COPY src/ src/
 
 RUN dotnet publish src/ProductServiceApp.Api/ProductServiceApp.Api.csproj \

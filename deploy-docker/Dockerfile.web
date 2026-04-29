@@ -1,0 +1,30 @@
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+
+WORKDIR /source
+
+COPY ProductServiceApp.slnx .
+COPY src/ src/
+
+RUN dotnet publish src/ProductServiceApp.Web/ProductServiceApp.Web.csproj \
+    -c Release \
+    -o /app/publish
+
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+
+WORKDIR /app
+
+RUN useradd -m appuser && \
+    chown -R appuser:appuser /app
+
+USER appuser
+
+COPY --from=build /app/publish .
+
+ENV ASPNETCORE_ENVIRONMENT=Production \
+    ASPNETCORE_HTTP_PORTS=8080 \
+    DOTNET_RUNNING_IN_CONTAINER=true \
+    ProductApi__BaseAddress=http://6137_api_product_service:9005
+
+EXPOSE 8080
+
+ENTRYPOINT ["dotnet", "ProductServiceApp.Web.dll"]

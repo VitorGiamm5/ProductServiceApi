@@ -12,8 +12,7 @@ builder.Services.AddRazorComponents()
 builder.Services.AddScoped<LoadingState>();
 builder.Services.AddHttpClient<ProductApiClient>(client =>
 {
-    client.BaseAddress = new Uri(
-        builder.Configuration["ProductApi:BaseAddress"] ?? "https+http://product-api");
+    client.BaseAddress = new Uri(GetProductApiBaseAddress(builder.Configuration));
 });
 
 var app = builder.Build();
@@ -36,3 +35,19 @@ app.MapRazorComponents<App>()
 app.MapDefaultEndpoints();
 
 app.Run();
+
+static string GetProductApiBaseAddress(IConfiguration configuration)
+{
+    var configuredAddress = configuration["ProductApi:BaseAddress"];
+    if (!string.IsNullOrWhiteSpace(configuredAddress))
+    {
+        return configuredAddress;
+    }
+
+    return string.Equals(
+        configuration["DOTNET_RUNNING_IN_CONTAINER"],
+        "true",
+        StringComparison.OrdinalIgnoreCase)
+            ? "http://6137_api_product_service:9005"
+            : "http://localhost:9005";
+}

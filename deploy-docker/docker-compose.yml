@@ -119,6 +119,24 @@ services:
     networks:
       - 6137_webnet
 
+  6137_web_product_service:
+    build:
+      context: ..
+      dockerfile: deploy-docker/Dockerfile.web
+    container_name: 6137_web_product_service
+    restart: always
+    ports:
+      - "9010:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_HTTP_PORTS=8080
+      - DOTNET_RUNNING_IN_CONTAINER=true
+      - ProductApi__BaseAddress=http://6137_api_product_service:9005
+    depends_on:
+      - 6137_api_product_service
+    networks:
+      - 6137_webnet
+
   # ─── Monitoring and metrics
   prometheus:
     image: prom/prometheus:latest
