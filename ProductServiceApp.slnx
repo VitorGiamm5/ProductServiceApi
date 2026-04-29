@@ -1,9 +1,11 @@
 <Solution>
+  <Folder Name="/tests/">
+    <Project Path="tests/ProductServiceApp.FunctionalTests/ProductServiceApp.FunctionalTests.csproj" Id="8bd5db51-0a73-42c7-9e47-6fd50fd3c79d" />
+    <Project Path="tests/ProductServiceApp.IntegrationTests/ProductServiceApp.IntegrationTests.csproj" Id="3a2671a8-dbb5-475c-9346-b34ef6a6e1a6" />
+    <Project Path="tests/ProductServiceApp.UnitTests/ProductServiceApp.UnitTests.csproj" Id="86f9f2d6-8ec5-4f0a-b4dc-29f3307bfe8f" />
+  </Folder>
   <Project Path="src/ProductServiceApp.Api/ProductServiceApp.Api.csproj" />
   <Project Path="src/ProductServiceApp.Application/ProductServiceApp.Application.csproj" Id="a69531d1-5b2d-4a26-b8dc-0e163665d09d" />
   <Project Path="src/ProductServiceApp.Domain/ProductServiceApp.Domain.csproj" Id="b88ca63d-f112-49b4-bc02-7b4814d5cfb7" />
   <Project Path="src/ProductServiceApp.Infrastructure/ProductServiceApp.Infrastructure.csproj" Id="fb4d4ef7-229f-42b2-94ca-dd980345390f" />
-  <Project Path="tests/ProductServiceApp.UnitTests/ProductServiceApp.UnitTests.csproj" Id="86f9f2d6-8ec5-4f0a-b4dc-29f3307bfe8f" />
-  <Project Path="tests/ProductServiceApp.IntegrationTests/ProductServiceApp.IntegrationTests.csproj" Id="3a2671a8-dbb5-475c-9346-b34ef6a6e1a6" />
-  <Project Path="tests/ProductServiceApp.FunctionalTests/ProductServiceApp.FunctionalTests.csproj" Id="8bd5db51-0a73-42c7-9e47-6fd50fd3c79d" />
 </Solution>

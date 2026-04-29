@@ -34,9 +34,7 @@ foreach ($project in $projects) {
         (Join-Path $PSScriptRoot $project),
         "--configuration", "Debug",
         "-m:1",
-        "-p:UseSharedCompilation=false",
-        "--settings", (Join-Path $PSScriptRoot "tests.runsettings"),
-        "--collect:XPlat Code Coverage"
+        "-p:UseSharedCompilation=false"
     )
 
     if ($NoRestore) {
@@ -47,15 +45,19 @@ foreach ($project in $projects) {
         $testArguments += @("--filter", $Filter)
     }
 
-    dotnet @testArguments
+    $projectName = [System.IO.Path]::GetFileNameWithoutExtension($project)
+    $coverageOutput = Join-Path $resultsDirectory "$projectName.coverage.cobertura.xml"
+
+    dotnet dotnet-coverage collect -f cobertura -o $coverageOutput dotnet @testArguments
     if ($LASTEXITCODE -ne 0) {
         exit $LASTEXITCODE
     }
 }
 
 dotnet reportgenerator `
-    "-reports:TestResults/**/coverage.cobertura.xml" `
+    "-reports:TestResults/*.coverage.cobertura.xml" `
     "-targetdir:TestResults/CoverageReport" `
-    "-reporttypes:Html;TextSummary"
+    "-reporttypes:Html;TextSummary" `
+    "-assemblyfilters:+ProductServiceApp.*;-ProductServiceApp.*Tests"
 
 Get-Content (Join-Path $PSScriptRoot "TestResults\CoverageReport\Summary.txt")

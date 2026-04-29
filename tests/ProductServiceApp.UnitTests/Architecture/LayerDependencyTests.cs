@@ -1,18 +1,15 @@
-using System.Reflection;
+using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
 using FluentAssertions;
-using NetArchTest.Rules;
-using ProductServiceApp.Application;
-using ProductServiceApp.Domain.Entities.Products;
-using ProductServiceApp.Infrastructure;
 
 namespace ProductServiceApp.UnitTests.Architecture;
 
 public class LayerDependencyTests
 {
-    private static readonly Assembly ApiAssembly = typeof(global::Program).Assembly;
-    private static readonly Assembly ApplicationAssembly = typeof(SetupApplication).Assembly;
-    private static readonly Assembly DomainAssembly = typeof(ProductEntity).Assembly;
-    private static readonly Assembly InfrastructureAssembly = typeof(SetupInfrastructure).Assembly;
+    private const string ApiAssembly = "ProductServiceApp.Api";
+    private const string ApplicationAssembly = "ProductServiceApp.Application";
+    private const string DomainAssembly = "ProductServiceApp.Domain";
+    private const string InfrastructureAssembly = "ProductServiceApp.Infrastructure";
 
     [Fact]
     public void Domain_Should_Not_Reference_Other_ProductServiceApp_Projects()
@@ -55,14 +52,11 @@ public class LayerDependencyTests
     [InlineData("ProductServiceApp.Infrastructure")]
     public void Domain_Types_Should_Not_Depend_On_Frameworks_Or_Outer_Layers(string forbiddenDependency)
     {
-        var result = Types.InAssembly(DomainAssembly)
-            .ShouldNot()
-            .HaveDependencyOn(forbiddenDependency)
-            .GetResult();
+        var violations = GetTypeReferenceNamespaces(DomainAssembly, forbiddenDependency);
 
-        result.IsSuccessful.Should().BeTrue(
+        violations.Should().BeEmpty(
             "Domain must stay pure. Violations: {0}",
-            string.Join(", ", result.FailingTypeNames ?? []));
+            string.Join(", ", violations));
     }
 
     [Theory]
@@ -70,24 +64,46 @@ public class LayerDependencyTests
     [InlineData("ProductServiceApp.Infrastructure")]
     public void Application_Types_Should_Not_Depend_On_Outer_Layers(string forbiddenDependency)
     {
-        var result = Types.InAssembly(ApplicationAssembly)
-            .ShouldNot()
-            .HaveDependencyOn(forbiddenDependency)
-            .GetResult();
+        var violations = GetTypeReferenceNamespaces(ApplicationAssembly, forbiddenDependency);
 
-        result.IsSuccessful.Should().BeTrue(
+        violations.Should().BeEmpty(
             "Application should not depend on outer layers. Violations: {0}",
-            string.Join(", ", result.FailingTypeNames ?? []));
+            string.Join(", ", violations));
     }
 
-    private static string[] GetProductServiceAppReferences(Assembly assembly)
+    private static string[] GetProductServiceAppReferences(string assemblyName)
     {
-        return assembly
-            .GetReferencedAssemblies()
-            .Select(reference => reference.Name)
+        using var reader = OpenMetadataReader(assemblyName);
+        var metadata = reader.GetMetadataReader();
+
+        return metadata
+            .AssemblyReferences
+            .Select(metadata.GetAssemblyReference)
+            .Select(reference => metadata.GetString(reference.Name))
             .Where(name => name is not null && name.StartsWith("ProductServiceApp.", StringComparison.Ordinal))
-            .Select(name => name!)
             .Order()
             .ToArray();
+    }
+
+    private static string[] GetTypeReferenceNamespaces(string assemblyName, string forbiddenDependency)
+    {
+        using var reader = OpenMetadataReader(assemblyName);
+        var metadata = reader.GetMetadataReader();
+
+        return metadata
+            .TypeReferences
+            .Select(metadata.GetTypeReference)
+            .Select(reference => metadata.GetString(reference.Namespace))
+            .Where(ns => ns.Equals(forbiddenDependency, StringComparison.Ordinal)
+                || ns.StartsWith(forbiddenDependency + ".", StringComparison.Ordinal))
+            .Distinct()
+            .Order()
+            .ToArray();
+    }
+
+    private static PEReader OpenMetadataReader(string assemblyName)
+    {
+        var assemblyPath = Path.Combine(AppContext.BaseDirectory, assemblyName + ".dll");
+        return new PEReader(File.OpenRead(assemblyPath));
     }
 }

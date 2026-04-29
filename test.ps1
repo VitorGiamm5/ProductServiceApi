@@ -22,8 +22,7 @@ foreach ($project in $projects) {
         (Join-Path $PSScriptRoot $project),
         "--configuration", "Debug",
         "-m:1",
-        "-p:UseSharedCompilation=false",
-        "--settings", (Join-Path $PSScriptRoot "tests.runsettings")
+        "-p:UseSharedCompilation=false"
     )
 
     if ($NoRestore) {
