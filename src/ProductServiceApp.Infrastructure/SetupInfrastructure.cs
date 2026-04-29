@@ -6,10 +6,14 @@ using Microsoft.Extensions.Logging;
 using Npgsql;
 using Polly;
 using Polly.Retry;
+using ProductServiceApp.Domain.Entities.Orders;
 using ProductServiceApp.Domain.Entities.Products;
+using ProductServiceApp.Domain.Repositories.Orders;
 using ProductServiceApp.Domain.Repositories.Products;
 using ProductServiceApp.Infrastructure.Database.Contexts;
 using ProductServiceApp.Infrastructure.Database.Interceptors;
+using ProductServiceApp.Infrastructure.Database.Repositories.Orders.Commands;
+using ProductServiceApp.Infrastructure.Database.Repositories.Orders.Queries;
 using ProductServiceApp.Infrastructure.Database.Repositories.Products.Commands;
 using ProductServiceApp.Infrastructure.Database.Repositories.Products.Queries;
 
@@ -125,6 +129,7 @@ public static class SetupInfrastructure
         #region Repositories
 
         AddProductsRepositories(services);
+        AddOrdersRepositories(services);
 
         #endregion
 
@@ -135,5 +140,12 @@ public static class SetupInfrastructure
     {
         services.TryAddScoped<IProductCommandRepository<ProductEntity>, ProductCommandRepository>();
         services.TryAddScoped<IProductQueryRepository<ProductEntity>, ProductQueryRepository>();
+    }
+
+    private static void AddOrdersRepositories(IServiceCollection services)
+    {
+        services.TryAddScoped<IOrderCommandRepository, OrderCommandRepository>();
+        services.TryAddScoped<IOrderQueryRepository, OrderQueryRepository>();
+        services.TryAddScoped<IOrderDiscountRuleQueryRepository, OrderDiscountRuleQueryRepository>();
     }
 }

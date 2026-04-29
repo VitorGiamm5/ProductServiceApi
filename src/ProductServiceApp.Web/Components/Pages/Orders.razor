@@ -1,0 +1,449 @@
+@page "/orders"
+@rendermode InteractiveServer
+@inject OrderApiClient OrdersClient
+@inject ProductApiClient ProductsClient
+
+<PageTitle>Pedidos</PageTitle>
+
+<section class="menu-shell">
+    <div class="menu-heading">
+        <div>
+            <p class="eyebrow">Backoffice</p>
+            <h1>Pedidos</h1>
+        </div>
+
+        <button class="primary-action" type="button" @onclick="OpenCreateModal">
+            <span class="button-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>
+            </span>
+            Adicionar novo
+        </button>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <div class="alert-message">@ErrorMessage</div>
+    }
+
+    <div class="table-panel">
+        <table class="products-table">
+            <thead>
+                <tr>
+                    <th>Número pedido</th>
+                    <th>Produtos</th>
+                    <th>Subtotal</th>
+                    <th>Total</th>
+                    <th class="actions-header">Opções</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (OrderList.Count == 0)
+                {
+                    <tr>
+                        <td colspan="5" class="empty-row">Nenhum pedido encontrado.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var order in OrderList)
+                    {
+                        <tr>
+                            <td>
+                                <span class="product-name">@order.Id</span>
+                            </td>
+                            <td>@FormatProducts(order.Products)</td>
+                            <td>@FormatPrice(order.SubTotalValue)</td>
+                            <td>@FormatPrice(order.TotalValue)</td>
+                            <td>
+                                <div class="row-actions">
+                                    <button class="icon-button" title="Editar" aria-label="Editar" @onclick="() => OpenEditModalAsync(order)">
+                                        <svg viewBox="0 0 24 24"><path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3zM13.5 8.5l2 2" /></svg>
+                                    </button>
+                                    <button class="icon-button" title="Visualizar" aria-label="Visualizar" @onclick="() => OpenViewModalAsync(order)">
+                                        <svg viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6z" /><path d="M12 9.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z" /></svg>
+                                    </button>
+                                    <button class="icon-button danger" title="Apagar" aria-label="Apagar" @onclick="() => OpenDeleteModal(order)">
+                                        <svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 14h10l1-14M9 7V4h6v3" /></svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</section>
+
+@if (ActiveModal != OrderModal.None)
+{
+    <div class="modal-backdrop-custom" @onclick="CloseModal">
+        <div class="product-modal order-modal" @onclick:stopPropagation="true">
+            <div class="modal-header-custom">
+                <div>
+                    <p class="eyebrow">@GetModalEyebrow()</p>
+                    <h2>@GetModalTitle()</h2>
+                </div>
+                <button class="close-button" type="button" aria-label="Fechar" @onclick="CloseModal">
+                    <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg>
+                </button>
+            </div>
+
+            @if (ActiveModal == OrderModal.Delete)
+            {
+                <p class="delete-copy">Deseja apagar o pedido <strong>@SelectedOrder?.Id</strong>?</p>
+            }
+            else
+            {
+                <div class="form-grid">
+                    <div class="order-products-field">
+                        <span>Produtos</span>
+
+                        @foreach (var row in Draft.Products)
+                        {
+                            <div class="product-select-row" @key="row.RowId">
+                                <select value="@row.ProductId" disabled="@IsViewMode" @onchange="eventArgs => SelectProduct(row, eventArgs)">
+                                    <option value="0">Selecione um produto</option>
+                                    @foreach (var product in Products)
+                                    {
+                                        <option value="@product.Id">@product.Name - @GetTypeLabel(product.Type)</option>
+                                    }
+                                </select>
+
+                                @if (!IsViewMode && Draft.Products.Count > 1)
+                                {
+                                    <button class="icon-button danger" type="button" title="Remover" aria-label="Remover" @onclick="() => RemoveProductRow(row)">
+                                        <svg viewBox="0 0 24 24"><path d="M5 12h14" /></svg>
+                                    </button>
+                                }
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(DuplicateMessage))
+                        {
+                            <p class="field-warning">@DuplicateMessage</p>
+                        }
+
+                        @if (!IsViewMode && CanAddProductRow)
+                        {
+                            <button class="secondary-action add-row-action" type="button" @onclick="AddProductRow">
+                                <span class="button-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>
+                                </span>
+                                Adicionar produto
+                            </button>
+                        }
+                    </div>
+                </div>
+            }
+
+            <div class="modal-actions">
+                <button class="secondary-action" type="button" @onclick="CloseModal">Cancelar</button>
+                @if (ActiveModal != OrderModal.View)
+                {
+                    <button class="primary-action" type="button" @onclick="SaveAsync">
+                        @(ActiveModal == OrderModal.Delete ? "Apagar" : "Salvar")
+                    </button>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<OrderResponse> OrderList { get; set; } = [];
+    private List<ProductResponse> Products { get; set; } = [];
+    private OrderResponse? SelectedOrder { get; set; }
+    private OrderForm Draft { get; set; } = OrderForm.Empty();
+    private OrderModal ActiveModal { get; set; }
+    private string? ErrorMessage { get; set; }
+    private string? DuplicateMessage { get; set; }
+    private bool IsViewMode => ActiveModal == OrderModal.View;
+    private bool CanAddProductRow => Draft.Products.Count < 3 && Draft.Products.All(product => product.ProductId > 0);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProductsAsync();
+        await LoadOrdersAsync();
+    }
+
+    private async Task LoadOrdersAsync()
+    {
+        try
+        {
+            ErrorMessage = null;
+            OrderList = [.. await OrdersClient.GetOrdersAsync()];
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Não foi possível carregar os pedidos. {ex.Message}";
+        }
+    }
+
+    private async Task LoadProductsAsync()
+    {
+        try
+        {
+            Products = [.. await ProductsClient.GetProductsAsync()];
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Não foi possível carregar os produtos. {ex.Message}";
+        }
+    }
+
+    private void OpenCreateModal()
+    {
+        ErrorMessage = null;
+        DuplicateMessage = null;
+        SelectedOrder = null;
+        Draft = OrderForm.Empty();
+        ActiveModal = OrderModal.Create;
+    }
+
+    private async Task OpenEditModalAsync(OrderResponse order)
+    {
+        var loadedOrder = await LoadOrderForModalAsync(order);
+        if (loadedOrder is null)
+        {
+            return;
+        }
+
+        SelectedOrder = loadedOrder;
+        Draft = OrderForm.FromOrder(loadedOrder);
+        DuplicateMessage = ValidateDuplicatedTypes();
+        ActiveModal = OrderModal.Edit;
+    }
+
+    private async Task OpenViewModalAsync(OrderResponse order)
+    {
+        var loadedOrder = await LoadOrderForModalAsync(order);
+        if (loadedOrder is null)
+        {
+            return;
+        }
+
+        SelectedOrder = loadedOrder;
+        Draft = OrderForm.FromOrder(loadedOrder);
+        DuplicateMessage = null;
+        ActiveModal = OrderModal.View;
+    }
+
+    private void OpenDeleteModal(OrderResponse order)
+    {
+        ErrorMessage = null;
+        DuplicateMessage = null;
+        SelectedOrder = order;
+        ActiveModal = OrderModal.Delete;
+    }
+
+    private async Task<OrderResponse?> LoadOrderForModalAsync(OrderResponse order)
+    {
+        try
+        {
+            ErrorMessage = null;
+            return order.Id is long id
+                ? await OrdersClient.GetOrderAsync(id)
+                : order;
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Não foi possível carregar o pedido. {ex.Message}";
+            return null;
+        }
+    }
+
+    private void AddProductRow()
+    {
+        Draft.Products.Add(new OrderProductForm());
+        DuplicateMessage = ValidateDuplicatedTypes();
+    }
+
+    private void RemoveProductRow(OrderProductForm row)
+    {
+        Draft.Products.Remove(row);
+        DuplicateMessage = ValidateDuplicatedTypes();
+    }
+
+    private void SelectProduct(OrderProductForm row, ChangeEventArgs eventArgs)
+    {
+        row.ProductId = long.TryParse(eventArgs.Value?.ToString(), out var productId)
+            ? productId
+            : 0;
+
+        DuplicateMessage = ValidateDuplicatedTypes();
+    }
+
+    private async Task SaveAsync()
+    {
+        try
+        {
+            ErrorMessage = null;
+
+            if (ActiveModal is OrderModal.Create or OrderModal.Edit && !ValidateDraft())
+            {
+                return;
+            }
+
+            if (ActiveModal == OrderModal.Delete && SelectedOrder?.Id is long deleteId)
+            {
+                await OrdersClient.DeleteOrderAsync(deleteId);
+            }
+            else if (ActiveModal == OrderModal.Edit && SelectedOrder?.Id is long updateId)
+            {
+                await OrdersClient.UpdateOrderAsync(updateId, Draft.ToUpdateRequest(updateId));
+            }
+            else if (ActiveModal == OrderModal.Create)
+            {
+                await OrdersClient.CreateOrderAsync(Draft.ToCreateRequest());
+            }
+
+            CloseModal();
+            await LoadOrdersAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Não foi possível salvar a operação. {ex.Message}";
+        }
+    }
+
+    private void CloseModal()
+    {
+        ActiveModal = OrderModal.None;
+        SelectedOrder = null;
+        DuplicateMessage = null;
+    }
+
+    private bool ValidateDraft()
+    {
+        if (Draft.Products.Count == 0 || Draft.Products.Any(product => product.ProductId <= 0))
+        {
+            ErrorMessage = "Selecione pelo menos um produto.";
+            return false;
+        }
+
+        DuplicateMessage = ValidateDuplicatedTypes();
+        if (!string.IsNullOrWhiteSpace(DuplicateMessage))
+        {
+            ErrorMessage = DuplicateMessage;
+            return false;
+        }
+
+        return true;
+    }
+
+    private string? ValidateDuplicatedTypes()
+    {
+        var duplicatedType = Draft.Products
+            .Select(row => Products.FirstOrDefault(product => product.Id == row.ProductId)?.Type)
+            .Where(type => type is not null and not ProductsType.Default)
+            .GroupBy(type => type)
+            .FirstOrDefault(group => group.Count() > 1)
+            ?.Key;
+
+        return duplicatedType is null
+            ? null
+            : $"O pedido não pode ter mais de um produto do tipo {GetTypeLabel(duplicatedType)}.";
+    }
+
+    private string GetModalTitle() => ActiveModal switch
+    {
+        OrderModal.Create => "Adicionar novo pedido",
+        OrderModal.Edit => "Editar pedido",
+        OrderModal.View => "Visualizar pedido",
+        OrderModal.Delete => "Apagar pedido",
+        _ => string.Empty
+    };
+
+    private string GetModalEyebrow() => ActiveModal switch
+    {
+        OrderModal.Create => "Novo registro",
+        OrderModal.Edit => "Alteração",
+        OrderModal.View => "Consulta",
+        OrderModal.Delete => "Confirmação",
+        _ => string.Empty
+    };
+
+    private static string FormatProducts(IEnumerable<ProductResponse> products)
+    {
+        var names = products
+            .Select(product => product.Name)
+            .Where(name => !string.IsNullOrWhiteSpace(name));
+
+        return string.Join(", ", names);
+    }
+
+    private static string FormatPrice(decimal price)
+    {
+        return price.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"));
+    }
+
+    private static string GetTypeLabel(ProductsType? type) => type switch
+    {
+        ProductsType.Sandwich => "Sanduíche",
+        ProductsType.Fries => "Batata",
+        ProductsType.Refreshment => "Refrigerante",
+        _ => "Não definido"
+    };
+
+    private enum OrderModal
+    {
+        None,
+        Create,
+        Edit,
+        View,
+        Delete
+    }
+
+    private sealed class OrderForm
+    {
+        public List<OrderProductForm> Products { get; set; } = [];
+
+        public static OrderForm Empty()
+        {
+            return new()
+            {
+                Products = [new OrderProductForm()]
+            };
+        }
+
+        public static OrderForm FromOrder(OrderResponse order)
+        {
+            var rows = order.ProductIds.Count > 0
+                ? order.ProductIds.Select(productId => new OrderProductForm { ProductId = productId }).ToList()
+                : order.Products.Select(product => new OrderProductForm { ProductId = product.Id ?? 0 }).ToList();
+
+            return new()
+            {
+                Products = rows.Count > 0 ? rows : [new OrderProductForm()]
+            };
+        }
+
+        public CreateOrderRequest ToCreateRequest()
+        {
+            return new()
+            {
+                ProductIds = [.. Products.Select(product => product.ProductId).Where(productId => productId > 0)],
+                IsActive = true,
+                IsDeleted = false
+            };
+        }
+
+        public UpdateOrderRequest ToUpdateRequest(long id)
+        {
+            return new()
+            {
+                Id = id,
+                ProductIds = [.. Products.Select(product => product.ProductId).Where(productId => productId > 0)],
+                IsActive = true,
+                IsDeleted = false
+            };
+        }
+    }
+
+    private sealed class OrderProductForm
+    {
+        public Guid RowId { get; } = Guid.NewGuid();
+        public long ProductId { get; set; }
+    }
+}

@@ -14,6 +14,10 @@ builder.Services.AddHttpClient<ProductApiClient>(client =>
 {
     client.BaseAddress = new Uri(GetProductApiBaseAddress(builder.Configuration));
 });
+builder.Services.AddHttpClient<OrderApiClient>(client =>
+{
+    client.BaseAddress = new Uri(GetProductApiBaseAddress(builder.Configuration));
+});
 
 var app = builder.Build();
 
