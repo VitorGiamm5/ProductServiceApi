@@ -9,8 +9,8 @@
 
 # Verifica os parâmetros
 param (
-    [string]$operation = "add",
-    [string]$name = "Inicial Base",
+    [string]$operation = "update",
+    [string]$name = "UpdateProductSeed",
     [string]$databaseWrite = "Server=localhost;Port=9000;Database=dbproducts;Username=randandan;Password=randandan_XLR;"
 )
 
