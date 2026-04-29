@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Npgsql;
 using Polly;
 using Polly.Retry;
+using ProductServiceApp.Infrastructure.Database.Metrics;
 using System.Data.Common;
 
 namespace ProductServiceApp.Infrastructure.Database.Interceptors;
@@ -51,6 +52,8 @@ public class ResilienceInterceptor : DbCommandInterceptor
         InterceptionResult<DbDataReader> result,
         CancellationToken cancellationToken = default)
     {
+        ObserveDatabaseCommand(command, eventData);
+
         await _pipeline.ExecuteAsync(
             async ct => await base.ReaderExecutingAsync(command, eventData, result, ct),
             cancellationToken);
@@ -64,6 +67,8 @@ public class ResilienceInterceptor : DbCommandInterceptor
         InterceptionResult<object> result,
         CancellationToken cancellationToken = default)
     {
+        ObserveDatabaseCommand(command, eventData);
+
         await _pipeline.ExecuteAsync(
             async ct => await base.ScalarExecutingAsync(command, eventData, result, ct),
             cancellationToken);
@@ -77,6 +82,8 @@ public class ResilienceInterceptor : DbCommandInterceptor
         InterceptionResult<int> result,
         CancellationToken cancellationToken = default)
     {
+        ObserveDatabaseCommand(command, eventData);
+
         await _pipeline.ExecuteAsync(
             async ct => await base.NonQueryExecutingAsync(command, eventData, result, ct),
             cancellationToken);
@@ -93,4 +100,44 @@ public class ResilienceInterceptor : DbCommandInterceptor
         "57P01" or
         "57P02" or
         "57P03";
+
+    private static void ObserveDatabaseCommand(DbCommand command, CommandEventData eventData)
+    {
+        var operation = GetSqlOperation(command.CommandText);
+        var context = eventData.Context?.GetType().Name ?? "unknown";
+
+        if (IsReadOperation(operation))
+        {
+            DatabaseMetrics.ReadOperationsTotal
+                .WithLabels(operation, context)
+                .Inc();
+        }
+        else if (IsWriteOperation(operation))
+        {
+            DatabaseMetrics.WriteOperationsTotal
+                .WithLabels(operation, context)
+                .Inc();
+        }
+    }
+
+    private static string GetSqlOperation(string commandText)
+    {
+        var sql = commandText.TrimStart();
+        if (string.IsNullOrWhiteSpace(sql))
+            return "unknown";
+
+        var endIndex = 0;
+        while (endIndex < sql.Length && !char.IsWhiteSpace(sql[endIndex]))
+            endIndex++;
+
+        return sql[..endIndex].ToLowerInvariant();
+    }
+
+    private static bool IsReadOperation(string operation) => operation is "select";
+
+    private static bool IsWriteOperation(string operation) => operation is
+        "insert" or
+        "update" or
+        "delete" or
+        "merge";
 }
