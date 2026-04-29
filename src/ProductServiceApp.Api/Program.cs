@@ -3,12 +3,15 @@ using ProductServiceApp.Api.Conveters;
 using ProductServiceApp.Application;
 using ProductServiceApp.Application.Metrics;
 using ProductServiceApp.Application.Middlewares;
+using ProductServiceApp.Infrastructure;
 using ProductServiceApp.Infrastructure.Database.Services;
 using Prometheus;
 using Serilog;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
+
+#region Log configuration
 
 // Bootstrap logger — It catches errors BEFORE the host comes up.
 Log.Logger = new LoggerConfiguration()
@@ -17,13 +20,19 @@ Log.Logger = new LoggerConfiguration()
 
 Log.Information("Iniciando aplicação...");
 
+#endregion
+
 builder.Configuration.AddEnvironmentVariables();
+
+#region Serilog
 
 builder.Host.UseSerilog((context, services, configuration) =>
     configuration
         .ReadFrom.Configuration(context.Configuration)
         .ReadFrom.Services(services)
         .Enrich.FromLogContext());
+
+#endregion
 
 #region Kestrel
 
@@ -115,6 +124,7 @@ builder.Services.AddHttpContextAccessor();
 
 #region Application DI
 
+builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication(builder.Configuration);
 
 #endregion

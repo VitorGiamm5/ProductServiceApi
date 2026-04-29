@@ -8,8 +8,8 @@ using System.Threading.Channels;
 namespace ProductServiceApp.Application.Handlers.Products.Queries.GetAll;
 
 public class GetAllProductQueryHandler(
-    Channel<(GetAllProductQuery, TaskCompletionSource<IEnumerable<ProductResponse>>, CancellationToken)> channel,
-    IServiceScopeFactory scopeFactory)
+        Channel<(GetAllProductQuery, TaskCompletionSource<IEnumerable<ProductResponse>>, CancellationToken)> channel,
+        IServiceScopeFactory scopeFactory)
     : BaseQueryHandler<GetAllProductQuery, IEnumerable<ProductResponse>>(channel, scopeFactory)
 {
     protected override async Task<IEnumerable<ProductResponse>> ExecuteQueryAsync(

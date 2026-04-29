@@ -7,11 +7,11 @@ using System.Threading.Channels;
 namespace ProductServiceApp.Application.Metrics;
 
 public class ChannelMetricsService(
-    Channel<(CreateProductCommand, TaskCompletionSource<ProductResponse>, CancellationToken)> createChannel,
-    Channel<(UpdateProductCommand, TaskCompletionSource<ProductResponse>, CancellationToken)> updateChannel,
-    Channel<(DeleteProductCommand, TaskCompletionSource<BooleanResponse>, CancellationToken)> deleteChannel,
-    Channel<(GetAllProductQuery, TaskCompletionSource<IEnumerable<ProductResponse>>, CancellationToken)> getAllChannel,
-    Channel<(GetByIdProductQuery, TaskCompletionSource<ProductResponse>, CancellationToken)> getByIdChannel)
+        Channel<(CreateProductCommand, TaskCompletionSource<ProductResponse>, CancellationToken)> createChannel,
+        Channel<(UpdateProductCommand, TaskCompletionSource<ProductResponse>, CancellationToken)> updateChannel,
+        Channel<(DeleteProductCommand, TaskCompletionSource<BooleanResponse>, CancellationToken)> deleteChannel,
+        Channel<(GetAllProductQuery, TaskCompletionSource<IEnumerable<ProductResponse>>, CancellationToken)> getAllChannel,
+        Channel<(GetByIdProductQuery, TaskCompletionSource<ProductResponse>, CancellationToken)> getByIdChannel)
     : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

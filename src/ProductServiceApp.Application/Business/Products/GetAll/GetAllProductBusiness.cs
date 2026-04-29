@@ -39,9 +39,9 @@ public class GetAllProductBusiness(
         return products;
     }
 
-    protected override Task<IEnumerable<ProductResponse>> PostProcessAsync(
+    protected override async Task<IEnumerable<ProductResponse>> PostProcessAsync(
         IEnumerable<ProductEntity> result, CancellationToken ct)
     {
-        return Task.FromResult(result.Select(x => new ProductResponse(x)));
+        return await Task.FromResult(result.Select(x => new ProductResponse(x)));
     }
 }

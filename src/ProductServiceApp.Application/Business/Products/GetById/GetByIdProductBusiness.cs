@@ -43,9 +43,9 @@ public class GetByIdProductBusiness(
         return result;
     }
 
-    protected override Task<ProductResponse> PostProcessAsync(
+    protected override async Task<ProductResponse> PostProcessAsync(
         ProductEntity result, CancellationToken ct)
     {
-        return Task.FromResult(new ProductResponse(result));
+        return await Task.FromResult(new ProductResponse(result));
     }
 }

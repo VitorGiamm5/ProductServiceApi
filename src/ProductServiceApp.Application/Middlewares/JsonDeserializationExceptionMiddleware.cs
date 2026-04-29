@@ -39,13 +39,10 @@ public class JsonDeserializationExceptionMiddleware
         ex is BadHttpRequestException { Data: { }, Message: "" } ||
         (ex.InnerException is JsonException);
 
-    private async Task HandleJsonExceptionAsync(HttpContext context, Exception ex)
+    private static async Task HandleJsonExceptionAsync(HttpContext context, Exception ex)
     {
-        //_logger.LogWarning(ex, "JSON deserialization error on {Method} {Path}",
-        //    context.Request.Method,
-        //    context.Request.Path);
-
         string? rawBody = null;
+
         try
         {
             context.Request.Body.Position = 0;
@@ -53,9 +50,6 @@ public class JsonDeserializationExceptionMiddleware
             rawBody = await reader.ReadToEndAsync();
         }
         catch { }
-
-        //if (rawBody is not null)
-        //_logger.LogDebug("Malformed JSON body: {Body}", rawBody);
 
         string message = ExtractMessage(ex);
         string detail = ExtractDetail(ex);

@@ -18,7 +18,6 @@ using ProductServiceApp.Domain.Business.Base.Dtos;
 using ProductServiceApp.Domain.Business.Products.Business;
 using ProductServiceApp.Domain.Business.Products.Dtos;
 using ProductServiceApp.Domain.Business.Products.Handlers;
-using ProductServiceApp.Infrastructure;
 using System.Threading.Channels;
 
 namespace ProductServiceApp.Application;
@@ -27,8 +26,6 @@ public static class SetupApplication
 {
     public static IServiceCollection AddApplication(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddInfrastructure(configuration);
-
         #region Cache
 
         services.AddStackExchangeRedisCache(options =>

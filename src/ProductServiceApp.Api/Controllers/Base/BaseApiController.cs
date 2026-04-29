@@ -1,6 +1,6 @@
 ﻿using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
-using ProductServiceApp.Domain.Controller.BaseApiResponse;
+using ProductServiceApp.Api.Controllers.Base.BaseApiResponse;
 using System.Threading.Channels;
 
 namespace ProductServiceApp.Api.Controllers.Base;

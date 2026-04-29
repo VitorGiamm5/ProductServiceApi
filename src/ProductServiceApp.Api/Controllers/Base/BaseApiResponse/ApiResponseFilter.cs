@@ -1,8 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.Extensions.Hosting;
 
-namespace ProductServiceApp.Domain.Controller.BaseApiResponse;
+namespace ProductServiceApp.Api.Controllers.Base.BaseApiResponse;
 
 public class ApiResponseFilter : IAsyncResultFilter
 {

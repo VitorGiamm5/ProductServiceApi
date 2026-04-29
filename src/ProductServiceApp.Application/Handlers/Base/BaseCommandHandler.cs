@@ -5,8 +5,8 @@ using System.Threading.Channels;
 namespace ProductServiceApp.Application.Handlers.Base;
 
 public abstract class BaseCommandHandler<TCommand, TResponse>(
-    Channel<(TCommand, TaskCompletionSource<TResponse>, CancellationToken)> channel,
-    IServiceScopeFactory scopeFactory)
+        Channel<(TCommand, TaskCompletionSource<TResponse>, CancellationToken)> channel,
+        IServiceScopeFactory scopeFactory)
     : BaseChannelHandler<TCommand, TResponse>(channel, scopeFactory)
     where TCommand : class
     where TResponse : class

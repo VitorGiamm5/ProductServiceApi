@@ -4,8 +4,8 @@ using System.Threading.Channels;
 namespace ProductServiceApp.Application.Handlers.Base;
 
 public abstract class BaseQueryHandler<TQuery, TResponse>(
-    Channel<(TQuery, TaskCompletionSource<TResponse>, CancellationToken)> channel,
-    IServiceScopeFactory scopeFactory)
+        Channel<(TQuery, TaskCompletionSource<TResponse>, CancellationToken)> channel,
+        IServiceScopeFactory scopeFactory)
     : BaseChannelHandler<TQuery, TResponse>(channel, scopeFactory)
     where TQuery : class
     where TResponse : class

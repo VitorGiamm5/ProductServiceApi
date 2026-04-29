@@ -12,6 +12,7 @@
 *.userosscache
 *.sln.docstates
 .vs
+.dotnet/
 *.*.v2
 v17
 

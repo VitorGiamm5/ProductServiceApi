@@ -1,4 +1,4 @@
-﻿namespace ProductServiceApp.Domain.Controller.BaseApiResponse;
+﻿namespace ProductServiceApp.Api.Controllers.Base.BaseApiResponse;
 
 public sealed class ApiErrorDetail
 {

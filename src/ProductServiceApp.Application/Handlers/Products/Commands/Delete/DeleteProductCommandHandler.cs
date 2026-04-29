@@ -8,8 +8,8 @@ using System.Threading.Channels;
 namespace ProductServiceApp.Application.Handlers.Products.Commands.Delete;
 
 public class DeleteProductCommandHandler(
-    Channel<(DeleteProductCommand, TaskCompletionSource<BooleanResponse>, CancellationToken)> channel,
-    IServiceScopeFactory scopeFactory)
+        Channel<(DeleteProductCommand, TaskCompletionSource<BooleanResponse>, CancellationToken)> channel,
+        IServiceScopeFactory scopeFactory)
     : BaseCommandHandler<DeleteProductCommand, BooleanResponse>(channel, scopeFactory)
 {
     protected override async Task<BooleanResponse> ExecuteCommandAsync(

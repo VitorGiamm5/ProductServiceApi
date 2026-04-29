@@ -1,0 +1,8 @@
+.git
+.vs
+tests
+**/bin
+**/obj
+TestResults
+CoverageReport
+.dotnet

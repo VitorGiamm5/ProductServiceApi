@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
-using ProductServiceApp.Domain.Controller.BaseApiResponse;
 using System.Net;
 using System.Text.Json;
 
@@ -32,17 +31,18 @@ public class ExceptionMiddleware
                 ? new { ex.Message, ex.StackTrace }
                 : null;
 
-            var response = ApiResponse<object>.SingleFailure(
-                code: (int)HttpStatusCode.InternalServerError,
-                message: "Ocorreu um erro interno. Tente novamente mais tarde.",
-                details: details
-            );
-
-            // garante que data nunca seja null
             var finalResponse = new
             {
-                data = response.Data ?? new { },
-                errors = response.Errors
+                data = new { },
+                errors = new[]
+                {
+                    new
+                    {
+                        code = (int)HttpStatusCode.InternalServerError,
+                        message = "Ocorreu um erro interno. Tente novamente mais tarde.",
+                        details
+                    }
+                }
             };
 
             await context.Response.WriteAsync(JsonSerializer.Serialize(finalResponse));

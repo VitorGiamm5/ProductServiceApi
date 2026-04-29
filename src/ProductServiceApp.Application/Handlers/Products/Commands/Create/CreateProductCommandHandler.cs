@@ -8,8 +8,8 @@ using System.Threading.Channels;
 namespace ProductServiceApp.Application.Handlers.Products.Commands.Create;
 
 public class CreateProductCommandHandler(
-    Channel<(CreateProductCommand, TaskCompletionSource<ProductResponse>, CancellationToken)> channel,
-    IServiceScopeFactory scopeFactory)
+        Channel<(CreateProductCommand, TaskCompletionSource<ProductResponse>, CancellationToken)> channel,
+        IServiceScopeFactory scopeFactory)
     : BaseCommandHandler<CreateProductCommand, ProductResponse>(channel, scopeFactory)
 {
     protected override async Task<ProductResponse> ExecuteCommandAsync(

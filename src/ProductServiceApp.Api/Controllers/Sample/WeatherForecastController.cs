@@ -1,7 +1,7 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using ProductServiceApp.Api.Controllers.Base;
-using ProductServiceApp.Domain.Controller.BaseApiResponse;
+using ProductServiceApp.Api.Controllers.Base.BaseApiResponse;
 
 namespace ProductServiceApp.Api.Controllers.Sample;
 
