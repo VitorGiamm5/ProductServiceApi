@@ -7,9 +7,6 @@ public class CreateProductValidator : AbstractValidator<CreateProductCommand>
 {
     public CreateProductValidator()
     {
-        RuleFor(x => x.Id)
-            .GreaterThan(0).WithMessage("Id deve ser maior que zero.");
-
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage("Nome é obrigatório.")
             .MaximumLength(150).WithMessage("Nome deve ter no máximo 150 caracteres.");

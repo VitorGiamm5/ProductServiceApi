@@ -220,6 +220,11 @@
         {
             ErrorMessage = null;
 
+            if (ActiveModal is ProductModal.Create or ProductModal.Edit && !ValidateDraft())
+            {
+                return;
+            }
+
             if (ActiveModal == ProductModal.Delete && SelectedProduct?.Id is long deleteId)
             {
                 await ProductsClient.DeleteProductAsync(deleteId);
@@ -246,6 +251,29 @@
     {
         ActiveModal = ProductModal.None;
         SelectedProduct = null;
+    }
+
+    private bool ValidateDraft()
+    {
+        if (string.IsNullOrWhiteSpace(Draft.Name))
+        {
+            ErrorMessage = "Informe o nome do produto.";
+            return false;
+        }
+
+        if (Draft.Price is null or <= 0)
+        {
+            ErrorMessage = "Informe um preço maior que zero.";
+            return false;
+        }
+
+        if (Draft.Type is null or ProductsType.Default)
+        {
+            ErrorMessage = "Selecione o tipo do produto.";
+            return false;
+        }
+
+        return true;
     }
 
     private string GetModalTitle() => ActiveModal switch
@@ -325,7 +353,7 @@
                 Price = Price,
                 Type = Type,
                 IsActive = true,
-                IsDeleted = false
+                IsDeleted = null
             };
         }
     }

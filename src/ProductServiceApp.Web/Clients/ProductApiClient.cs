@@ -48,8 +48,10 @@ public sealed class ProductApiClient(
     {
         using var _ = loading.Begin();
 
+        logger.LogInformation("Creating product through API: {BaseAddress}{Endpoint}", httpClient.BaseAddress, ProductsEndpoint);
+
         var httpResponse = await httpClient.PostAsJsonAsync(ProductsEndpoint, request, JsonOptions, cancellationToken);
-        httpResponse.EnsureSuccessStatusCode();
+        await EnsureSuccessAsync(httpResponse, cancellationToken);
 
         var response = await httpResponse.Content.ReadFromJsonAsync<ApiResponse<ProductResponse>>(
             JsonOptions,
@@ -65,12 +67,14 @@ public sealed class ProductApiClient(
     {
         using var _ = loading.Begin();
 
+        logger.LogInformation("Updating product through API: {BaseAddress}{Endpoint}/{ProductId}", httpClient.BaseAddress, ProductsEndpoint, id);
+
         var httpResponse = await httpClient.PutAsJsonAsync(
             $"{ProductsEndpoint}/{id}",
             request,
             JsonOptions,
             cancellationToken);
-        httpResponse.EnsureSuccessStatusCode();
+        await EnsureSuccessAsync(httpResponse, cancellationToken);
 
         var response = await httpResponse.Content.ReadFromJsonAsync<ApiResponse<ProductResponse>>(
             JsonOptions,
@@ -84,6 +88,26 @@ public sealed class ProductApiClient(
         using var _ = loading.Begin();
 
         var response = await httpClient.DeleteAsync($"{ProductsEndpoint}/{id}", cancellationToken);
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessAsync(response, cancellationToken);
+    }
+
+    private static async Task EnsureSuccessAsync(
+        HttpResponseMessage response,
+        CancellationToken cancellationToken)
+    {
+        if (response.IsSuccessStatusCode)
+        {
+            return;
+        }
+
+        var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<object>>(
+            JsonOptions,
+            cancellationToken);
+
+        var message = apiResponse?.Errors.Count > 0
+            ? string.Join(" ", apiResponse.Errors.Select(error => error.Message))
+            : response.ReasonPhrase;
+
+        throw new HttpRequestException(message, null, response.StatusCode);
     }
 }
