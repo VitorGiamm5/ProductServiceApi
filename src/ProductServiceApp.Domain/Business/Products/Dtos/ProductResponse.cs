@@ -27,7 +27,8 @@ public class ProductResponse : CreateProductRequest, IFromMapper<ProductResponse
             IsDeleted = input?.IsDeleted;
             CreatedDate = input?.CreatedDate;
             UpdatedDate = input?.UpdatedDate;
-        };
+        }
+        ;
 
         return this;
     }

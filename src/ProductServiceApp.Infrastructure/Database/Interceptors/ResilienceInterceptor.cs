@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Logging;
 using Npgsql;
 using Polly;
 using Polly.Retry;
@@ -8,15 +9,21 @@ namespace ProductServiceApp.Infrastructure.Database.Interceptors;
 
 public class ResilienceInterceptor : DbCommandInterceptor
 {
+    private const int MaxRetryAttempts = 10;
+    private const int SecondsToTimeout = 30;
+    private const int DelaySeconds = 3;
+    private readonly ILogger<ResilienceInterceptor> _logger;
     private readonly ResiliencePipeline _pipeline;
 
-    public ResilienceInterceptor()
+    public ResilienceInterceptor(ILogger<ResilienceInterceptor> logger)
     {
+        _logger = logger;
+
         _pipeline = new ResiliencePipelineBuilder()
             .AddRetry(new RetryStrategyOptions
             {
-                MaxRetryAttempts = 10,
-                Delay = TimeSpan.FromSeconds(3),
+                MaxRetryAttempts = MaxRetryAttempts,
+                Delay = TimeSpan.FromSeconds(DelaySeconds),
                 BackoffType = DelayBackoffType.Exponential,
                 UseJitter = true,
                 ShouldHandle = new PredicateBuilder()
@@ -24,18 +31,17 @@ public class ResilienceInterceptor : DbCommandInterceptor
                     .Handle<TimeoutException>(),
                 OnRetry = args =>
                 {
-                    Console.WriteLine(
-                        "[Resiliência] Banco indisponível — tentativa {Attempt}/{Max}. " +
-                        "Próxima em {Delay:s}s. Erro: {Error}",
+                    _logger.LogWarning(
+                        args.Outcome.Exception,
+                        "[Resiliencia] Banco indisponivel. Tentativa {Attempt}/{Max}. Proxima em {Delay}.",
                         args.AttemptNumber + 1,
-                        10,
-                        args.RetryDelay,
-                        args.Outcome.Exception?.Message);
+                        MaxRetryAttempts,
+                        args.RetryDelay);
 
                     return ValueTask.CompletedTask;
                 }
             })
-            .AddTimeout(TimeSpan.FromSeconds(30))
+            .AddTimeout(TimeSpan.FromSeconds(SecondsToTimeout))
             .Build();
     }
 

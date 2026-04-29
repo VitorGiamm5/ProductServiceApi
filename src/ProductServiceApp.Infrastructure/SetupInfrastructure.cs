@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 using Npgsql;
 using Polly;
 using Polly.Retry;
@@ -37,16 +38,21 @@ public static class SetupInfrastructure
             ? int.Parse(configuration.GetSection("RetryPolicy:MaxRetryCount").Value!)
             : _maxRetryCount;
 
-        RetryPolicy retryPolicy = Policy
-            .Handle<Exception>()
-            .WaitAndRetry(
-                retryCount: maxRetryCount,
-                sleepDurationProvider: attempt => 
-                    TimeSpan.FromSeconds(Math.Pow(retryCount, attempt)),
-                onRetry: (exception, timespan, attempt, context) =>
-                {
-                    Console.WriteLine($"Retry {attempt} fail with error: {exception.Message}. Lets try again {timespan}.");
-                });
+        static RetryPolicy CreateRetryPolicy(int retryCount, int maxRetryCount, ILogger logger) =>
+            Policy
+                .Handle<Exception>()
+                .WaitAndRetry(
+                    retryCount: maxRetryCount,
+                    sleepDurationProvider: attempt =>
+                        TimeSpan.FromSeconds(Math.Pow(retryCount, attempt)),
+                    onRetry: (exception, timespan, attempt, context) =>
+                    {
+                        logger.LogWarning(
+                            exception,
+                            "Retry {Attempt} failed. Next attempt in {RetryDelay}.",
+                            attempt,
+                            timespan);
+                    });
 
         #endregion
 
@@ -54,6 +60,12 @@ public static class SetupInfrastructure
 
         services.AddDbContext<ApplicationDbContext>((serviceProvider, options) =>
         {
+            var logger = serviceProvider
+                .GetRequiredService<ILoggerFactory>()
+                .CreateLogger(typeof(SetupInfrastructure).FullName!);
+
+            var retryPolicy = CreateRetryPolicy(retryCount, maxRetryCount, logger);
+
             retryPolicy.Execute(() =>
             {
                 var connectionString = configuration.GetConnectionString("PostgresWrite")
@@ -88,6 +100,12 @@ public static class SetupInfrastructure
 
         services.AddDbContext<ReadOnlyDbContext>((serviceProvider, options) =>
         {
+            var logger = serviceProvider
+                .GetRequiredService<ILoggerFactory>()
+                .CreateLogger(typeof(SetupInfrastructure).FullName!);
+
+            var retryPolicy = CreateRetryPolicy(retryCount, maxRetryCount, logger);
+
             retryPolicy.Execute(() =>
             {
                 var connectionString = configuration.GetConnectionString("PostgresRead")

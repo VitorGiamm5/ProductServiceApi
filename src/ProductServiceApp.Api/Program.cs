@@ -107,11 +107,23 @@ builder.Services.AddCors(options =>
 
 #endregion
 
+#region Context Acessor
+
 builder.Services.AddHttpContextAccessor();
+
+#endregion
+
+#region Application DI
 
 builder.Services.AddApplication(builder.Configuration);
 
+#endregion
+
+#region App build
+
 var app = builder.Build();
+
+#endregion
 
 #region Logging
 
@@ -156,7 +168,11 @@ app.MapControllers();
 
 #endregion
 
+#region Run
+
 await app.RunAsync();
+
+#endregion
 
 #region OpenApi functions
 

@@ -81,8 +81,8 @@ public static class SetupApplication
         services.AddWorkers<UpdateProductCommandHandler>(workersReplicasSection.GetValue<int>("ReplicasUpdateProduct", 2));
         services.AddWorkers<DeleteProductCommandHandler>(workersReplicasSection.GetValue<int>("ReplicasDeleteProduct", 2));
         services.AddWorkers<GetAllProductQueryHandler>(workersReplicasSection.GetValue<int>("ReplicasGetAllProduct", 1));
-        services.AddWorkers<GetByIdProductQueryHandler>(workersReplicasSection.GetValue<int>("ReplicasGetByIdProduct", 1));   
-        
+        services.AddWorkers<GetByIdProductQueryHandler>(workersReplicasSection.GetValue<int>("ReplicasGetByIdProduct", 1));
+
         #endregion
 
         #region Services — Business

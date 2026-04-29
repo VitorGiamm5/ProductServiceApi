@@ -2,7 +2,7 @@
 
 namespace ProductServiceApp.Domain.Business.Products.Dtos;
 
-public class CreateProductRequest 
+public class CreateProductRequest
 {
     public long? Id { get; set; } = 0L;
     public string? Name { get; set; } = string.Empty;
