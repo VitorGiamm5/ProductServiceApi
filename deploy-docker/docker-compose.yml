@@ -61,8 +61,12 @@ services:
       context: ..
       dockerfile: deploy-docker/Dockerfile
     container_name: 6137_api_product_service
+    user: root
+    entrypoint: ["/bin/sh", "-c", "chown -R appuser:appuser /app/logs && exec runuser -u appuser -- dotnet ProductServiceApp.Api.dll"]
     ports:
       - "9005:9005"
+    volumes:
+      - 6137_api_logs:/app/logs
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - Kestrel__Port=9005
@@ -82,7 +86,7 @@ services:
       - RetryPolicy__DelayBetweenRetriesInSeconds=2
       - KeepAliveTimeoutSeconds=30
       - RequestTimeoutSeconds=15
-      - Serilog__MinimumLevel__Default=Warning
+      - Serilog__MinimumLevel__Default=Information
       - Serilog__Properties__Environment=Production
     depends_on:
       6137_postgres_primary:
@@ -95,6 +99,7 @@ services:
   # ─── Monitoring and metrics
   prometheus:
     image: prom/prometheus:latest
+    container_name: 6137_prometheus
     ports:
       - "9090:9090"
     volumes:
@@ -104,17 +109,46 @@ services:
     networks:
       - 6137_webnet
 
+  loki:
+    image: grafana/loki:latest
+    container_name: 6137_loki
+    command: -config.file=/etc/loki/local-config.yaml
+    ports:
+      - "3100:3100"
+    networks:
+      - 6137_webnet
+
+  promtail:
+    image: grafana/promtail:latest
+    container_name: 6137_promtail
+    command: -config.file=/etc/promtail/config.yml
+    volumes:
+      - ./promtail.yml:/etc/promtail/config.yml
+      - 6137_api_logs:/app/logs:ro
+    depends_on:
+      - loki
+      - 6137_api_product_service
+    networks:
+      - 6137_webnet
+
   grafana:
     image: grafana/grafana:latest
+    container_name: 6137_grafana
     ports:
       - "3000:3000"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/product-service-overview.json
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
     depends_on:
       - prometheus
+      - loki
     networks:
       - 6137_webnet
 
 volumes:
   6137_pgdata_primary:
   6137_pgdata_replica:
+  6137_api_logs:
