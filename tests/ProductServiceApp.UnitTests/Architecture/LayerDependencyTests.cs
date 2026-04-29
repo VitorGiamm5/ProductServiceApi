@@ -41,7 +41,8 @@ public class LayerDependencyTests
             .BeEquivalentTo(
                 "ProductServiceApp.Application",
                 "ProductServiceApp.Domain",
-                "ProductServiceApp.Infrastructure");
+                "ProductServiceApp.Infrastructure",
+                "ProductServiceApp.ServiceDefaults");
     }
 
     [Theory]

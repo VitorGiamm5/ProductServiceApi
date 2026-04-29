@@ -1,0 +1,118 @@
+.page {
+    min-height: 100vh;
+    display: flex;
+    background: #eef0ed;
+}
+
+main {
+    flex: 1;
+    min-width: 0;
+}
+
+.sidebar {
+    width: 248px;
+    min-height: 100vh;
+    background: #202421;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.top-row {
+    height: 3.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    background: rgba(255, 255, 255, 0.82);
+    border-bottom: 1px solid #d9ddd7;
+    color: #596157;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.content {
+    padding-top: 1.5rem;
+}
+
+.loading-veil {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: grid;
+    place-items: center;
+    background: rgba(14, 18, 15, 0.48);
+    backdrop-filter: blur(4px);
+    animation: veil-in 160ms ease-out;
+}
+
+.loading-card {
+    min-width: 168px;
+    display: grid;
+    justify-items: center;
+    gap: 0.85rem;
+    padding: 1.35rem 1.5rem;
+    background: #f9faf7;
+    border: 1px solid rgba(32, 36, 33, 0.12);
+    box-shadow: 0 24px 60px rgba(18, 22, 19, 0.22);
+}
+
+.loading-ring {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #d5dbd3;
+    border-top-color: #3e6f5a;
+    border-radius: 50%;
+    animation: loading-spin 820ms linear infinite;
+}
+
+.loading-text {
+    color: #2d342f;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+#blazor-error-ui {
+    color-scheme: light only;
+    background: #fff3cd;
+    bottom: 0;
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    box-sizing: border-box;
+    display: none;
+    left: 0;
+    padding: 0.7rem 1.25rem;
+    position: fixed;
+    width: 100%;
+    z-index: 2100;
+}
+
+#blazor-error-ui .dismiss {
+    cursor: pointer;
+    position: absolute;
+    right: 0.75rem;
+    top: 0.5rem;
+}
+
+@keyframes loading-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes veil-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@media (max-width: 760px) {
+    .page {
+        display: block;
+    }
+
+    .sidebar {
+        width: 100%;
+        min-height: auto;
+    }
+}

@@ -39,6 +39,8 @@
     <ProjectReference Include="..\ProductServiceApp.Application\ProductServiceApp.Application.csproj" />
     <ProjectReference Include="..\ProductServiceApp.Domain\ProductServiceApp.Domain.csproj" />
     <ProjectReference Include="..\ProductServiceApp.Infrastructure\ProductServiceApp.Infrastructure.csproj" />
+    <ProjectReference Include="..\ProductServiceApp.ServiceDefaults\ProductServiceApp.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\ProductServiceApp.Shared\ProductServiceApp.Shared.csproj" />
   </ItemGroup>
 
 </Project>

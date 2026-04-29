@@ -1,4 +1,10 @@
 <Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ProductServiceApp.AppHost/ProductServiceApp.AppHost.csproj" />
+    <Project Path="src/ProductServiceApp.ServiceDefaults/ProductServiceApp.ServiceDefaults.csproj" />
+    <Project Path="src/ProductServiceApp.Shared/ProductServiceApp.Shared.csproj" />
+    <Project Path="src/ProductServiceApp.Web/ProductServiceApp.Web.csproj" />
+  </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/ProductServiceApp.FunctionalTests/ProductServiceApp.FunctionalTests.csproj" Id="8bd5db51-0a73-42c7-9e47-6fd50fd3c79d" />
     <Project Path="tests/ProductServiceApp.IntegrationTests/ProductServiceApp.IntegrationTests.csproj" Id="3a2671a8-dbb5-475c-9346-b34ef6a6e1a6" />

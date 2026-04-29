@@ -1,0 +1,332 @@
+@page "/"
+@rendermode InteractiveServer
+@inject ProductApiClient ProductsClient
+
+<PageTitle>Menu</PageTitle>
+
+<section class="menu-shell">
+    <div class="menu-heading">
+        <div>
+            <p class="eyebrow">Backoffice</p>
+            <h1>Menu</h1>
+        </div>
+
+        <button class="primary-action" type="button" @onclick="OpenCreateModal">
+            <span class="button-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>
+            </span>
+            Adicionar novo
+        </button>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <div class="alert-message">@ErrorMessage</div>
+    }
+
+    <div class="table-panel">
+        <table class="products-table">
+            <thead>
+                <tr>
+                    <th>Nome do produto</th>
+                    <th>Preço</th>
+                    <th>Tipo</th>
+                    <th class="actions-header">Opções</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Products.Count == 0)
+                {
+                    <tr>
+                        <td colspan="4" class="empty-row">Nenhum produto encontrado.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var product in Products)
+                    {
+                        <tr>
+                            <td>
+                                <span class="product-name">@product.Name</span>
+                            </td>
+                            <td>@FormatPrice(product.Price)</td>
+                            <td>
+                                <span class="type-pill">@GetTypeLabel(product.Type)</span>
+                            </td>
+                            <td>
+                                <div class="row-actions">
+                                    <button class="icon-button" title="Editar" aria-label="Editar" @onclick="() => OpenEditModalAsync(product)">
+                                        <svg viewBox="0 0 24 24"><path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3zM13.5 8.5l2 2" /></svg>
+                                    </button>
+                                    <button class="icon-button" title="Visualizar" aria-label="Visualizar" @onclick="() => OpenViewModalAsync(product)">
+                                        <svg viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6z" /><path d="M12 9.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z" /></svg>
+                                    </button>
+                                    <button class="icon-button danger" title="Apagar" aria-label="Apagar" @onclick="() => OpenDeleteModal(product)">
+                                        <svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 14h10l1-14M9 7V4h6v3" /></svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</section>
+
+@if (ActiveModal != ProductModal.None)
+{
+    <div class="modal-backdrop-custom" @onclick="CloseModal">
+        <div class="product-modal" @onclick:stopPropagation="true">
+            <div class="modal-header-custom">
+                <div>
+                    <p class="eyebrow">@GetModalEyebrow()</p>
+                    <h2>@GetModalTitle()</h2>
+                </div>
+                <button class="close-button" type="button" aria-label="Fechar" @onclick="CloseModal">
+                    <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg>
+                </button>
+            </div>
+
+            @if (ActiveModal == ProductModal.Delete)
+            {
+                <p class="delete-copy">Deseja apagar o produto <strong>@SelectedProduct?.Name</strong>?</p>
+            }
+            else
+            {
+                <div class="form-grid">
+                    <label>
+                        <span>Nome</span>
+                        <input @bind="Draft.Name" disabled="@IsViewMode" />
+                    </label>
+                    <label>
+                        <span>Preço</span>
+                        <input type="number" step="0.01" min="0" @bind="Draft.Price" disabled="@IsViewMode" />
+                    </label>
+                    <label>
+                        <span>Tipo</span>
+                        <select @bind="Draft.Type" disabled="@IsViewMode">
+                            @foreach (var type in ProductTypes)
+                            {
+                                <option value="@type">@GetTypeLabel(type)</option>
+                            }
+                        </select>
+                    </label>
+                </div>
+            }
+
+            <div class="modal-actions">
+                <button class="secondary-action" type="button" @onclick="CloseModal">Cancelar</button>
+                @if (ActiveModal != ProductModal.View)
+                {
+                    <button class="primary-action" type="button" @onclick="SaveAsync">
+                        @(ActiveModal == ProductModal.Delete ? "Apagar" : "Salvar")
+                    </button>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private readonly ProductsType[] ProductTypes =
+        Enum.GetValues<ProductsType>().Where(type => type != ProductsType.Default).ToArray();
+
+    private List<ProductResponse> Products { get; set; } = [];
+    private ProductResponse? SelectedProduct { get; set; }
+    private ProductForm Draft { get; set; } = new();
+    private ProductModal ActiveModal { get; set; }
+    private string? ErrorMessage { get; set; }
+    private bool IsViewMode => ActiveModal == ProductModal.View;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProductsAsync();
+    }
+
+    private async Task LoadProductsAsync()
+    {
+        try
+        {
+            ErrorMessage = null;
+            Products = [.. await ProductsClient.GetProductsAsync()];
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Não foi possível carregar os produtos. {ex.Message}";
+        }
+    }
+
+    private void OpenCreateModal()
+    {
+        ErrorMessage = null;
+        SelectedProduct = null;
+        Draft = new ProductForm();
+        ActiveModal = ProductModal.Create;
+    }
+
+    private async Task OpenEditModalAsync(ProductResponse product)
+    {
+        var loadedProduct = await LoadProductForModalAsync(product);
+        if (loadedProduct is null)
+        {
+            return;
+        }
+
+        SelectedProduct = loadedProduct;
+        Draft = ProductForm.FromProduct(loadedProduct);
+        ActiveModal = ProductModal.Edit;
+    }
+
+    private async Task OpenViewModalAsync(ProductResponse product)
+    {
+        var loadedProduct = await LoadProductForModalAsync(product);
+        if (loadedProduct is null)
+        {
+            return;
+        }
+
+        SelectedProduct = loadedProduct;
+        Draft = ProductForm.FromProduct(loadedProduct);
+        ActiveModal = ProductModal.View;
+    }
+
+    private void OpenDeleteModal(ProductResponse product)
+    {
+        ErrorMessage = null;
+        SelectedProduct = product;
+        ActiveModal = ProductModal.Delete;
+    }
+
+    private async Task<ProductResponse?> LoadProductForModalAsync(ProductResponse product)
+    {
+        try
+        {
+            ErrorMessage = null;
+            return product.Id is long id
+                ? await ProductsClient.GetProductAsync(id)
+                : product;
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Não foi possível carregar o produto. {ex.Message}";
+            return null;
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        try
+        {
+            ErrorMessage = null;
+
+            if (ActiveModal == ProductModal.Delete && SelectedProduct?.Id is long deleteId)
+            {
+                await ProductsClient.DeleteProductAsync(deleteId);
+            }
+            else if (ActiveModal == ProductModal.Edit && SelectedProduct?.Id is long updateId)
+            {
+                await ProductsClient.UpdateProductAsync(updateId, Draft.ToUpdateRequest(updateId));
+            }
+            else if (ActiveModal == ProductModal.Create)
+            {
+                await ProductsClient.CreateProductAsync(Draft.ToCreateRequest());
+            }
+
+            CloseModal();
+            await LoadProductsAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Não foi possível salvar a operação. {ex.Message}";
+        }
+    }
+
+    private void CloseModal()
+    {
+        ActiveModal = ProductModal.None;
+        SelectedProduct = null;
+    }
+
+    private string GetModalTitle() => ActiveModal switch
+    {
+        ProductModal.Create => "Adicionar novo produto",
+        ProductModal.Edit => "Editar produto",
+        ProductModal.View => "Visualizar produto",
+        ProductModal.Delete => "Apagar produto",
+        _ => string.Empty
+    };
+
+    private string GetModalEyebrow() => ActiveModal switch
+    {
+        ProductModal.Create => "Novo registro",
+        ProductModal.Edit => "Alteração",
+        ProductModal.View => "Consulta",
+        ProductModal.Delete => "Confirmação",
+        _ => string.Empty
+    };
+
+    private static string FormatPrice(decimal? price)
+    {
+        return price.GetValueOrDefault().ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"));
+    }
+
+    private static string GetTypeLabel(ProductsType? type) => type switch
+    {
+        ProductsType.Sandwich => "Sanduíche",
+        ProductsType.Fries => "Fritas",
+        ProductsType.Refreshment => "Bebida",
+        _ => "Não definido"
+    };
+
+    private enum ProductModal
+    {
+        None,
+        Create,
+        Edit,
+        View,
+        Delete
+    }
+
+    private sealed class ProductForm
+    {
+        public string? Name { get; set; } = string.Empty;
+        public decimal? Price { get; set; } = decimal.Zero;
+        public ProductsType? Type { get; set; } = ProductsType.Sandwich;
+
+        public static ProductForm FromProduct(ProductResponse product)
+        {
+            return new()
+            {
+                Name = product.Name,
+                Price = product.Price,
+                Type = product.Type is ProductsType.Default or null ? ProductsType.Sandwich : product.Type
+            };
+        }
+
+        public CreateProductRequest ToCreateRequest()
+        {
+            return new()
+            {
+                Name = Name,
+                Price = Price,
+                Type = Type,
+                IsActive = true,
+                IsDeleted = false
+            };
+        }
+
+        public UpdateProductRequest ToUpdateRequest(long id)
+        {
+            return new()
+            {
+                Id = id,
+                Name = Name,
+                Price = Price,
+                Type = Type,
+                IsActive = true,
+                IsDeleted = false
+            };
+        }
+    }
+}

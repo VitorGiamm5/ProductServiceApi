@@ -11,6 +11,8 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.AddServiceDefaults();
+
 #region Log configuration
 
 // Bootstrap logger — It catches errors BEFORE the host comes up.
@@ -175,6 +177,7 @@ app.UseCors("AllowAll");
 
 app.UseAuthorization();
 app.MapControllers();
+app.MapDefaultEndpoints();
 
 #endregion
 
