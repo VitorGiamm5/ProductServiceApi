@@ -56,6 +56,23 @@ services:
       - 6137_webnet
 
   # ─── API ────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: 6137_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - 6137_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - 6137_webnet
+
   6137_api_product_service:
     build:
       context: ..
@@ -73,6 +90,10 @@ services:
       - DOTNET_RUNNING_IN_CONTAINER=true
       - ConnectionStrings__PostgresWrite=Server=6137_postgres_primary;Port=5432;Database=dbproducts;Username=randandan;Password=randandan_XLR;SSL Mode=Disable;
       - ConnectionStrings__PostgresRead=Server=6137_postgres_replica;Port=5433;Database=dbproducts;Username=read_randandan;Password=read_randandan_XLR;SSL Mode=Disable;
+      - Redis__ConnectionString=redis:6379
+      - "Redis__InstanceName=ProductServiceApp:"
+      - Redis__ProductsAbsoluteExpirationMinutes=10
+      - Redis__ProductsSlidingExpirationMinutes=2
       - DatabaseSettings__EnableLoadBalancing=true
       - WorkersReplicas__ReplicasCreateProduct=2
       - WorkersReplicas__ReplicasUpdateProduct=2
@@ -92,6 +113,8 @@ services:
       6137_postgres_primary:
         condition: service_healthy
       6137_postgres_replica:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - 6137_webnet
@@ -152,3 +175,4 @@ volumes:
   6137_pgdata_primary:
   6137_pgdata_replica:
   6137_api_logs:
+  6137_redis_data:

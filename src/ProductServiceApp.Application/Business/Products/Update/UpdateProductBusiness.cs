@@ -1,5 +1,6 @@
-﻿using FluentValidation;
+using FluentValidation;
 using ProductServiceApp.Application.Business.Base;
+using ProductServiceApp.Application.Cache.Products;
 using ProductServiceApp.Domain.Business.Products.Business;
 using ProductServiceApp.Domain.Business.Products.Dtos;
 using ProductServiceApp.Domain.Business.Products.Handlers;
@@ -10,24 +11,21 @@ namespace ProductServiceApp.Application.Business.Products.Update;
 
 public class UpdateProductBusiness(
         IProductCommandRepository<ProductEntity> repository,
+        IProductCacheService cache,
         IValidator<UpdateProductCommand> validator
     )
     : BaseBusinessService<UpdateProductCommand, ProductEntity, ProductEntity, ProductResponse>(),
     IUpdateProductBusiness
 {
-    // Inbox
     protected override async Task<ProductEntity> PreProcessAsync(
-    UpdateProductCommand input, CancellationToken ct)
+        UpdateProductCommand input, CancellationToken ct)
     {
-        // Validate the input
         var validation = await validator.ValidateAsync(input, ct);
         if (!validation.IsValid)
             throw new ValidationException(validation.Errors);
 
-        // Map the main properties
         ProductEntity entity = input.MapTo();
 
-        // Set Auditing internal properties
         entity.UpdatedDate = DateTime.UtcNow;
         entity.IsDeleted = input.IsDeleted;
         entity.UpdatedByUserId = 0;
@@ -35,17 +33,18 @@ public class UpdateProductBusiness(
         return entity;
     }
 
-    // Process
     protected override async Task<ProductEntity> ProcessAsync(
         ProductEntity input, CancellationToken ct)
     {
         return await repository.UpdateAsync(input, input.Id, ct);
     }
 
-    // Outbox
     protected override async Task<ProductResponse> PostProcessAsync(
-    ProductEntity result, CancellationToken ct)
+        ProductEntity result, CancellationToken ct)
     {
+        await cache.InvalidateAllAsync(ct);
+        await cache.SetByIdAsync(result, ct);
+
         return new ProductResponse(result);
     }
 }

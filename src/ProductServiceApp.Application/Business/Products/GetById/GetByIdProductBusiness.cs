@@ -1,5 +1,6 @@
-﻿using FluentValidation;
+using FluentValidation;
 using ProductServiceApp.Application.Business.Base;
+using ProductServiceApp.Application.Cache.Products;
 using ProductServiceApp.Domain.Business.Products.Business;
 using ProductServiceApp.Domain.Business.Products.Dtos;
 using ProductServiceApp.Domain.Business.Products.Handlers;
@@ -10,12 +11,12 @@ namespace ProductServiceApp.Application.Business.Products.GetById;
 
 public class GetByIdProductBusiness(
         IProductQueryRepository<ProductEntity> repository,
+        IProductCacheService cache,
         IValidator<GetByIdProductQuery> validator
     )
     : BaseBusinessService<GetByIdProductQuery, GetByIdProductQuery, ProductEntity, ProductResponse>,
       IGetByIdProductBusiness
 {
-    // 1️ INBOX — delegate to validator
     protected override async Task<GetByIdProductQuery> PreProcessAsync(
         GetByIdProductQuery input, CancellationToken ct)
     {
@@ -26,21 +27,25 @@ public class GetByIdProductBusiness(
         return input;
     }
 
-    // 2 PROCESS - get the item by id or if not found throw a NotFound exception 
     protected override async Task<ProductEntity> ProcessAsync(
         GetByIdProductQuery input, CancellationToken ct)
     {
-        var result = await repository.GetByIdAsync(input.Id, ct);
+        var cachedProduct = await cache.GetByIdAsync(input.Id, ct);
+        if (cachedProduct is not null)
+            return cachedProduct;
 
-        return result is null
-            ? throw new KeyNotFoundException($"Produto {input.Id} não encontrado.")
-            : result;
+        var result = await repository.GetByIdAsync(input.Id, ct);
+        if (result is null)
+            throw new KeyNotFoundException($"Produto {input.Id} não encontrado.");
+
+        await cache.SetByIdAsync(result, ct);
+
+        return result;
     }
 
-    // 3️ OUTBOX
-    protected override async Task<ProductResponse> PostProcessAsync(
+    protected override Task<ProductResponse> PostProcessAsync(
         ProductEntity result, CancellationToken ct)
     {
-        return new ProductResponse(result);
+        return Task.FromResult(new ProductResponse(result));
     }
 }

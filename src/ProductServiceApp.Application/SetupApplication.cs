@@ -7,6 +7,7 @@ using ProductServiceApp.Application.Business.Products.Delete;
 using ProductServiceApp.Application.Business.Products.GetAll;
 using ProductServiceApp.Application.Business.Products.GetById;
 using ProductServiceApp.Application.Business.Products.Update;
+using ProductServiceApp.Application.Cache.Products;
 using ProductServiceApp.Application.Handlers.Products.Commands.Create;
 using ProductServiceApp.Application.Handlers.Products.Commands.Delete;
 using ProductServiceApp.Application.Handlers.Products.Commands.Update;
@@ -27,6 +28,20 @@ public static class SetupApplication
     public static IServiceCollection AddApplication(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddInfrastructure(configuration);
+
+        #region Cache
+
+        services.AddStackExchangeRedisCache(options =>
+        {
+            options.Configuration = configuration.GetValue<string>("Redis:ConnectionString")
+                ?? "localhost:6379";
+            options.InstanceName = configuration.GetValue<string>("Redis:InstanceName")
+                ?? "ProductServiceApp:";
+        });
+
+        services.AddScoped<IProductCacheService, ProductCacheService>();
+
+        #endregion
 
         #region Validators — Auto reflection
 
