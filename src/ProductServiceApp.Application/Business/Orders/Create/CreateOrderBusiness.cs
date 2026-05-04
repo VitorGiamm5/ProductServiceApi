@@ -21,6 +21,10 @@ public class CreateOrderBusiness(
     : BaseBusinessService<CreateOrderCommand, OrderEntity, OrderEntity, OrderResponse>,
     ICreateOrderBusiness
 {
+    private IReadOnlyCollection<ProductEntity> _products = [];
+    private OrderDiscountResult? _orderCalculated;
+    private DateTime _createdDate;
+
     //INBOX
     protected override async Task<OrderEntity> PreProcessAsync(CreateOrderCommand input, CancellationToken ct)
     {
@@ -50,11 +54,26 @@ public class CreateOrderBusiness(
 
         #endregion
 
+        _products = products;
+        _orderCalculated = orderCalculated;
+        _createdDate = now;
+
+        return MapToIntermediateAsync(input, ct)
+            ?? throw new InvalidOperationException("Nao foi possivel mapear o pedido para entidade.");
+    }
+
+    //MAP
+    protected override OrderEntity? MapToIntermediateAsync(CreateOrderCommand input, CancellationToken ct)
+    {
+        _ = ct;
+        var orderCalculated = _orderCalculated
+            ?? throw new InvalidOperationException("O calculo do pedido deve ser executado antes do mapeamento.");
+
         #region Entity Mapping
 
         return new OrderEntity
         {
-            CreatedDate = now,
+            CreatedDate = _createdDate,
             CreatedByUserId = 0,
             IsActive = input.IsActive,
             IsDeleted = input.IsDeleted,
@@ -64,12 +83,12 @@ public class CreateOrderBusiness(
             DiscountValue = orderCalculated.DiscountValue,
             OrdersAudit = new OrderAuditEntity
             {
-                CreatedDate = now,
+                CreatedDate = _createdDate,
                 CreatedByUserId = 0,
                 IsActive = true,
                 IsDeleted = false
             },
-            OrderProducts = [.. products
+            OrderProducts = [.. _products
                 .Select(product => new OrderProductEntity
                 {
                     ProductId = product.Id,
