@@ -14,7 +14,7 @@ public abstract class BaseCommandRepository<T> : IBaseCommandRepository<T> where
         _context = context;
     }
 
-    public async Task<T> CreateAsync(T entity, CancellationToken cancellationToken)
+    public virtual async Task<T> CreateAsync(T entity, CancellationToken cancellationToken)
     {
         await _context.Set<T>().AddAsync(entity, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
@@ -22,7 +22,7 @@ public abstract class BaseCommandRepository<T> : IBaseCommandRepository<T> where
         return entity;
     }
 
-    public async Task<bool> DeleteAsync(long id, CancellationToken cancellationToken)
+    public virtual async Task<bool> DeleteAsync(long id, CancellationToken cancellationToken)
     {
         var entity = await _context.Set<T>()
             .FindAsync([id], cancellationToken)
@@ -34,7 +34,7 @@ public abstract class BaseCommandRepository<T> : IBaseCommandRepository<T> where
         return true;
     }
 
-    public async Task<T> UpdateAsync(T entity, long id, CancellationToken cancellationToken)
+    public virtual async Task<T> UpdateAsync(T entity, long id, CancellationToken cancellationToken)
     {
         _context.Set<T>().Update(entity);
 

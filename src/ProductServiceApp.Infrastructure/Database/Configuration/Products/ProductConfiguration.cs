@@ -10,11 +10,13 @@ public class ProductConfiguration : BaseAuditConfiguration<ProductEntity>
 {
     public override void Configure(EntityTypeBuilder<ProductEntity> builder)
     {
-        var friesCreatedDate = new DateTime(2026, 04, 29, 23, 12, 12, 284, DateTimeKind.Utc).AddTicks(3527);
-        var xBurgerCreatedDate = new DateTime(2026, 04, 29, 23, 12, 12, 284, DateTimeKind.Utc).AddTicks(3947);
-        var xEggCreatedDate = new DateTime(2026, 04, 29, 23, 12, 12, 284, DateTimeKind.Utc).AddTicks(4127);
-        var xBaconCreatedDate = new DateTime(2026, 04, 29, 23, 12, 12, 284, DateTimeKind.Utc).AddTicks(4131);
-        var refreshmentCreatedDate = new DateTime(2026, 04, 29, 23, 12, 12, 284, DateTimeKind.Utc).AddTicks(4133);
+        base.Configure(builder);
+
+        var friesCreatedDate = new DateTime(2026, 04, 29, 23, 12, 12, 284, DateTimeKind.Unspecified).AddTicks(3527);
+        var xBurgerCreatedDate = new DateTime(2026, 04, 29, 23, 12, 12, 284, DateTimeKind.Unspecified).AddTicks(3947);
+        var xEggCreatedDate = new DateTime(2026, 04, 29, 23, 12, 12, 284, DateTimeKind.Unspecified).AddTicks(4127);
+        var xBaconCreatedDate = new DateTime(2026, 04, 29, 23, 12, 12, 284, DateTimeKind.Unspecified).AddTicks(4131);
+        var refreshmentCreatedDate = new DateTime(2026, 04, 29, 23, 12, 12, 284, DateTimeKind.Unspecified).AddTicks(4133);
 
         builder.ToTable("tb_product");
 

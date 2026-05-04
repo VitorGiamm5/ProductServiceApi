@@ -13,18 +13,14 @@ public class CreateOrderRequest
 public class OrderProductRequest
 {
     public long ProductId { get; set; }
+
+    [JsonIgnore]
     public int Quantity { get; set; } = 1;
 
     [JsonPropertyName("quatity")]
-    public int? Quatity
+    public int Quatity
     {
-        get => null;
-        set
-        {
-            if (value.HasValue)
-            {
-                Quantity = value.Value;
-            }
-        }
+        get => Quantity;
+        set => Quantity = value;
     }
 }

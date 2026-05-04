@@ -110,6 +110,13 @@
                                     }
                                 </select>
 
+                                <input class="quantity-input"
+                                       type="number"
+                                       min="1"
+                                       value="@row.Quantity"
+                                       disabled="@IsViewMode"
+                                       @onchange="eventArgs => ChangeQuantity(row, eventArgs)" />
+
                                 @if (!IsViewMode && Draft.Products.Count > 1)
                                 {
                                     <button class="icon-button danger" type="button" title="Remover" aria-label="Remover" @onclick="() => RemoveProductRow(row)">
@@ -274,6 +281,13 @@
         DuplicateMessage = ValidateDuplicatedTypes();
     }
 
+    private void ChangeQuantity(OrderProductForm row, ChangeEventArgs eventArgs)
+    {
+        row.Quantity = int.TryParse(eventArgs.Value?.ToString(), out var quantity) && quantity > 0
+            ? quantity
+            : 1;
+    }
+
     private async Task SaveAsync()
     {
         try
@@ -322,6 +336,12 @@
             return false;
         }
 
+        if (Draft.Products.Any(product => product.Quantity <= 0))
+        {
+            ErrorMessage = "Informe uma quantidade maior que zero para cada produto.";
+            return false;
+        }
+
         DuplicateMessage = ValidateDuplicatedTypes();
         if (!string.IsNullOrWhiteSpace(DuplicateMessage))
         {
@@ -367,7 +387,9 @@
     private static string FormatProducts(IEnumerable<ProductResponse> products)
     {
         var names = products
-            .Select(product => product.Name)
+            .Select(product => product.Quantity > 1
+                ? $"{product.Name} x{product.Quantity}"
+                : product.Name)
             .Where(name => !string.IsNullOrWhiteSpace(name));
 
         return string.Join(", ", names);
@@ -409,9 +431,13 @@
 
         public static OrderForm FromOrder(OrderResponse order)
         {
-            var rows = order.ProductIds.Count > 0
-                ? order.ProductIds.Select(productId => new OrderProductForm { ProductId = productId }).ToList()
-                : order.Products.Select(product => new OrderProductForm { ProductId = product.Id ?? 0 }).ToList();
+            var rows = order.Products
+                .Select(product => new OrderProductForm
+                {
+                    ProductId = product.Id ?? 0,
+                    Quantity = product.Quantity <= 0 ? 1 : product.Quantity
+                })
+                .ToList();
 
             return new()
             {
@@ -423,7 +449,13 @@
         {
             return new()
             {
-                ProductIds = [.. Products.Select(product => product.ProductId).Where(productId => productId > 0)],
+                Products = [.. Products
+                    .Where(product => product.ProductId > 0)
+                    .Select(product => new OrderProductRequest
+                    {
+                        ProductId = product.ProductId,
+                        Quantity = product.Quantity
+                    })],
                 IsActive = true,
                 IsDeleted = false
             };
@@ -434,7 +466,13 @@
             return new()
             {
                 Id = id,
-                ProductIds = [.. Products.Select(product => product.ProductId).Where(productId => productId > 0)],
+                Products = [.. Products
+                    .Where(product => product.ProductId > 0)
+                    .Select(product => new OrderProductRequest
+                    {
+                        ProductId = product.ProductId,
+                        Quantity = product.Quantity
+                    })],
                 IsActive = true,
                 IsDeleted = false
             };
@@ -445,5 +483,6 @@
     {
         public Guid RowId { get; } = Guid.NewGuid();
         public long ProductId { get; set; }
+        public int Quantity { get; set; } = 1;
     }
 }
