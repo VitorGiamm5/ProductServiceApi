@@ -17,4 +17,6 @@ public class ProductEntity : BaseAuditEntity, IIdentifiableLong
 
     [Required]
     public ProductsTypeEnum? Type { get; set; } = (byte)ProductsTypeEnum.Default;
+
+    public ProductTypeEntity? ProductType { get; set; }
 }

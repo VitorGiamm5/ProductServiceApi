@@ -10,6 +10,12 @@ public class ProductConfiguration : BaseAuditConfiguration<ProductEntity>
 {
     public override void Configure(EntityTypeBuilder<ProductEntity> builder)
     {
+        var friesCreatedDate = new DateTime(2026, 04, 29, 23, 12, 12, 284, DateTimeKind.Utc).AddTicks(3527);
+        var xBurgerCreatedDate = new DateTime(2026, 04, 29, 23, 12, 12, 284, DateTimeKind.Utc).AddTicks(3947);
+        var xEggCreatedDate = new DateTime(2026, 04, 29, 23, 12, 12, 284, DateTimeKind.Utc).AddTicks(4127);
+        var xBaconCreatedDate = new DateTime(2026, 04, 29, 23, 12, 12, 284, DateTimeKind.Utc).AddTicks(4131);
+        var refreshmentCreatedDate = new DateTime(2026, 04, 29, 23, 12, 12, 284, DateTimeKind.Utc).AddTicks(4133);
+
         builder.ToTable("tb_product");
 
         builder.HasKey(e => e.Id);
@@ -32,6 +38,12 @@ public class ProductConfiguration : BaseAuditConfiguration<ProductEntity>
                .HasColumnName("type")
                .HasConversion<byte>();  // Stores as byte in the database
 
+        builder.HasOne(e => e.ProductType)
+               .WithMany(e => e.Products)
+               .HasForeignKey(e => e.Type)
+               .HasPrincipalKey(e => e.Id)
+               .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasData(
             new ProductEntity
             {
@@ -40,7 +52,7 @@ public class ProductConfiguration : BaseAuditConfiguration<ProductEntity>
                 Price = 2m,
                 Type = ProductsTypeEnum.Fries,
                 CreatedByUserId = 1,
-                CreatedDate = DateTime.UtcNow,
+                CreatedDate = friesCreatedDate,
                 IsActive = true,
                 IsDeleted = false
             },
@@ -51,7 +63,7 @@ public class ProductConfiguration : BaseAuditConfiguration<ProductEntity>
                 Price = 5m,
                 Type = ProductsTypeEnum.Sandwich,
                 CreatedByUserId = 1,
-                CreatedDate = DateTime.UtcNow,
+                CreatedDate = xBurgerCreatedDate,
                 IsActive = true,
                 IsDeleted = false
             },
@@ -62,7 +74,7 @@ public class ProductConfiguration : BaseAuditConfiguration<ProductEntity>
                 Price = 4.50m,
                 Type = ProductsTypeEnum.Sandwich,
                 CreatedByUserId = 1,
-                CreatedDate = DateTime.UtcNow,
+                CreatedDate = xEggCreatedDate,
                 IsActive = true,
                 IsDeleted = false
             },
@@ -73,7 +85,7 @@ public class ProductConfiguration : BaseAuditConfiguration<ProductEntity>
                 Price = 7m,
                 Type = ProductsTypeEnum.Sandwich,
                 CreatedByUserId = 1,
-                CreatedDate = DateTime.UtcNow,
+                CreatedDate = xBaconCreatedDate,
                 IsActive = true,
                 IsDeleted = false
             },
@@ -84,7 +96,7 @@ public class ProductConfiguration : BaseAuditConfiguration<ProductEntity>
                 Price = 2.50m,
                 Type = ProductsTypeEnum.Refreshment,
                 CreatedByUserId = 1,
-                CreatedDate = DateTime.UtcNow,
+                CreatedDate = refreshmentCreatedDate,
                 IsActive = true,
                 IsDeleted = false
             }
