@@ -1,5 +1,5 @@
 using FluentAssertions;
-using ProductServiceApp.Application.Business.Orders.Discounts;
+using ProductServiceApp.Application.Business.Orders.OrderDiscount;
 using ProductServiceApp.Domain.Entities.Orders;
 using ProductServiceApp.Domain.Entities.Products;
 using ProductServiceApp.Domain.Enums.Products;
@@ -8,12 +8,10 @@ namespace ProductServiceApp.UnitTests.Orders;
 
 public class OrderDiscountCalculatorTests
 {
-    private readonly OrderDiscountCalculator _calculator = new();
-
     [Fact]
     public void Calculate_Should_Apply_20_Percent_When_Order_Has_Sandwich_Fries_And_Refreshment()
     {
-        var result = _calculator.Calculate(
+        var result = OrderDiscountCalculator.Execute(
             [
                 Product(ProductsTypeEnum.Sandwich, 20m),
                 Product(ProductsTypeEnum.Fries, 10m),
@@ -30,7 +28,7 @@ public class OrderDiscountCalculatorTests
     [Fact]
     public void Calculate_Should_Apply_15_Percent_When_Order_Has_Sandwich_And_Refreshment()
     {
-        var result = _calculator.Calculate(
+        var result = OrderDiscountCalculator.Execute(
             [
                 Product(ProductsTypeEnum.Sandwich, 20m),
                 Product(ProductsTypeEnum.Refreshment, 10m)
@@ -46,7 +44,7 @@ public class OrderDiscountCalculatorTests
     [Fact]
     public void Calculate_Should_Apply_10_Percent_When_Order_Has_Sandwich_And_Fries()
     {
-        var result = _calculator.Calculate(
+        var result = OrderDiscountCalculator.Execute(
             [
                 Product(ProductsTypeEnum.Sandwich, 20m),
                 Product(ProductsTypeEnum.Fries, 10m)
@@ -62,7 +60,7 @@ public class OrderDiscountCalculatorTests
     [Fact]
     public void Calculate_Should_Not_Apply_Discount_When_No_Rule_Matches()
     {
-        var result = _calculator.Calculate(
+        var result = OrderDiscountCalculator.Execute(
             [Product(ProductsTypeEnum.Fries, 10m)],
             Rules());
 
@@ -75,7 +73,7 @@ public class OrderDiscountCalculatorTests
     [Fact]
     public void Calculate_Should_Reject_Duplicated_Product_Types()
     {
-        var act = () => _calculator.Calculate(
+        var act = () => OrderDiscountCalculator.Execute(
             [
                 Product(ProductsTypeEnum.Sandwich, 20m),
                 Product(ProductsTypeEnum.Sandwich, 18m)

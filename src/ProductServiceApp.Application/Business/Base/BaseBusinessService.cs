@@ -10,7 +10,11 @@ namespace ProductServiceApp.Application.Business.Base;
 /// Intermediate = TInIntermediate / TOutIntermediate (dados no meio do processo)
 /// Outbox = TOutObject (dados que saem)
 /// </summary>
-public abstract class BaseBusinessService<TInObject, TInIntermediate, TOutIntermediate, TOutObject>
+public abstract class BaseBusinessService<
+        TInObject, 
+        TInIntermediate, 
+        TOutIntermediate,
+        TOutObject>
     : IBaseBusinessService<TInObject, TOutObject>
     where TInObject : class
     where TInIntermediate : class
@@ -24,7 +28,7 @@ public abstract class BaseBusinessService<TInObject, TInIntermediate, TOutInterm
     {
         // 1 Inbox — pré-processamento (validação, enriquecimento, sanitização, etc.)
         var processedInput = await PreProcessAsync(input, ct);
-
+        
         // 2️ PROCESSO — opera no intermediário
         var outIntermediate = await ProcessAsync(processedInput, ct);
 
@@ -39,18 +43,23 @@ public abstract class BaseBusinessService<TInObject, TInIntermediate, TOutInterm
     // ------------------------------------------------------------------ //
 
     /// <summary>
-    /// INBOX — recebe o input cru e devolve o input pronto para processar.
+    /// INBOX — recebe o input puro e devolve o input pronto para processar.
     /// Use para: validação, enriquecimento, normalização de dados.
     /// Implementação padrão: passa o input sem alteração.
     /// Uso Obrigatório, mas recomendado para manter o ProcessAsync focado apenas na lógica de negócio.
     /// </summary>
     protected abstract Task<TInIntermediate> PreProcessAsync(TInObject input, CancellationToken ct);
 
-    ///// <summary>
-    ///// Conversão de TInObject → TInIntermediate. Ex: Command → Entity
-    ///// Uso opcional,
-    ///// </summary>
-    //protected abstract Task<TInIntermediate> MapToIntermediateAsync(TInObject input, CancellationToken ct);
+    /// <summary>
+    /// Conversão de TInObject → TInIntermediate. Ex: Command → Entity ou Query → Entity. ou Objeto intermediário específico para o processo.
+    /// Uso opcional, serviços simples podem não precisar de um tipo intermediário e usar TInObject diretamente no ProcessAsync.
+    /// </summary>
+    protected virtual TInIntermediate? MapToIntermediateAsync(TInObject input, CancellationToken ct)
+    {
+        // Implementação padrão: tenta converter por cast (útil quando TInObject == TInIntermediate).
+        // Retorna null se não for possível — subclasses podem sobrescrever para fornecer mapeamento adequado.
+        return input as TInIntermediate;
+    }
 
     /// <summary>
     /// PROCESSAMENTO — lógica de negócio principal opera em TInIntermediate.

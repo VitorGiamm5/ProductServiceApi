@@ -27,4 +27,8 @@
     <ProjectReference Include="..\ProductServiceApp.Domain\ProductServiceApp.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Extensions\AssertionsValidator\Orders\" />
+  </ItemGroup>
+
 </Project>

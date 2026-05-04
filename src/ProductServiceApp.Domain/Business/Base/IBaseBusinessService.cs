@@ -1,7 +1,7 @@
 ﻿namespace ProductServiceApp.Domain.Business.Base;
 
 /// <summary>
-/// Contrato da camada de negócio com pipeline Inbox/Outbox.
+/// Business layer contract with Inbox/Outbox pipeline.
 /// </summary>
 public interface IBaseBusinessService<TInObject, TOutObject>
     where TInObject : class

@@ -30,14 +30,22 @@ ENV ASPNETCORE_ENVIRONMENT=Production \
     ConnectionStrings__PostgresWrite="Server=localhost;Port=5432;Database=dbproducts;Username=randandan;Password=randandan_XLR;" \
     ConnectionStrings__PostgresRead="Server=localhost;Port=5433;Database=dbproducts;Username=read_randandan;Password=read_randandan_XLR;" \
     DatabaseSettings__EnableLoadBalancing=true \
-    WorkersReplicas__ReplicasCreateProduct=2 \
-    WorkersReplicas__ReplicasUpdateProduct=2 \
-    WorkersReplicas__ReplicasDeleteProduct=2 \
+    WorkersReplicas__ReplicasCreateProduct=1 \
+    WorkersReplicas__ReplicasUpdateProduct=1 \
+    WorkersReplicas__ReplicasDeleteProduct=1 \
     WorkersReplicas__ReplicasGetAllProduct=1 \
     WorkersReplicas__ReplicasGetByIdProduct=1 \
+    WorkersReplicas__ReplicasCreateOrder=1 \
+    WorkersReplicas__ReplicasUpdateOrder=1 \
+    WorkersReplicas__ReplicasDeleteOrder=1 \
+    WorkersReplicas__ReplicasGetAllOrder=1 \
+    WorkersReplicas__ReplicasGetByIdOrder=1 \
     QueueCapacity__QueueCreateProduct=100 \
     QueueCapacity__QueueUpdateProduct=100 \
     QueueCapacity__QueueDeleteProduct=100 \
+    QueueCapacity__QueueCreateOrder=100 \
+    QueueCapacity__QueueUpdateOrder=100 \
+    QueueCapacity__QueueDeleteOrder=100 \
     RetryPolicy__MaxRetryAttempts=3 \
     RetryPolicy__DelayBetweenRetriesInSeconds=2 \
     KeepAliveTimeoutSeconds=30 \

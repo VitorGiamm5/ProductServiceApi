@@ -136,16 +136,25 @@ public static class SetupInfrastructure
         return services;
     }
 
+    #region Products Repositories
+
     private static void AddProductsRepositories(IServiceCollection services)
     {
         services.TryAddScoped<IProductCommandRepository<ProductEntity>, ProductCommandRepository>();
         services.TryAddScoped<IProductQueryRepository<ProductEntity>, ProductQueryRepository>();
     }
 
+    #endregion
+
+    #region Orders Repositories
+
     private static void AddOrdersRepositories(IServiceCollection services)
     {
         services.TryAddScoped<IOrderCommandRepository, OrderCommandRepository>();
         services.TryAddScoped<IOrderQueryRepository, OrderQueryRepository>();
-        services.TryAddScoped<IOrderDiscountRuleQueryRepository, OrderDiscountRuleQueryRepository>();
+        services.TryAddScoped<IOrderDiscountRuleQueryRepository<OrderDiscountRuleEntity>, OrderDiscountRuleQueryRepository>();
     }
+
+    #endregion
+
 }

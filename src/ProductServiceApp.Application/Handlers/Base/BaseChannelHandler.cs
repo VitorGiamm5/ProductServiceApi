@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using System.Threading.Channels;
 
 namespace ProductServiceApp.Application.Handlers.Base;
@@ -9,10 +10,10 @@ public abstract class BaseChannelHandler<TQuery, TResponse> : BackgroundService
 {
     private readonly Channel<(TQuery, TaskCompletionSource<TResponse>, CancellationToken)> _channel;
     protected readonly IServiceScopeFactory ScopeFactory;
-
     protected BaseChannelHandler(
         Channel<(TQuery, TaskCompletionSource<TResponse>, CancellationToken)> channel,
-        IServiceScopeFactory scopeFactory)
+        IServiceScopeFactory scopeFactory
+        )
     {
         _channel = channel;
         ScopeFactory = scopeFactory;
@@ -36,10 +37,22 @@ public abstract class BaseChannelHandler<TQuery, TResponse> : BackgroundService
                 var result = await HandleAsync(query, scope.ServiceProvider, cts.Token);
                 tcs.TrySetResult(result);
             }
-            catch (OperationCanceledException ex) { tcs.TrySetCanceled(ex.CancellationToken); }
-            catch (ValidationException ex) { tcs.TrySetException(ex); }
-            catch (KeyNotFoundException ex) { tcs.TrySetException(ex); }
-            catch (Exception ex) { tcs.TrySetException(ex); }
+            catch (OperationCanceledException ex) 
+            { 
+                tcs.TrySetCanceled(ex.CancellationToken);
+            }
+            catch (ValidationException ex) 
+            {
+                tcs.TrySetException(ex); 
+            }
+            catch (KeyNotFoundException ex) 
+            {
+                tcs.TrySetException(ex); 
+            }
+            catch (Exception ex) 
+            {
+                tcs.TrySetException(ex); 
+            }
         }
     }
 

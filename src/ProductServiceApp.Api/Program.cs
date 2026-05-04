@@ -5,6 +5,7 @@ using ProductServiceApp.Application.Metrics;
 using ProductServiceApp.Application.Middlewares;
 using ProductServiceApp.Infrastructure;
 using ProductServiceApp.Infrastructure.Database.Services;
+using ProductServiceApp.ServiceDefaults;
 using Prometheus;
 using Serilog;
 using System.Text.Json.Serialization;

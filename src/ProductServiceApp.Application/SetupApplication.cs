@@ -9,7 +9,6 @@ using ProductServiceApp.Application.Business.Products.GetById;
 using ProductServiceApp.Application.Business.Products.Update;
 using ProductServiceApp.Application.Business.Orders.Create;
 using ProductServiceApp.Application.Business.Orders.Delete;
-using ProductServiceApp.Application.Business.Orders.Discounts;
 using ProductServiceApp.Application.Business.Orders.GetAll;
 using ProductServiceApp.Application.Business.Orders.GetById;
 using ProductServiceApp.Application.Business.Orders.Update;
@@ -33,11 +32,15 @@ using ProductServiceApp.Domain.Business.Products.Business;
 using ProductServiceApp.Domain.Business.Products.Dtos;
 using ProductServiceApp.Domain.Business.Products.Handlers;
 using System.Threading.Channels;
+using ProductServiceApp.Application.Business.Orders.OrderDiscount;
 
 namespace ProductServiceApp.Application;
 
 public static class SetupApplication
 {
+    private const int DefaultQueueMessageQuantity = 100;
+    private const int DefaultWorkersReplicas = 1;
+
     public static IServiceCollection AddApplication(this IServiceCollection services, IConfiguration configuration)
     {
         #region Cache
@@ -79,16 +82,17 @@ public static class SetupApplication
     private static void SetupProductApplication(IServiceCollection services, IConfiguration configuration)
     {
         #region Channels — Commands (bounded with backpressure)
+
         var queueCapacity = configuration.GetSection("QueueCapacity");
 
         services.AddSingleton(Channel.CreateBounded<(CreateProductCommand, TaskCompletionSource<ProductResponse>, CancellationToken)>(
-            BoundedOptions(queueCapacity.GetValue<int>("QueueCreateProduct", 100))));
+            BoundedOptions(queueCapacity.GetValue<int>("QueueCreateProduct", DefaultQueueMessageQuantity))));
 
         services.AddSingleton(Channel.CreateBounded<(UpdateProductCommand, TaskCompletionSource<ProductResponse>, CancellationToken)>(
-            BoundedOptions(queueCapacity.GetValue<int>("QueueUpdateProduct", 100))));
+            BoundedOptions(queueCapacity.GetValue<int>("QueueUpdateProduct", DefaultQueueMessageQuantity))));
 
         services.AddSingleton(Channel.CreateBounded<(DeleteProductCommand, TaskCompletionSource<BooleanResponse>, CancellationToken)>(
-            BoundedOptions(queueCapacity.GetValue<int>("QueueDeleteProduct", 100))));
+            BoundedOptions(queueCapacity.GetValue<int>("QueueDeleteProduct", DefaultQueueMessageQuantity))));
 
         #endregion
 
@@ -104,11 +108,11 @@ public static class SetupApplication
 
         var workersReplicasSection = configuration.GetSection("WorkersReplicas");
 
-        services.AddWorkers<CreateProductCommandHandler>(workersReplicasSection.GetValue<int>("ReplicasCreateProduct", 2));
-        services.AddWorkers<UpdateProductCommandHandler>(workersReplicasSection.GetValue<int>("ReplicasUpdateProduct", 2));
-        services.AddWorkers<DeleteProductCommandHandler>(workersReplicasSection.GetValue<int>("ReplicasDeleteProduct", 2));
-        services.AddWorkers<GetAllProductQueryHandler>(workersReplicasSection.GetValue<int>("ReplicasGetAllProduct", 1));
-        services.AddWorkers<GetByIdProductQueryHandler>(workersReplicasSection.GetValue<int>("ReplicasGetByIdProduct", 1));
+        services.AddWorkers<CreateProductCommandHandler>(workersReplicasSection.GetValue<int>("ReplicasCreateProduct", DefaultWorkersReplicas));
+        services.AddWorkers<UpdateProductCommandHandler>(workersReplicasSection.GetValue<int>("ReplicasUpdateProduct", DefaultWorkersReplicas));
+        services.AddWorkers<DeleteProductCommandHandler>(workersReplicasSection.GetValue<int>("ReplicasDeleteProduct", DefaultWorkersReplicas));
+        services.AddWorkers<GetAllProductQueryHandler>(workersReplicasSection.GetValue<int>("ReplicasGetAllProduct", DefaultWorkersReplicas));
+        services.AddWorkers<GetByIdProductQueryHandler>(workersReplicasSection.GetValue<int>("ReplicasGetByIdProduct", DefaultWorkersReplicas));
 
         #endregion
 
@@ -129,28 +133,36 @@ public static class SetupApplication
 
     private static void SetupOrderApplication(IServiceCollection services, IConfiguration configuration)
     {
+        #region Channels — Commands (bounded with backpressure)
+
         var queueCapacity = configuration.GetSection("QueueCapacity");
 
         services.AddSingleton(Channel.CreateBounded<(CreateOrderCommand, TaskCompletionSource<OrderResponse>, CancellationToken)>(
-            BoundedOptions(queueCapacity.GetValue<int>("QueueCreateOrder", 100))));
+            BoundedOptions(queueCapacity.GetValue<int>("QueueCreateOrder", DefaultQueueMessageQuantity))));
 
         services.AddSingleton(Channel.CreateBounded<(UpdateOrderCommand, TaskCompletionSource<OrderResponse>, CancellationToken)>(
-            BoundedOptions(queueCapacity.GetValue<int>("QueueUpdateOrder", 100))));
+            BoundedOptions(queueCapacity.GetValue<int>("QueueUpdateOrder", DefaultQueueMessageQuantity))));
 
         services.AddSingleton(Channel.CreateBounded<(DeleteOrderCommand, TaskCompletionSource<BooleanResponse>, CancellationToken)>(
-            BoundedOptions(queueCapacity.GetValue<int>("QueueDeleteOrder", 100))));
+            BoundedOptions(queueCapacity.GetValue<int>("QueueDeleteOrder", DefaultQueueMessageQuantity))));
+
+        #endregion
+
+        #region Channels — Queries (unbounded)
 
         services.AddSingleton(Channel.CreateUnbounded<(GetAllOrderQuery, TaskCompletionSource<IEnumerable<OrderResponse>>, CancellationToken)>());
 
         services.AddSingleton(Channel.CreateUnbounded<(GetByIdOrderQuery, TaskCompletionSource<OrderResponse>, CancellationToken)>());
 
+        #endregion
+
         var workersReplicasSection = configuration.GetSection("WorkersReplicas");
 
-        services.AddWorkers<CreateOrderCommandHandler>(workersReplicasSection.GetValue<int>("ReplicasCreateOrder", 2));
-        services.AddWorkers<UpdateOrderCommandHandler>(workersReplicasSection.GetValue<int>("ReplicasUpdateOrder", 2));
-        services.AddWorkers<DeleteOrderCommandHandler>(workersReplicasSection.GetValue<int>("ReplicasDeleteOrder", 2));
-        services.AddWorkers<GetAllOrderQueryHandler>(workersReplicasSection.GetValue<int>("ReplicasGetAllOrder", 1));
-        services.AddWorkers<GetByIdOrderQueryHandler>(workersReplicasSection.GetValue<int>("ReplicasGetByIdOrder", 1));
+        services.AddWorkers<CreateOrderCommandHandler>(workersReplicasSection.GetValue<int>("ReplicasCreateOrder", DefaultWorkersReplicas));
+        services.AddWorkers<UpdateOrderCommandHandler>(workersReplicasSection.GetValue<int>("ReplicasUpdateOrder", DefaultWorkersReplicas));
+        services.AddWorkers<DeleteOrderCommandHandler>(workersReplicasSection.GetValue<int>("ReplicasDeleteOrder", DefaultWorkersReplicas));
+        services.AddWorkers<GetAllOrderQueryHandler>(workersReplicasSection.GetValue<int>("ReplicasGetAllOrder", DefaultWorkersReplicas));
+        services.AddWorkers<GetByIdOrderQueryHandler>(workersReplicasSection.GetValue<int>("ReplicasGetByIdOrder", DefaultWorkersReplicas));
 
         services.AddScoped<IOrderDiscountCalculator, OrderDiscountCalculator>();
         services.AddScoped<IGetAllOrderBusiness, GetAllOrderBusiness>();

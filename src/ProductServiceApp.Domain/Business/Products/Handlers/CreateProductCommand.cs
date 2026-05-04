@@ -8,7 +8,13 @@ public class CreateProductCommand : CreateProductRequest,
     IFromMapper<CreateProductCommand, CreateProductRequest>,
     IToMapper<ProductEntity>
 {
+    #region Constructors
+
     public CreateProductCommand(CreateProductRequest input) => MapFrom(input);
+
+    #endregion
+
+    #region Mapping
 
     public CreateProductCommand MapFrom(CreateProductRequest? input)
     {
@@ -38,4 +44,7 @@ public class CreateProductCommand : CreateProductRequest,
             IsActive = IsActive
         };
     }
+
+    #endregion
+
 }

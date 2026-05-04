@@ -1,4 +1,4 @@
-namespace ProductServiceApp.Application.Business.Orders.Discounts;
+namespace ProductServiceApp.Domain.Business.Orders.AdditionalFeaturesBusiness.OrderDiscount;
 
 public sealed class OrderDiscountResult
 {

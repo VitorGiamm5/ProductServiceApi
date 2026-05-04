@@ -4,15 +4,26 @@ using ProductServiceApp.Domain.Mappers;
 
 namespace ProductServiceApp.Domain.Business.Products.Dtos;
 
+/// <summary>
+/// Data Transfer Object (DTO) for representing product information in responses, extending the CreateProductRequest with additional properties for response purposes.
+/// </summary>
 public class ProductResponse : CreateProductRequest, IFromMapper<ProductResponse, ProductEntity>
 {
+    #region Constructors
+
     public ProductResponse(ProductEntity input) => MapFrom(input);
+
+    #endregion
 
     #region Additional Properties
 
     public string? TypeName { get; set; }
     public DateTime? CreatedDate { get; set; }
     public DateTime? UpdatedDate { get; set; }
+
+    #endregion
+
+    #region Mapping
 
     public ProductResponse MapFrom(ProductEntity? input)
     {
@@ -34,4 +45,5 @@ public class ProductResponse : CreateProductRequest, IFromMapper<ProductResponse
     }
 
     #endregion
+
 }

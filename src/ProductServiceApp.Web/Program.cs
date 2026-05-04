@@ -1,5 +1,6 @@
 using ProductServiceApp.Web.Components;
 using ProductServiceApp.Web.Clients;
+using ProductServiceApp.ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
 
