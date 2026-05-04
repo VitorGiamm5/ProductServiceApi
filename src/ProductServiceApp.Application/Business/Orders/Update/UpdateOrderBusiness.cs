@@ -12,6 +12,12 @@ using System.Collections.Frozen;
 
 namespace ProductServiceApp.Application.Business.Orders.Update;
 
+public sealed record UpdateOrderIntermediate(
+    UpdateOrderCommand Input,
+    IReadOnlyCollection<ProductEntity> Products,
+    OrderDiscountResult OrderCalculated,
+    DateTime UpdatedDate);
+
 public class UpdateOrderBusiness(
         IOrderCommandRepository repository,
         IOrderQueryRepository readRepository,
@@ -19,11 +25,11 @@ public class UpdateOrderBusiness(
         IOrderDiscountRuleQueryRepository<OrderDiscountRuleEntity> discountRuleRepository,
         IOrderDiscountCalculator calculator,
         IValidator<UpdateOrderCommand> validator)
-    : BaseBusinessService<UpdateOrderCommand, OrderEntity, OrderEntity, OrderResponse>,
+    : BaseBusinessService<UpdateOrderCommand, UpdateOrderIntermediate, OrderEntity, OrderResponse>,
     IUpdateOrderBusiness
 {
     //INBOX
-    protected override async Task<OrderEntity> PreProcessAsync(UpdateOrderCommand input, CancellationToken ct)
+    protected override async Task<UpdateOrderIntermediate> PreProcessAsync(UpdateOrderCommand input, CancellationToken ct)
     {
         #region VALIDATION
 
@@ -52,41 +58,49 @@ public class UpdateOrderBusiness(
 
         #endregion
 
-        #region Entity Mapping
+        #region Map
 
-        return new OrderEntity
-        {
-            Id = input.Id ?? 0L,
-            UpdatedDate = DateTime.UtcNow,
-            UpdatedByUserId = 0,
-            IsActive = input.IsActive,
-            IsDeleted = input.IsDeleted ?? false,
-            SubTotalValue = orderCalculated.SubTotalValue,
-            TotalValue = orderCalculated.TotalValue,
-            DiscountPercentage = orderCalculated.DiscountPercentage,
-            DiscountValue = orderCalculated.DiscountValue,
-            OrderProducts = [.. products
-                .Select(product => new OrderProductEntity
-                {
-                    Id = input.Id ?? 0L,
-                    ProductId = product.Id,
-                    UnitPrice = product.Price.GetValueOrDefault(),
-                    Product = product
-                })]
-        };
+        return new UpdateOrderIntermediate(input, products, orderCalculated, DateTime.UtcNow);
 
         #endregion
     }
 
     //PROCESS
-    protected override async Task<OrderEntity> ProcessAsync(OrderEntity input, CancellationToken ct)
+    protected override async Task<OrderEntity> ProcessAsync(UpdateOrderIntermediate input, CancellationToken ct)
     {
-        return await repository.UpdateAsync(input, input.Id, ct);
+        var entity = MapToIntermediate(input);
+
+        return await repository.UpdateAsync(entity, entity.Id, ct);
     }
 
     //OUTBOX
     protected override Task<OrderResponse> PostProcessAsync(OrderEntity result, CancellationToken ct)
     {
         return Task.FromResult(new OrderResponse(result));
+    }
+
+    //MAP
+    public static OrderEntity MapToIntermediate(UpdateOrderIntermediate intermediate)
+    {
+        return new OrderEntity
+        {
+            Id = intermediate.Input.Id ?? 0L,
+            UpdatedDate = intermediate.UpdatedDate,
+            UpdatedByUserId = 0,
+            IsActive = intermediate.Input.IsActive,
+            IsDeleted = intermediate.Input.IsDeleted ?? false,
+            SubTotalValue = intermediate.OrderCalculated.SubTotalValue,
+            TotalValue = intermediate.OrderCalculated.TotalValue,
+            DiscountPercentage = intermediate.OrderCalculated.DiscountPercentage,
+            DiscountValue = intermediate.OrderCalculated.DiscountValue,
+            OrderProducts = [.. intermediate.Products
+                .Select(product => new OrderProductEntity
+                {
+                    Id = intermediate.Input.Id ?? 0L,
+                    ProductId = product.Id,
+                    UnitPrice = product.Price.GetValueOrDefault(),
+                    Product = product
+                })]
+        };
     }
 }

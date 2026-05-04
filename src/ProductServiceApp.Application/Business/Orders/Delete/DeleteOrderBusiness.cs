@@ -8,32 +8,55 @@ using ProductServiceApp.Domain.Repositories.Orders;
 
 namespace ProductServiceApp.Application.Business.Orders.Delete;
 
+public sealed record DeleteOrderIntermediate(
+    DeleteOrderCommand Input,
+    OrderEntity OrderToDelete,
+    DateTime DeletedDate);
+
 public class DeleteOrderBusiness(
         IOrderCommandRepository repository,
         IOrderQueryRepository readRepository,
         IValidator<DeleteOrderCommand> validator)
-    : BaseBusinessService<DeleteOrderCommand, OrderEntity, OrderEntity, BooleanResponse>,
+    : BaseBusinessService<DeleteOrderCommand, DeleteOrderIntermediate, OrderEntity, BooleanResponse>,
     IDeleteOrderBusiness
 {
-    protected override async Task<OrderEntity> PreProcessAsync(DeleteOrderCommand input, CancellationToken ct)
+    private readonly DateTime _deletedDate = DateTime.UtcNow;
+
+    //INBOX
+    protected override async Task<DeleteOrderIntermediate> PreProcessAsync(DeleteOrderCommand input, CancellationToken ct)
     {
         var validation = await validator.ValidateAsync(input, ct);
         if (!validation.IsValid)
             throw new ValidationException(validation.Errors);
 
-        return await readRepository.GetByIdAsync(input.Id, ct);
+        var entity = await readRepository.GetByIdAsync(input.Id, ct);
+
+        return MapToIntermediate(new DeleteOrderIntermediate(input, entity, _deletedDate));
     }
 
-    protected override async Task<OrderEntity> ProcessAsync(OrderEntity input, CancellationToken ct)
+    //PROCESS
+    protected override async Task<OrderEntity> ProcessAsync(DeleteOrderIntermediate input, CancellationToken ct)
     {
-        return await repository.SoftDeleteAsync(input.Id, ct);
+        return await repository.SoftDeleteAsync(input.OrderToDelete.Id, ct);
     }
 
+    //OUTBOX
     protected override Task<BooleanResponse> PostProcessAsync(OrderEntity result, CancellationToken ct)
     {
         return Task.FromResult(new BooleanResponse
         {
             IsSuccess = true
         });
+    }
+
+    //MAP
+    public static DeleteOrderIntermediate MapToIntermediate(DeleteOrderIntermediate intermediate)
+    {
+        intermediate.OrderToDelete.DeletedDate = intermediate.DeletedDate;
+        intermediate.OrderToDelete.DeletedByUserId = 0;
+        intermediate.OrderToDelete.IsActive = false;
+        intermediate.OrderToDelete.IsDeleted = true;
+
+        return intermediate;
     }
 }

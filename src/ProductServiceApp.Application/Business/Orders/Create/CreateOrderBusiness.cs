@@ -12,21 +12,30 @@ using System.Collections.Frozen;
 
 namespace ProductServiceApp.Application.Business.Orders.Create;
 
+/// <summary>
+/// Intermediate object for the order creation process, containing the necessary data for order mapping and processing.
+/// </summary>
+/// <param name="Input">Order creation command containing the input data.</param>
+/// <param name="Products">Collection of products loaded for the order.</param>
+/// <param name="OrderCalculated">Result of the order discount calculation.</param>
+/// <param name="CreatedDate">Order creation date.</param>
+public sealed record CreateOrderIntermediate(
+    CreateOrderCommand Input,
+    IReadOnlyCollection<ProductEntity> Products,
+    OrderDiscountResult OrderCalculated,
+    DateTime CreatedDate);
+
 public class CreateOrderBusiness(
         LoadProductsAsync loadProductsAsync,
         IOrderCommandRepository repository,
         IOrderDiscountRuleQueryRepository<OrderDiscountRuleEntity> discountRuleRepository,
         IOrderDiscountCalculator calculator,
         IValidator<CreateOrderCommand> validator)
-    : BaseBusinessService<CreateOrderCommand, OrderEntity, OrderEntity, OrderResponse>,
+    : BaseBusinessService<CreateOrderCommand, CreateOrderIntermediate, OrderEntity, OrderResponse>,
     ICreateOrderBusiness
 {
-    private IReadOnlyCollection<ProductEntity> _products = [];
-    private OrderDiscountResult? _orderCalculated;
-    private readonly DateTime _createdDate = DateTime.UtcNow;
-
     //INBOX
-    protected override async Task<OrderEntity> PreProcessAsync(CreateOrderCommand input, CancellationToken ct)
+    protected override async Task<CreateOrderIntermediate> PreProcessAsync(CreateOrderCommand input, CancellationToken ct)
     {
         #region VALIDATION
 
@@ -38,16 +47,16 @@ public class CreateOrderBusiness(
 
         #region Data Load
 
-        _products = await loadProductsAsync.ExecuteAsync(input.ProductIds, ct);
+        var products = await loadProductsAsync.ExecuteAsync(input.ProductIds, ct);
         var rules = await discountRuleRepository.GetActiveAsync(ct);
 
         #endregion
 
         #region Additional Features - Order Discount Calculation
 
-        _orderCalculated = await calculator.ExecuteAsync(new OrderDiscountRequest
+        var orderCalculated = await calculator.ExecuteAsync(new OrderDiscountRequest
         {
-            Products = [.. _products.ToFrozenSet()],
+            Products = [.. products.ToFrozenSet()],
             Rules = [.. rules.ToFrozenSet()],
         }, ct);
 
@@ -55,38 +64,48 @@ public class CreateOrderBusiness(
 
         #region Map
 
-        return MapToIntermediate(input)
-            ?? throw new InvalidOperationException("Nao foi possivel mapear o pedido para entidade.");
+        return new CreateOrderIntermediate(input, products, orderCalculated, DateTime.UtcNow);
 
         #endregion
     }
 
-    //MAP
-    protected override OrderEntity? MapToIntermediate(CreateOrderCommand input)
+    #region Entity Mapping
+
+    //PROCESS
+    protected override async Task<OrderEntity> ProcessAsync(CreateOrderIntermediate input, CancellationToken ct)
     {
-        var orderCalculated = _orderCalculated
-            ?? throw new InvalidOperationException("O calculo do pedido deve ser executado antes do mapeamento.");
+        var entity = MapToIntermediate(input);
 
-        #region Entity Mapping
+        return await repository.CreateAsync(entity, ct);
+    }
 
+    //OUTBOX
+    protected override Task<OrderResponse> PostProcessAsync(OrderEntity result, CancellationToken ct)
+    {
+        return Task.FromResult(new OrderResponse(result));
+    }
+
+    //MAP
+    public static OrderEntity MapToIntermediate(CreateOrderIntermediate intermediate)
+    {
         return new OrderEntity
         {
-            CreatedDate = _createdDate,
+            CreatedDate = intermediate.CreatedDate,
             CreatedByUserId = 0,
-            IsActive = input.IsActive,
-            IsDeleted = input.IsDeleted,
-            SubTotalValue = orderCalculated.SubTotalValue,
-            TotalValue = orderCalculated.TotalValue,
-            DiscountPercentage = orderCalculated.DiscountPercentage,
-            DiscountValue = orderCalculated.DiscountValue,
+            IsActive = intermediate.Input.IsActive,
+            IsDeleted = intermediate.Input.IsDeleted,
+            SubTotalValue = intermediate.OrderCalculated.SubTotalValue,
+            TotalValue = intermediate.OrderCalculated.TotalValue,
+            DiscountPercentage = intermediate.OrderCalculated.DiscountPercentage,
+            DiscountValue = intermediate.OrderCalculated.DiscountValue,
             OrdersAudit = new OrderAuditEntity
             {
-                CreatedDate = _createdDate,
+                CreatedDate = intermediate.CreatedDate,
                 CreatedByUserId = 0,
                 IsActive = true,
                 IsDeleted = false
             },
-            OrderProducts = [.. _products
+            OrderProducts = [.. intermediate.Products
                 .Select(product => new OrderProductEntity
                 {
                     ProductId = product.Id,
@@ -95,19 +114,7 @@ public class CreateOrderBusiness(
                 })
             ]
         };
-
-        #endregion
     }
 
-    //PROCESS
-    protected override async Task<OrderEntity> ProcessAsync(OrderEntity input, CancellationToken ct)
-    {
-        return await repository.CreateAsync(input, ct);
-    }
-
-    //OUTBOX
-    protected override Task<OrderResponse> PostProcessAsync(OrderEntity result, CancellationToken ct)
-    {
-        return Task.FromResult(new OrderResponse(result));
-    }
+    #endregion
 }
