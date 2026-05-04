@@ -26,15 +26,15 @@ using ProductServiceApp.Application.Handlers.Products.Commands.Update;
 using ProductServiceApp.Application.Handlers.Products.Queries.GetAll;
 using ProductServiceApp.Application.Handlers.Products.Queries.GetById;
 using ProductServiceApp.Application.Metrics;
-using ProductServiceApp.Domain.Business.Base.Dtos;
-using ProductServiceApp.Domain.Business.Orders.Business;
-using ProductServiceApp.Domain.Business.Orders.Dtos;
-using ProductServiceApp.Domain.Business.Orders.Handlers;
-using ProductServiceApp.Domain.Business.Products.Business;
-using ProductServiceApp.Domain.Business.Products.Dtos;
-using ProductServiceApp.Domain.Business.Products.Handlers;
 using System.Threading.Channels;
 using ProductServiceApp.Application.Business.Orders.OrderDiscount;
+using ProductServiceApp.Domain.Services.Products.Handlers;
+using ProductServiceApp.Domain.Services.Orders.Business;
+using ProductServiceApp.Domain.Services.Products.Dtos;
+using ProductServiceApp.Domain.Services.Base.Dtos;
+using ProductServiceApp.Domain.Services.Orders.Handlers;
+using ProductServiceApp.Domain.Services.Products.Business;
+using ProductServiceApp.Domain.Services.Orders.Dtos;
 
 namespace ProductServiceApp.Application;
 

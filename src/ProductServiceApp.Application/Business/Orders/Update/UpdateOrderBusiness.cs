@@ -2,13 +2,14 @@ using FluentValidation;
 using ProductServiceApp.Application.Business.Base;
 using ProductServiceApp.Application.Business.Products.GetByIdList;
 using ProductServiceApp.Application.Cache.Orders;
-using ProductServiceApp.Domain.Business.Orders.AdditionalFeaturesBusiness.OrderDiscount;
-using ProductServiceApp.Domain.Business.Orders.Business;
-using ProductServiceApp.Domain.Business.Orders.Dtos;
-using ProductServiceApp.Domain.Business.Orders.Handlers;
+using ProductServiceApp.Domain.DateTimes;
 using ProductServiceApp.Domain.Entities.Orders;
 using ProductServiceApp.Domain.Entities.Products;
 using ProductServiceApp.Domain.Repositories.Orders;
+using ProductServiceApp.Domain.Services.Orders.AdditionalFeaturesBusiness.OrderDiscount;
+using ProductServiceApp.Domain.Services.Orders.Business;
+using ProductServiceApp.Domain.Services.Orders.Dtos;
+using ProductServiceApp.Domain.Services.Orders.Handlers;
 using System.Collections.Frozen;
 
 namespace ProductServiceApp.Application.Business.Orders.Update;
@@ -66,7 +67,7 @@ public class UpdateOrderBusiness(
 
         #region Map
 
-        return new UpdateOrderToProcess(input, products, orderCalculated, DateTime.UtcNow);
+        return new UpdateOrderToProcess(input, products, orderCalculated, DateTimeProvider.UtcNowAsUnspecified());
 
         #endregion
     }

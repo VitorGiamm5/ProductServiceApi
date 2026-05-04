@@ -1,11 +1,11 @@
 using FluentValidation;
 using ProductServiceApp.Application.Business.Base;
 using ProductServiceApp.Application.Cache.Orders;
-using ProductServiceApp.Domain.Business.Orders.Business;
-using ProductServiceApp.Domain.Business.Orders.Dtos;
-using ProductServiceApp.Domain.Business.Orders.Handlers;
 using ProductServiceApp.Domain.Entities.Orders;
 using ProductServiceApp.Domain.Repositories.Orders;
+using ProductServiceApp.Domain.Services.Orders.Business;
+using ProductServiceApp.Domain.Services.Orders.Dtos;
+using ProductServiceApp.Domain.Services.Orders.Handlers;
 
 namespace ProductServiceApp.Application.Business.Orders.GetById;
 

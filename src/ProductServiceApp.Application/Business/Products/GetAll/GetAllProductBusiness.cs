@@ -1,10 +1,10 @@
 using ProductServiceApp.Application.Business.Base;
 using ProductServiceApp.Application.Cache.Products;
-using ProductServiceApp.Domain.Business.Products.Business;
-using ProductServiceApp.Domain.Business.Products.Dtos;
-using ProductServiceApp.Domain.Business.Products.Handlers;
 using ProductServiceApp.Domain.Entities.Products;
 using ProductServiceApp.Domain.Repositories.Products;
+using ProductServiceApp.Domain.Services.Products.Business;
+using ProductServiceApp.Domain.Services.Products.Dtos;
+using ProductServiceApp.Domain.Services.Products.Handlers;
 
 namespace ProductServiceApp.Application.Business.Products.GetAll;
 

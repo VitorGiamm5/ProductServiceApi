@@ -1,11 +1,12 @@
 using FluentValidation;
 using ProductServiceApp.Application.Business.Base;
 using ProductServiceApp.Application.Cache.Orders;
-using ProductServiceApp.Domain.Business.Base.Dtos;
-using ProductServiceApp.Domain.Business.Orders.Business;
-using ProductServiceApp.Domain.Business.Orders.Handlers;
+using ProductServiceApp.Domain.DateTimes;
 using ProductServiceApp.Domain.Entities.Orders;
 using ProductServiceApp.Domain.Repositories.Orders;
+using ProductServiceApp.Domain.Services.Base.Dtos;
+using ProductServiceApp.Domain.Services.Orders.Business;
+using ProductServiceApp.Domain.Services.Orders.Handlers;
 
 namespace ProductServiceApp.Application.Business.Orders.Delete;
 
@@ -22,7 +23,7 @@ public class DeleteOrderBusiness(
     : BaseBusinessService<DeleteOrderCommand, DeleteOrderIntermediate, OrderEntity, BooleanResponse>,
     IDeleteOrderBusiness
 {
-    private readonly DateTime _deletedDate = DateTime.UtcNow;
+    private readonly DateTime _deletedDate = DateTimeProvider.UtcNowAsUnspecified();
 
     #region INBOX
 

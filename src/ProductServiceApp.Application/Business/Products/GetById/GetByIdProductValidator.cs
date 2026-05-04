@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
-using ProductServiceApp.Domain.Business.Products.Handlers;
 using ProductServiceApp.Domain.Entities.Products;
 using ProductServiceApp.Domain.Repositories.Products;
+using ProductServiceApp.Domain.Services.Products.Handlers;
 
 namespace ProductServiceApp.Application.Business.Products.GetById;
 

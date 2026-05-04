@@ -1,5 +1,5 @@
 ﻿using FluentValidation;
-using ProductServiceApp.Domain.Business.Products.Handlers;
+using ProductServiceApp.Domain.Services.Products.Handlers;
 
 namespace ProductServiceApp.Application.Business.Products.Create;
 

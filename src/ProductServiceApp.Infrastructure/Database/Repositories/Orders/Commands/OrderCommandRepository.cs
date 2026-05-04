@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using ProductServiceApp.Domain.DateTimes;
 using ProductServiceApp.Domain.Entities.Orders;
 using ProductServiceApp.Domain.Exceptions;
 using ProductServiceApp.Domain.Repositories.Orders;
@@ -89,7 +90,7 @@ public class OrderCommandRepository : BaseCommandRepository<OrderEntity>, IOrder
             .FirstOrDefaultAsync(order => order.Id == id, cancellationToken)
             ?? throw new NotFoundException(nameof(OrderEntity), id);
 
-        var now = DateTime.UtcNow;
+        var now = DateTimeProvider.UtcNowAsUnspecified();
 
         existing.IsDeleted = true;
         existing.IsActive = false;

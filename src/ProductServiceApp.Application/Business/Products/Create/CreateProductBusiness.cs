@@ -1,11 +1,12 @@
 using FluentValidation;
 using ProductServiceApp.Application.Business.Base;
 using ProductServiceApp.Application.Cache.Products;
-using ProductServiceApp.Domain.Business.Products.Business;
-using ProductServiceApp.Domain.Business.Products.Dtos;
-using ProductServiceApp.Domain.Business.Products.Handlers;
+using ProductServiceApp.Domain.DateTimes;
 using ProductServiceApp.Domain.Entities.Products;
 using ProductServiceApp.Domain.Repositories.Products;
+using ProductServiceApp.Domain.Services.Products.Business;
+using ProductServiceApp.Domain.Services.Products.Dtos;
+using ProductServiceApp.Domain.Services.Products.Handlers;
 
 namespace ProductServiceApp.Application.Business.Products.Create;
 
@@ -33,7 +34,7 @@ public class CreateProductBusiness(
         if (!validation.IsValid)
             throw new ValidationException(validation.Errors);
 
-        return new CreateProductToProcess(input, DateTime.UtcNow);
+        return new CreateProductToProcess(input, DateTimeProvider.UtcNowAsUnspecified());
     }
 
     #endregion

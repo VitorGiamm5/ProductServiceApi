@@ -5,15 +5,15 @@ using Moq;
 using ProductServiceApp.Application.Business.Orders.Create;
 using ProductServiceApp.Application.Business.Products.GetByIdList;
 using ProductServiceApp.Application.Cache.Orders;
-using ProductServiceApp.Domain.Business.Orders.AdditionalFeaturesBusiness.OrderDiscount;
-using ProductServiceApp.Domain.Business.Orders.Business;
-using ProductServiceApp.Domain.Business.Orders.Dtos;
-using ProductServiceApp.Domain.Business.Orders.Handlers;
 using ProductServiceApp.Domain.Entities.Orders;
 using ProductServiceApp.Domain.Entities.Products;
 using ProductServiceApp.Domain.Enums.Products;
 using ProductServiceApp.Domain.Repositories.Orders;
 using ProductServiceApp.Domain.Repositories.Products;
+using ProductServiceApp.Domain.Services.Orders.AdditionalFeaturesBusiness.OrderDiscount;
+using ProductServiceApp.Domain.Services.Orders.Business;
+using ProductServiceApp.Domain.Services.Orders.Dtos;
+using ProductServiceApp.Domain.Services.Orders.Handlers;
 
 namespace ProductServiceApp.UnitTests.Orders;
 

@@ -1,8 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using ProductServiceApp.Application.Handlers.Base;
-using ProductServiceApp.Domain.Business.Orders.Business;
-using ProductServiceApp.Domain.Business.Orders.Dtos;
-using ProductServiceApp.Domain.Business.Orders.Handlers;
+using ProductServiceApp.Domain.Services.Orders.Business;
+using ProductServiceApp.Domain.Services.Orders.Dtos;
+using ProductServiceApp.Domain.Services.Orders.Handlers;
 using System.Threading.Channels;
 
 namespace ProductServiceApp.Application.Handlers.Orders.Commands.Create;

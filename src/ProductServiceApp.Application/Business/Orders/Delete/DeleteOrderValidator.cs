@@ -1,5 +1,5 @@
 using FluentValidation;
-using ProductServiceApp.Domain.Business.Orders.Handlers;
+using ProductServiceApp.Domain.Services.Orders.Handlers;
 
 namespace ProductServiceApp.Application.Business.Orders.Delete;
 

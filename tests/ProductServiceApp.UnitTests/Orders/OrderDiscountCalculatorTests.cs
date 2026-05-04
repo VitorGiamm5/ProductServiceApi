@@ -3,10 +3,10 @@ using FluentValidation;
 using FluentValidation.Results;
 using Moq;
 using ProductServiceApp.Application.Business.Orders.OrderDiscount;
-using ProductServiceApp.Domain.Business.Orders.AdditionalFeaturesBusiness.OrderDiscount;
 using ProductServiceApp.Domain.Entities.Orders;
 using ProductServiceApp.Domain.Entities.Products;
 using ProductServiceApp.Domain.Enums.Products;
+using ProductServiceApp.Domain.Services.Orders.AdditionalFeaturesBusiness.OrderDiscount;
 
 namespace ProductServiceApp.UnitTests.Orders;
 

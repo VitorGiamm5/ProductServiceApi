@@ -1,6 +1,6 @@
 using FluentValidation;
 using ProductServiceApp.Application.Extensions.AssertionsValidator.Products;
-using ProductServiceApp.Domain.Business.Orders.Handlers;
+using ProductServiceApp.Domain.Services.Orders.Handlers;
 
 namespace ProductServiceApp.Application.Business.Orders.Update;
 

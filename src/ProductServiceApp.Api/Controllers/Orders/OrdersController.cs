@@ -1,8 +1,8 @@
 using Asp.Versioning;
 using ProductServiceApp.Api.Controllers.Base;
-using ProductServiceApp.Domain.Business.Base.Dtos;
-using ProductServiceApp.Domain.Business.Orders.Dtos;
-using ProductServiceApp.Domain.Business.Orders.Handlers;
+using ProductServiceApp.Domain.Services.Base.Dtos;
+using ProductServiceApp.Domain.Services.Orders.Dtos;
+using ProductServiceApp.Domain.Services.Orders.Handlers;
 using System.Threading.Channels;
 
 namespace ProductServiceApp.Api.Controllers.Orders;

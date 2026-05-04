@@ -1,10 +1,10 @@
 using FluentValidation;
 using ProductServiceApp.Application.Business.Base;
-using ProductServiceApp.Domain.Business.Orders.AdditionalFeaturesBusiness.OrderDiscount;
-using ProductServiceApp.Domain.Business.Orders.Business;
 using ProductServiceApp.Domain.Entities.Orders;
 using ProductServiceApp.Domain.Entities.Products;
 using ProductServiceApp.Domain.Enums.Products;
+using ProductServiceApp.Domain.Services.Orders.AdditionalFeaturesBusiness.OrderDiscount;
+using ProductServiceApp.Domain.Services.Orders.Business;
 
 namespace ProductServiceApp.Application.Business.Orders.OrderDiscount;
 

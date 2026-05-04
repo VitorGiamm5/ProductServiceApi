@@ -1,6 +1,6 @@
 using FluentValidation;
 using ProductServiceApp.Application.Extensions.AssertionsValidator.Products;
-using ProductServiceApp.Domain.Business.Orders.AdditionalFeaturesBusiness.OrderDiscount;
+using ProductServiceApp.Domain.Services.Orders.AdditionalFeaturesBusiness.OrderDiscount;
 
 namespace ProductServiceApp.Application.Business.Orders.OrderDiscount;
 
