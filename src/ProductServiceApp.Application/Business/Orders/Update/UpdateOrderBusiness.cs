@@ -1,5 +1,6 @@
 using FluentValidation;
 using ProductServiceApp.Application.Business.Base;
+using ProductServiceApp.Application.Business.Products.GetByIdList;
 using ProductServiceApp.Domain.Business.Orders.AdditionalFeaturesBusiness.OrderDiscount;
 using ProductServiceApp.Domain.Business.Orders.Business;
 using ProductServiceApp.Domain.Business.Orders.Dtos;
@@ -7,7 +8,6 @@ using ProductServiceApp.Domain.Business.Orders.Handlers;
 using ProductServiceApp.Domain.Entities.Orders;
 using ProductServiceApp.Domain.Entities.Products;
 using ProductServiceApp.Domain.Repositories.Orders;
-using ProductServiceApp.Domain.Repositories.Products;
 using System.Collections.Frozen;
 
 namespace ProductServiceApp.Application.Business.Orders.Update;
@@ -15,7 +15,7 @@ namespace ProductServiceApp.Application.Business.Orders.Update;
 public class UpdateOrderBusiness(
         IOrderCommandRepository repository,
         IOrderQueryRepository readRepository,
-        IProductQueryRepository<ProductEntity> productRepository,
+        LoadProductsAsync loadProductsAsync,
         IOrderDiscountRuleQueryRepository<OrderDiscountRuleEntity> discountRuleRepository,
         IOrderDiscountCalculator calculator,
         IValidator<UpdateOrderCommand> validator)
@@ -37,7 +37,7 @@ public class UpdateOrderBusiness(
 
         await readRepository.GetByIdAsync(input.Id!.Value, ct);
 
-        var products = await ExecuteAsync(input.ProductIds, ct);
+        var products = await loadProductsAsync.ExecuteAsync(input.ProductIds, ct);
         var rules = (await discountRuleRepository.GetActiveAsync(ct)).ToList();
 
         #endregion
@@ -88,20 +88,5 @@ public class UpdateOrderBusiness(
     protected override Task<OrderResponse> PostProcessAsync(OrderEntity result, CancellationToken ct)
     {
         return Task.FromResult(new OrderResponse(result));
-    }
-
-    public async Task<List<ProductEntity>> ExecuteAsync(IEnumerable<long> productIds, CancellationToken ct)
-    {
-        var ids = productIds.Distinct().ToHashSet();
-        var products = (await productRepository.GetAllAsync(ct))
-            .Where(product => ids.Contains(product.Id))
-            .ToList();
-
-        if (products.Count != ids.Count)
-        {
-            throw new ArgumentException("Um ou mais produtos informados no pedido nao foram encontrados.");
-        }
-
-        return products;
     }
 }

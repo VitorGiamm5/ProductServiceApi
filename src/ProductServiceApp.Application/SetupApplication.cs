@@ -6,6 +6,7 @@ using ProductServiceApp.Application.Business.Products.Create;
 using ProductServiceApp.Application.Business.Products.Delete;
 using ProductServiceApp.Application.Business.Products.GetAll;
 using ProductServiceApp.Application.Business.Products.GetById;
+using ProductServiceApp.Application.Business.Products.GetByIdList;
 using ProductServiceApp.Application.Business.Products.Update;
 using ProductServiceApp.Application.Business.Orders.Create;
 using ProductServiceApp.Application.Business.Orders.Delete;
@@ -120,6 +121,7 @@ public static class SetupApplication
 
         services.AddScoped<IGetAllProductBusiness, GetAllProductBusiness>();
         services.AddScoped<IGetByIdProductBusiness, GetByIdProductBusiness>();
+        services.AddScoped<LoadProductsAsync>();
         services.AddScoped<ICreateProductBusiness, CreateProductBusiness>();
         services.AddScoped<IUpdateProductBusiness, UpdateProductBusiness>();
         services.AddScoped<IDeleteProductBusiness, DeleteProductBusiness>();

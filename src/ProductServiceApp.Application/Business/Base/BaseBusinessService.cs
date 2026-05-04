@@ -54,7 +54,7 @@ public abstract class BaseBusinessService<
     /// Conversão de TInObject → TInIntermediate. Ex: Command → Entity ou Query → Entity. ou Objeto intermediário específico para o processo.
     /// Uso opcional, serviços simples podem não precisar de um tipo intermediário e usar TInObject diretamente no ProcessAsync.
     /// </summary>
-    protected virtual TInIntermediate? MapToIntermediateAsync(TInObject input, CancellationToken ct)
+    protected virtual TInIntermediate? MapToIntermediate(TInObject input)
     {
         // Implementação padrão: tenta converter por cast (útil quando TInObject == TInIntermediate).
         // Retorna null se não for possível — subclasses podem sobrescrever para fornecer mapeamento adequado.

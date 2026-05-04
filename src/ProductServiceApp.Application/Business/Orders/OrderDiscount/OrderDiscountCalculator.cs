@@ -15,7 +15,6 @@ public class OrderDiscountCalculator(
 {
     private readonly IValidator<OrderDiscountRequest> _validator = validator;
 
-
     // INBOX
     protected override async Task<OrderDiscountRequest> PreProcessAsync(OrderDiscountRequest input, CancellationToken ct)
     {

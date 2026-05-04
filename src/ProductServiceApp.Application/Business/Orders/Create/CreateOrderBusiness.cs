@@ -1,5 +1,6 @@
 using FluentValidation;
 using ProductServiceApp.Application.Business.Base;
+using ProductServiceApp.Application.Business.Products.GetByIdList;
 using ProductServiceApp.Domain.Business.Orders.AdditionalFeaturesBusiness.OrderDiscount;
 using ProductServiceApp.Domain.Business.Orders.Business;
 using ProductServiceApp.Domain.Business.Orders.Dtos;
@@ -7,14 +8,13 @@ using ProductServiceApp.Domain.Business.Orders.Handlers;
 using ProductServiceApp.Domain.Entities.Orders;
 using ProductServiceApp.Domain.Entities.Products;
 using ProductServiceApp.Domain.Repositories.Orders;
-using ProductServiceApp.Domain.Repositories.Products;
 using System.Collections.Frozen;
 
 namespace ProductServiceApp.Application.Business.Orders.Create;
 
 public class CreateOrderBusiness(
+        LoadProductsAsync loadProductsAsync,
         IOrderCommandRepository repository,
-        IProductQueryRepository<ProductEntity> productRepository,
         IOrderDiscountRuleQueryRepository<OrderDiscountRuleEntity> discountRuleRepository,
         IOrderDiscountCalculator calculator,
         IValidator<CreateOrderCommand> validator)
@@ -23,7 +23,7 @@ public class CreateOrderBusiness(
 {
     private IReadOnlyCollection<ProductEntity> _products = [];
     private OrderDiscountResult? _orderCalculated;
-    private DateTime _createdDate;
+    private readonly DateTime _createdDate = DateTime.UtcNow;
 
     //INBOX
     protected override async Task<OrderEntity> PreProcessAsync(CreateOrderCommand input, CancellationToken ct)
@@ -38,34 +38,32 @@ public class CreateOrderBusiness(
 
         #region Data Load
 
-        var products = await ExecuteAsync(input.ProductIds, ct);
+        _products = await loadProductsAsync.ExecuteAsync(input.ProductIds, ct);
         var rules = await discountRuleRepository.GetActiveAsync(ct);
-        var now = DateTime.UtcNow;
 
         #endregion
 
         #region Additional Features - Order Discount Calculation
 
-        var orderCalculated = await calculator.ExecuteAsync(new OrderDiscountRequest
+        _orderCalculated = await calculator.ExecuteAsync(new OrderDiscountRequest
         {
-            Products = [.. products.ToFrozenSet()],
+            Products = [.. _products.ToFrozenSet()],
             Rules = [.. rules.ToFrozenSet()],
         }, ct);
 
         #endregion
 
-        _products = products;
-        _orderCalculated = orderCalculated;
-        _createdDate = now;
+        #region Map
 
-        return MapToIntermediateAsync(input, ct)
+        return MapToIntermediate(input)
             ?? throw new InvalidOperationException("Nao foi possivel mapear o pedido para entidade.");
+
+        #endregion
     }
 
     //MAP
-    protected override OrderEntity? MapToIntermediateAsync(CreateOrderCommand input, CancellationToken ct)
+    protected override OrderEntity? MapToIntermediate(CreateOrderCommand input)
     {
-        _ = ct;
         var orderCalculated = _orderCalculated
             ?? throw new InvalidOperationException("O calculo do pedido deve ser executado antes do mapeamento.");
 
@@ -112,23 +110,4 @@ public class CreateOrderBusiness(
     {
         return Task.FromResult(new OrderResponse(result));
     }
-
-    #region - Helpers
-
-    private async Task<List<ProductEntity>> ExecuteAsync(IEnumerable<long> productIds, CancellationToken ct)
-    {
-        var ids = productIds.Distinct().ToHashSet();
-        var products = (await productRepository.GetAllAsync(ct))
-            .Where(product => ids.Contains(product.Id))
-            .ToList();
-
-        if (products.Count != ids.Count)
-        {
-            throw new ArgumentException("Um ou mais produtos informados no pedido nao foram encontrados.");
-        }
-
-        return products;
-    }
-
-    #endregion
 }
