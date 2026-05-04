@@ -8,28 +8,77 @@ using ProductServiceApp.Domain.Repositories.Orders;
 
 namespace ProductServiceApp.Application.Business.Orders.GetById;
 
+public sealed record GetByIdOrderIntermediate(
+    GetByIdOrderQuery Input);
+
+public sealed record GetByIdOrderToPostProcess(
+    OrderEntity RetrievedOrder);
+
 public class GetByIdOrderBusiness(
         IOrderQueryRepository repository,
         IValidator<GetByIdOrderQuery> validator)
-    : BaseBusinessService<GetByIdOrderQuery, GetByIdOrderQuery, OrderEntity, OrderResponse>,
+    : BaseBusinessService<GetByIdOrderQuery, GetByIdOrderIntermediate, GetByIdOrderToPostProcess, OrderResponse>,
     IGetByIdOrderBusiness
 {
-    protected override async Task<GetByIdOrderQuery> PreProcessAsync(GetByIdOrderQuery input, CancellationToken ct)
+    #region INBOX
+
+    protected override async Task<GetByIdOrderIntermediate> PreProcessAsync(GetByIdOrderQuery input, CancellationToken ct)
     {
+        #region VALIDATION
+
         var validation = await validator.ValidateAsync(input, ct);
         if (!validation.IsValid)
             throw new ValidationException(validation.Errors);
 
-        return input;
+        #endregion
+
+        #region Map
+
+        return new GetByIdOrderIntermediate(input);
+
+        #endregion
     }
 
-    protected override async Task<OrderEntity> ProcessAsync(GetByIdOrderQuery input, CancellationToken ct)
+    #endregion
+
+    #region PROCESS
+
+    protected override async Task<GetByIdOrderToPostProcess> ProcessAsync(GetByIdOrderIntermediate input, CancellationToken ct)
     {
-        return await repository.GetByIdAsync(input.Id, ct);
+        var entity = MapToIntermediate(input);
+
+        var result = await repository.GetByIdAsync(entity.Id, ct);
+
+        return new GetByIdOrderToPostProcess(result);
     }
 
-    protected override Task<OrderResponse> PostProcessAsync(OrderEntity result, CancellationToken ct)
+    #endregion
+
+    #region OUTBOX
+
+    protected override Task<OrderResponse> PostProcessAsync(GetByIdOrderToPostProcess result, CancellationToken ct)
     {
-        return Task.FromResult(new OrderResponse(result));
+        return Task.FromResult(new OrderResponse(result.RetrievedOrder));
     }
+
+    #endregion
+
+    #region MAP
+
+    public static OrderEntity MapToIntermediate(GetByIdOrderIntermediate input)
+    {
+        return new OrderEntity
+        {
+            Id = input.Input.Id
+        };
+    }
+
+    //MAP
+    public static OrderResponse MapToPostProcess(GetByIdOrderToPostProcess postProcess)
+    {
+        return new OrderResponse(postProcess.RetrievedOrder);
+    }
+
+    #endregion
+
 }

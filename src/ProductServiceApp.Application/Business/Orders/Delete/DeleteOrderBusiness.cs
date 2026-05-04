@@ -22,7 +22,8 @@ public class DeleteOrderBusiness(
 {
     private readonly DateTime _deletedDate = DateTime.UtcNow;
 
-    //INBOX
+    #region INBOX
+
     protected override async Task<DeleteOrderIntermediate> PreProcessAsync(DeleteOrderCommand input, CancellationToken ct)
     {
         var validation = await validator.ValidateAsync(input, ct);
@@ -34,13 +35,19 @@ public class DeleteOrderBusiness(
         return MapToIntermediate(new DeleteOrderIntermediate(input, entity, _deletedDate));
     }
 
-    //PROCESS
+    #endregion
+
+    #region PROCESS
+
     protected override async Task<OrderEntity> ProcessAsync(DeleteOrderIntermediate input, CancellationToken ct)
     {
         return await repository.SoftDeleteAsync(input.OrderToDelete.Id, ct);
     }
 
-    //OUTBOX
+    #endregion
+
+    #region OUTBOX
+
     protected override Task<BooleanResponse> PostProcessAsync(OrderEntity result, CancellationToken ct)
     {
         return Task.FromResult(new BooleanResponse
@@ -49,7 +56,10 @@ public class DeleteOrderBusiness(
         });
     }
 
-    //MAP
+    #endregion
+
+    #region MAP
+
     public static DeleteOrderIntermediate MapToIntermediate(DeleteOrderIntermediate intermediate)
     {
         intermediate.OrderToDelete.DeletedDate = intermediate.DeletedDate;
@@ -59,4 +69,7 @@ public class DeleteOrderBusiness(
 
         return intermediate;
     }
+
+    #endregion
+
 }

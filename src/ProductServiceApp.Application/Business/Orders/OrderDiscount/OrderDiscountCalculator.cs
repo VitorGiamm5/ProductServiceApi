@@ -15,7 +15,8 @@ public class OrderDiscountCalculator(
 {
     private readonly IValidator<OrderDiscountRequest> _validator = validator;
 
-    // INBOX
+    #region INBOX
+
     protected override async Task<OrderDiscountRequest> PreProcessAsync(OrderDiscountRequest input, CancellationToken ct)
     {
         var validation = await _validator.ValidateAsync(input, ct);
@@ -25,7 +26,10 @@ public class OrderDiscountCalculator(
         return input;
     }
 
-    // PROCESS
+    #endregion
+
+    #region PROCESS
+
     protected override async Task<OrderDiscountResult> ProcessAsync(OrderDiscountRequest input, CancellationToken ct)
     {
         var subTotal = input.Products.Sum(product => product.Price.GetValueOrDefault());
@@ -43,11 +47,16 @@ public class OrderDiscountCalculator(
         };
     }
 
-    // OUTBOX
+    #endregion
+
+    #region OUTBOX
+
     protected override Task<OrderDiscountResult> PostProcessAsync(OrderDiscountResult result, CancellationToken ct)
     {
         return Task.FromResult(result);
     }
+
+    #endregion
 
     #region Private Methods
 

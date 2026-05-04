@@ -11,18 +11,31 @@ public class GetAllOrderBusiness(IOrderQueryRepository repository)
     : BaseBusinessService<GetAllOrderQuery, GetAllOrderQuery, IEnumerable<OrderEntity>, IEnumerable<OrderResponse>>,
     IGetAllOrderBusiness
 {
+    #region INBOX
+
     protected override Task<GetAllOrderQuery> PreProcessAsync(GetAllOrderQuery input, CancellationToken ct)
     {
         return Task.FromResult(input);
     }
+
+    #endregion
+
+    #region PROCESS
 
     protected override async Task<IEnumerable<OrderEntity>> ProcessAsync(GetAllOrderQuery input, CancellationToken ct)
     {
         return await repository.GetAllAsync(ct);
     }
 
+    #endregion
+
+    #region OUTBOX
+
     protected override Task<IEnumerable<OrderResponse>> PostProcessAsync(IEnumerable<OrderEntity> result, CancellationToken ct)
     {
         return Task.FromResult(result.Select(order => new OrderResponse(order)));
     }
+
+    #endregion
+
 }

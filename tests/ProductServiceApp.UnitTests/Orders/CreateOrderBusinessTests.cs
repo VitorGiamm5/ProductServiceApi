@@ -130,7 +130,7 @@ public class CreateOrderBusinessTests
             TotalValue = 25.50m
         };
 
-        var result = CreateOrderBusiness.MapToIntermediate(new CreateOrderIntermediate(
+        var result = CreateOrderBusiness.MapToProcess(new CreateOrderToProcess(
             command,
             products,
             calculated,
@@ -173,7 +173,7 @@ public class CreateOrderBusinessTests
     public async Task ProcessAsync_Should_Call_CreateAsync_And_Return_Created_Order()
     {
         var context = TestContext.Create();
-        var input = new CreateOrderIntermediate(
+        var input = new CreateOrderToProcess(
             Command([1], isActive: true, isDeleted: false),
             [Product(1, ProductsTypeEnum.Sandwich, 20m)],
             new OrderDiscountResult
@@ -313,12 +313,12 @@ public class CreateOrderBusinessTests
             IValidator<CreateOrderCommand> validator)
         : CreateOrderBusiness(loadProductsAsync, repository, discountRuleRepository, calculator, validator)
     {
-        public Task<CreateOrderIntermediate> PreProcessForTestAsync(CreateOrderCommand input, CancellationToken ct)
+        public Task<CreateOrderToProcess> PreProcessForTestAsync(CreateOrderCommand input, CancellationToken ct)
         {
             return PreProcessAsync(input, ct);
         }
 
-        public Task<OrderEntity> ProcessForTestAsync(CreateOrderIntermediate input, CancellationToken ct)
+        public Task<OrderEntity> ProcessForTestAsync(CreateOrderToProcess input, CancellationToken ct)
         {
             return ProcessAsync(input, ct);
         }

@@ -12,11 +12,14 @@ using System.Collections.Frozen;
 
 namespace ProductServiceApp.Application.Business.Orders.Update;
 
-public sealed record UpdateOrderIntermediate(
+public sealed record UpdateOrderToProcess(
     UpdateOrderCommand Input,
     IReadOnlyCollection<ProductEntity> Products,
     OrderDiscountResult OrderCalculated,
     DateTime UpdatedDate);
+
+public sealed record UpdateOrderToPostProcess(
+    OrderEntity UpdatedOrder);
 
 public class UpdateOrderBusiness(
         IOrderCommandRepository repository,
@@ -25,11 +28,12 @@ public class UpdateOrderBusiness(
         IOrderDiscountRuleQueryRepository<OrderDiscountRuleEntity> discountRuleRepository,
         IOrderDiscountCalculator calculator,
         IValidator<UpdateOrderCommand> validator)
-    : BaseBusinessService<UpdateOrderCommand, UpdateOrderIntermediate, OrderEntity, OrderResponse>,
+    : BaseBusinessService<UpdateOrderCommand, UpdateOrderToProcess, UpdateOrderToPostProcess, OrderResponse>,
     IUpdateOrderBusiness
 {
-    //INBOX
-    protected override async Task<UpdateOrderIntermediate> PreProcessAsync(UpdateOrderCommand input, CancellationToken ct)
+    #region INBOX
+
+    protected override async Task<UpdateOrderToProcess> PreProcessAsync(UpdateOrderCommand input, CancellationToken ct)
     {
         #region VALIDATION
 
@@ -60,27 +64,37 @@ public class UpdateOrderBusiness(
 
         #region Map
 
-        return new UpdateOrderIntermediate(input, products, orderCalculated, DateTime.UtcNow);
+        return new UpdateOrderToProcess(input, products, orderCalculated, DateTime.UtcNow);
 
         #endregion
     }
 
-    //PROCESS
-    protected override async Task<OrderEntity> ProcessAsync(UpdateOrderIntermediate input, CancellationToken ct)
+    #endregion
+
+    #region PROCESS
+    protected override async Task<UpdateOrderToPostProcess> ProcessAsync(UpdateOrderToProcess input, CancellationToken ct)
     {
         var entity = MapToIntermediate(input);
 
-        return await repository.UpdateAsync(entity, entity.Id, ct);
+        var result = await repository.UpdateAsync(entity, entity.Id, ct);
+
+        return new UpdateOrderToPostProcess(result);
     }
 
-    //OUTBOX
-    protected override Task<OrderResponse> PostProcessAsync(OrderEntity result, CancellationToken ct)
+    #endregion
+
+    #region OUTBOX
+
+    protected override Task<OrderResponse> PostProcessAsync(UpdateOrderToPostProcess result, CancellationToken ct)
     {
-        return Task.FromResult(new OrderResponse(result));
+        return Task.FromResult(new OrderResponse(result.UpdatedOrder));
     }
 
-    //MAP
-    public static OrderEntity MapToIntermediate(UpdateOrderIntermediate intermediate)
+    #endregion
+
+    #region MAP
+
+    public static OrderEntity MapToIntermediate(UpdateOrderToProcess intermediate)
     {
         return new OrderEntity
         {
@@ -103,4 +117,13 @@ public class UpdateOrderBusiness(
                 })]
         };
     }
+
+    //MAP
+    public static UpdateOrderToPostProcess MapToPostProcess(OrderEntity entity)
+    {
+        return new UpdateOrderToPostProcess(entity);
+    }
+
+#endregion
+
 }
