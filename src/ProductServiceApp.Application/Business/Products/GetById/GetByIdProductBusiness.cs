@@ -9,43 +9,85 @@ using ProductServiceApp.Domain.Repositories.Products;
 
 namespace ProductServiceApp.Application.Business.Products.GetById;
 
+public sealed record GetByIdProductToProcess(
+    GetByIdProductQuery Input);
+
+public sealed record GetByIdProductToPostProcess(
+    ProductEntity RetrievedProduct);
+
 public class GetByIdProductBusiness(
         IProductQueryRepository<ProductEntity> repository,
         IProductCacheService cache,
         IValidator<GetByIdProductQuery> validator
     )
-    : BaseBusinessService<GetByIdProductQuery, GetByIdProductQuery, ProductEntity, ProductResponse>,
+    : BaseBusinessService<GetByIdProductQuery, GetByIdProductToProcess, GetByIdProductToPostProcess, ProductResponse>,
       IGetByIdProductBusiness
 {
-    protected override async Task<GetByIdProductQuery> PreProcessAsync(
+    #region INBOX
+
+    protected override async Task<GetByIdProductToProcess> PreProcessAsync(
         GetByIdProductQuery input, CancellationToken ct)
     {
         var validation = await validator.ValidateAsync(input, ct);
         if (!validation.IsValid)
             throw new ValidationException(validation.Errors);
 
-        return input;
+        return new GetByIdProductToProcess(input);
     }
 
-    protected override async Task<ProductEntity> ProcessAsync(
-        GetByIdProductQuery input, CancellationToken ct)
-    {
-        var cachedProduct = await cache.GetByIdAsync(input.Id, ct);
-        if (cachedProduct is not null)
-            return cachedProduct;
+    #endregion
 
-        var result = await repository.GetByIdAsync(input.Id, ct);
+    #region PROCESS
+
+    protected override async Task<GetByIdProductToPostProcess> ProcessAsync(
+        GetByIdProductToProcess input, CancellationToken ct)
+    {
+        var entity = MapToProcess(input);
+
+        var cachedProduct = await cache.GetByIdAsync(entity.Id, ct);
+        if (cachedProduct is not null)
+            return MapToPostProcess(cachedProduct);
+
+        var result = await repository.GetByIdAsync(entity.Id, ct);
         if (result is null)
-            throw new KeyNotFoundException($"Produto {input.Id} não encontrado.");
+            throw new KeyNotFoundException($"Produto {entity.Id} nao encontrado.");
 
         await cache.SetByIdAsync(result, ct);
 
-        return result;
+        return MapToPostProcess(result);
     }
 
-    protected override async Task<ProductResponse> PostProcessAsync(
-        ProductEntity result, CancellationToken ct)
+    #endregion
+
+    #region OUTBOX
+
+    protected override Task<ProductResponse> PostProcessAsync(
+        GetByIdProductToPostProcess result, CancellationToken ct)
     {
-        return await Task.FromResult(new ProductResponse(result));
+        return Task.FromResult(MapToResponse(result));
     }
+
+    #endregion
+
+    #region MAP
+
+    public static ProductEntity MapToProcess(GetByIdProductToProcess input)
+    {
+        return new ProductEntity
+        {
+            Id = input.Input.Id
+        };
+    }
+
+    public static GetByIdProductToPostProcess MapToPostProcess(ProductEntity product)
+    {
+        return new GetByIdProductToPostProcess(product);
+    }
+
+    public static ProductResponse MapToResponse(GetByIdProductToPostProcess postProcess)
+    {
+        return new ProductResponse(postProcess.RetrievedProduct);
+    }
+
+    #endregion
 }

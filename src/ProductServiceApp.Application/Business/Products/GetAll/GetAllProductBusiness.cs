@@ -8,25 +8,37 @@ using ProductServiceApp.Domain.Repositories.Products;
 
 namespace ProductServiceApp.Application.Business.Products.GetAll;
 
+public sealed record GetAllProductToProcess(
+    GetAllProductQuery Input);
+
+public sealed record GetAllProductToPostProcess(
+    IEnumerable<ProductEntity> RetrievedProducts);
+
 public class GetAllProductBusiness(
         IProductQueryRepository<ProductEntity> repository,
         IProductCacheService cache
     )
-    : BaseBusinessService<GetAllProductQuery, GetAllProductQuery, IEnumerable<ProductEntity>, IEnumerable<ProductResponse>>,
+    : BaseBusinessService<GetAllProductQuery, GetAllProductToProcess, GetAllProductToPostProcess, IEnumerable<ProductResponse>>,
     IGetAllProductBusiness
 {
-    protected override Task<GetAllProductQuery> PreProcessAsync(
+    #region INBOX
+
+    protected override Task<GetAllProductToProcess> PreProcessAsync(
         GetAllProductQuery input, CancellationToken ct)
     {
-        return Task.FromResult(input);
+        return Task.FromResult(new GetAllProductToProcess(input));
     }
 
-    protected override async Task<IEnumerable<ProductEntity>> ProcessAsync(
-        GetAllProductQuery input, CancellationToken ct)
+    #endregion
+
+    #region PROCESS
+
+    protected override async Task<GetAllProductToPostProcess> ProcessAsync(
+        GetAllProductToProcess input, CancellationToken ct)
     {
         var cachedProducts = await cache.GetAllAsync(ct);
         if (cachedProducts is not null)
-            return cachedProducts;
+            return MapToPostProcess(cachedProducts);
 
         var products = (await repository.GetAllAsync(ct)).ToArray();
         await cache.SetAllAsync(products, ct);
@@ -36,12 +48,32 @@ public class GetAllProductBusiness(
             await cache.SetByIdAsync(product, ct);
         }
 
-        return products;
+        return MapToPostProcess(products);
     }
 
-    protected override async Task<IEnumerable<ProductResponse>> PostProcessAsync(
-        IEnumerable<ProductEntity> result, CancellationToken ct)
+    #endregion
+
+    #region OUTBOX
+
+    protected override Task<IEnumerable<ProductResponse>> PostProcessAsync(
+        GetAllProductToPostProcess result, CancellationToken ct)
     {
-        return await Task.FromResult(result.Select(x => new ProductResponse(x)));
+        return Task.FromResult(result.RetrievedProducts.Select(MapToResponse));
     }
+
+    #endregion
+
+    #region MAP
+
+    public static GetAllProductToPostProcess MapToPostProcess(IEnumerable<ProductEntity> products)
+    {
+        return new GetAllProductToPostProcess(products);
+    }
+
+    public static ProductResponse MapToResponse(ProductEntity product)
+    {
+        return new ProductResponse(product);
+    }
+
+    #endregion
 }

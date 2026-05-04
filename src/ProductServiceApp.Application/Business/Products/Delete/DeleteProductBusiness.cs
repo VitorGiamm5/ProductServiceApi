@@ -9,16 +9,25 @@ using ProductServiceApp.Domain.Repositories.Products;
 
 namespace ProductServiceApp.Application.Business.Products.Delete;
 
+public sealed record DeleteProductToProcess(
+    DeleteProductCommand Input,
+    ProductEntity ProductToDelete);
+
+public sealed record DeleteProductToPostProcess(
+    ProductEntity DeletedProduct);
+
 public class DeleteProductBusiness(
         IProductCommandRepository<ProductEntity> repository,
         IProductQueryRepository<ProductEntity> read,
         IProductCacheService cache,
         IValidator<DeleteProductCommand> validator
     )
-    : BaseBusinessService<DeleteProductCommand, ProductEntity, ProductEntity, BooleanResponse>,
+    : BaseBusinessService<DeleteProductCommand, DeleteProductToProcess, DeleteProductToPostProcess, BooleanResponse>,
     IDeleteProductBusiness
 {
-    protected override async Task<ProductEntity> PreProcessAsync(
+    #region INBOX
+
+    protected override async Task<DeleteProductToProcess> PreProcessAsync(
         DeleteProductCommand input, CancellationToken ct)
     {
         var validation = await validator.ValidateAsync(input, ct);
@@ -28,27 +37,51 @@ public class DeleteProductBusiness(
         var entity = await read.GetByIdAsync(input.Id, ct);
 
         return entity is null
-            ? throw new KeyNotFoundException($"Produto {input.Id} não encontrado.")
-            : entity;
+            ? throw new KeyNotFoundException($"Produto {input.Id} nao encontrado.")
+            : MapToProcess(new DeleteProductToProcess(input, entity));
     }
 
-    protected override async Task<ProductEntity> ProcessAsync(
-        ProductEntity input, CancellationToken ct)
+    #endregion
+
+    #region PROCESS
+
+    protected override async Task<DeleteProductToPostProcess> ProcessAsync(
+        DeleteProductToProcess input, CancellationToken ct)
     {
-        await repository.DeleteAsync(input.Id, ct);
+        await repository.DeleteAsync(input.ProductToDelete.Id, ct);
 
-        return input;
+        return MapToPostProcess(input.ProductToDelete);
     }
+
+    #endregion
+
+    #region OUTBOX
 
     protected override async Task<BooleanResponse> PostProcessAsync(
-        ProductEntity result, CancellationToken ct)
+        DeleteProductToPostProcess result, CancellationToken ct)
     {
         await cache.InvalidateAllAsync(ct);
-        await cache.InvalidateByIdAsync(result.Id, ct);
+        await cache.InvalidateByIdAsync(result.DeletedProduct.Id, ct);
 
         return new BooleanResponse
         {
             IsSuccess = true
         };
     }
+
+    #endregion
+
+    #region MAP
+
+    public static DeleteProductToProcess MapToProcess(DeleteProductToProcess intermediate)
+    {
+        return intermediate;
+    }
+
+    public static DeleteProductToPostProcess MapToPostProcess(ProductEntity deletedProduct)
+    {
+        return new DeleteProductToPostProcess(deletedProduct);
+    }
+
+    #endregion
 }

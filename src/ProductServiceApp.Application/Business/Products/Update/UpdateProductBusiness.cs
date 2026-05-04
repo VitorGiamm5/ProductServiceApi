@@ -9,42 +9,78 @@ using ProductServiceApp.Domain.Repositories.Products;
 
 namespace ProductServiceApp.Application.Business.Products.Update;
 
+public sealed record UpdateProductToProcess(
+    UpdateProductCommand Input,
+    DateTime UpdatedDate);
+
+public sealed record UpdateProductToPostProcess(
+    ProductEntity UpdatedProduct);
+
 public class UpdateProductBusiness(
         IProductCommandRepository<ProductEntity> repository,
         IProductCacheService cache,
         IValidator<UpdateProductCommand> validator
     )
-    : BaseBusinessService<UpdateProductCommand, ProductEntity, ProductEntity, ProductResponse>(),
+    : BaseBusinessService<UpdateProductCommand, UpdateProductToProcess, UpdateProductToPostProcess, ProductResponse>(),
     IUpdateProductBusiness
 {
-    protected override async Task<ProductEntity> PreProcessAsync(
+    #region INBOX
+
+    protected override async Task<UpdateProductToProcess> PreProcessAsync(
         UpdateProductCommand input, CancellationToken ct)
     {
         var validation = await validator.ValidateAsync(input, ct);
         if (!validation.IsValid)
             throw new ValidationException(validation.Errors);
 
-        ProductEntity entity = input.MapTo();
+        return new UpdateProductToProcess(input, DateTime.UtcNow);
+    }
 
-        entity.UpdatedDate = DateTime.UtcNow;
-        entity.IsDeleted = input.IsDeleted;
+    #endregion
+
+    #region PROCESS
+
+    protected override async Task<UpdateProductToPostProcess> ProcessAsync(
+        UpdateProductToProcess input, CancellationToken ct)
+    {
+        var entity = MapToProcess(input);
+        var result = await repository.UpdateAsync(entity, entity.Id, ct);
+
+        return MapToPostProcess(result);
+    }
+
+    #endregion
+
+    #region OUTBOX
+
+    protected override async Task<ProductResponse> PostProcessAsync(
+        UpdateProductToPostProcess result, CancellationToken ct)
+    {
+        await cache.InvalidateAllAsync(ct);
+        await cache.SetByIdAsync(result.UpdatedProduct, ct);
+
+        return new ProductResponse(result.UpdatedProduct);
+    }
+
+    #endregion
+
+    #region MAP
+
+    public static ProductEntity MapToProcess(UpdateProductToProcess intermediate)
+    {
+        var entity = intermediate.Input.MapTo();
+
+        entity.UpdatedDate = intermediate.UpdatedDate;
+        entity.IsDeleted = intermediate.Input.IsDeleted;
         entity.UpdatedByUserId = 0;
 
         return entity;
     }
 
-    protected override async Task<ProductEntity> ProcessAsync(
-        ProductEntity input, CancellationToken ct)
+    public static UpdateProductToPostProcess MapToPostProcess(ProductEntity updatedProduct)
     {
-        return await repository.UpdateAsync(input, input.Id, ct);
+        return new UpdateProductToPostProcess(updatedProduct);
     }
 
-    protected override async Task<ProductResponse> PostProcessAsync(
-        ProductEntity result, CancellationToken ct)
-    {
-        await cache.InvalidateAllAsync(ct);
-        await cache.SetByIdAsync(result, ct);
-
-        return new ProductResponse(result);
-    }
+    #endregion
 }
