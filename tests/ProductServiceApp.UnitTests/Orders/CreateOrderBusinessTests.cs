@@ -4,6 +4,7 @@ using FluentValidation.Results;
 using Moq;
 using ProductServiceApp.Application.Business.Orders.Create;
 using ProductServiceApp.Application.Business.Products.GetByIdList;
+using ProductServiceApp.Application.Cache.Orders;
 using ProductServiceApp.Domain.Business.Orders.AdditionalFeaturesBusiness.OrderDiscount;
 using ProductServiceApp.Domain.Business.Orders.Business;
 using ProductServiceApp.Domain.Business.Orders.Dtos;
@@ -191,7 +192,7 @@ public class CreateOrderBusinessTests
 
         var result = await context.Business.ProcessForTestAsync(input, CancellationToken.None);
 
-        result.Should().BeSameAs(created);
+        result.CreatedOrder.Should().BeSameAs(created);
         context.Repository.Verify(item => item.CreateAsync(
             It.Is<OrderEntity>(entity =>
                 entity.SubTotalValue == 20m &&
@@ -226,7 +227,7 @@ public class CreateOrderBusinessTests
             ]
         };
 
-        var result = await context.Business.PostProcessForTestAsync(order, CancellationToken.None);
+        var result = await context.Business.PostProcessForTestAsync(new CreateOrderToPostProcess(order), CancellationToken.None);
 
         result.Should().BeOfType<OrderResponse>();
         result.Should().BeEquivalentTo(new
@@ -285,6 +286,7 @@ public class CreateOrderBusinessTests
     {
         public Mock<IOrderCommandRepository> Repository { get; } = new();
         public Mock<IProductQueryRepository<ProductEntity>> ProductRepository { get; } = new();
+        public Mock<IOrderCacheService> Cache { get; } = new();
         public Mock<IOrderDiscountRuleQueryRepository<OrderDiscountRuleEntity>> DiscountRuleRepository { get; } = new();
         public Mock<IOrderDiscountCalculator> Calculator { get; } = new();
         public Mock<IValidator<CreateOrderCommand>> Validator { get; } = new();
@@ -297,6 +299,7 @@ public class CreateOrderBusinessTests
             context.Business = new TestableCreateOrderBusiness(
                 loadProductsAsync,
                 context.Repository.Object,
+                context.Cache.Object,
                 context.DiscountRuleRepository.Object,
                 context.Calculator.Object,
                 context.Validator.Object);
@@ -308,22 +311,23 @@ public class CreateOrderBusinessTests
     private sealed class TestableCreateOrderBusiness(
             LoadProductsAsync loadProductsAsync,
             IOrderCommandRepository repository,
+            IOrderCacheService cache,
             IOrderDiscountRuleQueryRepository<OrderDiscountRuleEntity> discountRuleRepository,
             IOrderDiscountCalculator calculator,
             IValidator<CreateOrderCommand> validator)
-        : CreateOrderBusiness(loadProductsAsync, repository, discountRuleRepository, calculator, validator)
+        : CreateOrderBusiness(loadProductsAsync, repository, cache, discountRuleRepository, calculator, validator)
     {
         public Task<CreateOrderToProcess> PreProcessForTestAsync(CreateOrderCommand input, CancellationToken ct)
         {
             return PreProcessAsync(input, ct);
         }
 
-        public Task<OrderEntity> ProcessForTestAsync(CreateOrderToProcess input, CancellationToken ct)
+        public Task<CreateOrderToPostProcess> ProcessForTestAsync(CreateOrderToProcess input, CancellationToken ct)
         {
             return ProcessAsync(input, ct);
         }
 
-        public Task<OrderResponse> PostProcessForTestAsync(OrderEntity input, CancellationToken ct)
+        public Task<OrderResponse> PostProcessForTestAsync(CreateOrderToPostProcess input, CancellationToken ct)
         {
             return PostProcessAsync(input, ct);
         }

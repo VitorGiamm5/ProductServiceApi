@@ -1,5 +1,6 @@
 using FluentValidation;
 using ProductServiceApp.Application.Business.Base;
+using ProductServiceApp.Application.Cache.Orders;
 using ProductServiceApp.Domain.Business.Orders.Business;
 using ProductServiceApp.Domain.Business.Orders.Dtos;
 using ProductServiceApp.Domain.Business.Orders.Handlers;
@@ -16,6 +17,7 @@ public sealed record GetByIdOrderToPostProcess(
 
 public class GetByIdOrderBusiness(
         IOrderQueryRepository repository,
+        IOrderCacheService cache,
         IValidator<GetByIdOrderQuery> validator)
     : BaseBusinessService<GetByIdOrderQuery, GetByIdOrderIntermediate, GetByIdOrderToPostProcess, OrderResponse>,
     IGetByIdOrderBusiness
@@ -47,7 +49,12 @@ public class GetByIdOrderBusiness(
     {
         var entity = MapToIntermediate(input);
 
+        var cachedOrder = await cache.GetByIdAsync(entity.Id, ct);
+        if (cachedOrder is not null)
+            return new GetByIdOrderToPostProcess(cachedOrder);
+
         var result = await repository.GetByIdAsync(entity.Id, ct);
+        await cache.SetByIdAsync(result, ct);
 
         return new GetByIdOrderToPostProcess(result);
     }

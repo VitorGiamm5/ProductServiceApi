@@ -13,6 +13,7 @@ using ProductServiceApp.Application.Business.Orders.Delete;
 using ProductServiceApp.Application.Business.Orders.GetAll;
 using ProductServiceApp.Application.Business.Orders.GetById;
 using ProductServiceApp.Application.Business.Orders.Update;
+using ProductServiceApp.Application.Cache.Orders;
 using ProductServiceApp.Application.Cache.Products;
 using ProductServiceApp.Application.Handlers.Orders.Commands.Create;
 using ProductServiceApp.Application.Handlers.Orders.Commands.Delete;
@@ -55,6 +56,7 @@ public static class SetupApplication
         });
 
         services.AddScoped<IProductCacheService, ProductCacheService>();
+        services.AddScoped<IOrderCacheService, OrderCacheService>();
 
         #endregion
 

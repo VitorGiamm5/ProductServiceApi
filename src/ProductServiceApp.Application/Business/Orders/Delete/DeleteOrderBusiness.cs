@@ -1,5 +1,6 @@
 using FluentValidation;
 using ProductServiceApp.Application.Business.Base;
+using ProductServiceApp.Application.Cache.Orders;
 using ProductServiceApp.Domain.Business.Base.Dtos;
 using ProductServiceApp.Domain.Business.Orders.Business;
 using ProductServiceApp.Domain.Business.Orders.Handlers;
@@ -16,6 +17,7 @@ public sealed record DeleteOrderIntermediate(
 public class DeleteOrderBusiness(
         IOrderCommandRepository repository,
         IOrderQueryRepository readRepository,
+        IOrderCacheService cache,
         IValidator<DeleteOrderCommand> validator)
     : BaseBusinessService<DeleteOrderCommand, DeleteOrderIntermediate, OrderEntity, BooleanResponse>,
     IDeleteOrderBusiness
@@ -48,12 +50,15 @@ public class DeleteOrderBusiness(
 
     #region OUTBOX
 
-    protected override Task<BooleanResponse> PostProcessAsync(OrderEntity result, CancellationToken ct)
+    protected override async Task<BooleanResponse> PostProcessAsync(OrderEntity result, CancellationToken ct)
     {
-        return Task.FromResult(new BooleanResponse
+        await cache.InvalidateAllAsync(ct);
+        await cache.InvalidateByIdAsync(result.Id, ct);
+
+        return new BooleanResponse
         {
             IsSuccess = true
-        });
+        };
     }
 
     #endregion

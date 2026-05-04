@@ -1,4 +1,5 @@
 using ProductServiceApp.Application.Business.Base;
+using ProductServiceApp.Application.Cache.Orders;
 using ProductServiceApp.Domain.Business.Orders.Business;
 using ProductServiceApp.Domain.Business.Orders.Dtos;
 using ProductServiceApp.Domain.Business.Orders.Handlers;
@@ -7,7 +8,9 @@ using ProductServiceApp.Domain.Repositories.Orders;
 
 namespace ProductServiceApp.Application.Business.Orders.GetAll;
 
-public class GetAllOrderBusiness(IOrderQueryRepository repository)
+public class GetAllOrderBusiness(
+        IOrderQueryRepository repository,
+        IOrderCacheService cache)
     : BaseBusinessService<GetAllOrderQuery, GetAllOrderQuery, IEnumerable<OrderEntity>, IEnumerable<OrderResponse>>,
     IGetAllOrderBusiness
 {
@@ -24,7 +27,19 @@ public class GetAllOrderBusiness(IOrderQueryRepository repository)
 
     protected override async Task<IEnumerable<OrderEntity>> ProcessAsync(GetAllOrderQuery input, CancellationToken ct)
     {
-        return await repository.GetAllAsync(ct);
+        var cachedOrders = await cache.GetAllAsync(ct);
+        if (cachedOrders is not null)
+            return cachedOrders;
+
+        var orders = (await repository.GetAllAsync(ct)).ToArray();
+        await cache.SetAllAsync(orders, ct);
+
+        foreach (var order in orders)
+        {
+            await cache.SetByIdAsync(order, ct);
+        }
+
+        return orders;
     }
 
     #endregion

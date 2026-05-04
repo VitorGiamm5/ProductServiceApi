@@ -1,6 +1,7 @@
 using FluentValidation;
 using ProductServiceApp.Application.Business.Base;
 using ProductServiceApp.Application.Business.Products.GetByIdList;
+using ProductServiceApp.Application.Cache.Orders;
 using ProductServiceApp.Domain.Business.Orders.AdditionalFeaturesBusiness.OrderDiscount;
 using ProductServiceApp.Domain.Business.Orders.Business;
 using ProductServiceApp.Domain.Business.Orders.Dtos;
@@ -24,6 +25,7 @@ public sealed record CreateOrderToPostProcess(
 public class CreateOrderBusiness(
         LoadProductsAsync loadProductsAsync,
         IOrderCommandRepository repository,
+        IOrderCacheService cache,
         IOrderDiscountRuleQueryRepository<OrderDiscountRuleEntity> discountRuleRepository,
         IOrderDiscountCalculator calculator,
         IValidator<CreateOrderCommand> validator)
@@ -82,9 +84,12 @@ public class CreateOrderBusiness(
 
     #region OUTBOX
 
-    protected override Task<OrderResponse> PostProcessAsync(CreateOrderToPostProcess result, CancellationToken ct)
+    protected override async Task<OrderResponse> PostProcessAsync(CreateOrderToPostProcess result, CancellationToken ct)
     {
-        return Task.FromResult(new OrderResponse(result.CreatedOrder));
+        await cache.InvalidateAllAsync(ct);
+        await cache.SetByIdAsync(result.CreatedOrder, ct);
+
+        return new OrderResponse(result.CreatedOrder);
     }
 
     #endregion
