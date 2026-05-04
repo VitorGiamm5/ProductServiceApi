@@ -6,7 +6,7 @@ public class CreateOrderRequest
 {
     public long? Id { get; set; } = 0L;
 
-    public List<long> ProductIds { get; set; } = [];
+    public List<OrderProductRequest> Products { get; set; } = [];
 
     public bool? IsActive { get; set; } = true;
 

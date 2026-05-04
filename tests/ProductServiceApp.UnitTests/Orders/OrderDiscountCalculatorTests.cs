@@ -255,7 +255,7 @@ public class OrderDiscountCalculatorTests
     {
         return new OrderDiscountRequest
         {
-            Products = products,
+            Products = [.. products.Select(product => new OrderDiscountProduct(product, 1))],
             Rules = rules
         };
     }

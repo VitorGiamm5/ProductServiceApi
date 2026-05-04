@@ -16,7 +16,7 @@ namespace ProductServiceApp.Application.Business.Orders.Create;
 
 public sealed record CreateOrderToProcess(
     CreateOrderCommand Input,
-    IReadOnlyCollection<ProductEntity> Products,
+    IReadOnlyCollection<OrderDiscountProduct> Products,
     OrderDiscountResult OrderCalculated,
     DateTime CreatedDate);
 
@@ -47,7 +47,11 @@ public class CreateOrderBusiness(
 
         #region Data Load
 
-        var products = await loadProductsAsync.ExecuteAsync(input.ProductIds, ct);
+        var products = await loadProductsAsync.ExecuteAsync(input.Products.Select(item => item.ProductId), ct);
+        var quantities = input.Products.ToDictionary(item => item.ProductId, item => item.Quantity);
+        var orderProducts = products
+            .Select(product => new OrderDiscountProduct(product, quantities[product.Id]))
+            .ToArray();
         var rules = await discountRuleRepository.GetActiveAsync(ct);
 
         #endregion
@@ -56,7 +60,7 @@ public class CreateOrderBusiness(
 
         var orderCalculated = await calculator.ExecuteAsync(new OrderDiscountRequest
         {
-            Products = [.. products.ToFrozenSet()],
+            Products = [.. orderProducts.ToFrozenSet()],
             Rules = [.. rules.ToFrozenSet()],
         }, ct);
 
@@ -64,7 +68,7 @@ public class CreateOrderBusiness(
 
         #region Map
 
-        return new CreateOrderToProcess(input, products, orderCalculated, DateTimeProvider.UtcNowAsUnspecified());
+        return new CreateOrderToProcess(input, orderProducts, orderCalculated, DateTimeProvider.UtcNowAsUnspecified());
 
         #endregion
     }
@@ -117,11 +121,12 @@ public class CreateOrderBusiness(
                 IsDeleted = false
             },
             OrderProducts = [.. intermediate.Products
-                .Select(product => new OrderProductEntity
+                .Select(item => new OrderProductEntity
                 {
-                    ProductId = product.Id,
-                    UnitPrice = product.Price.GetValueOrDefault(),
-                    Product = product
+                    ProductId = item.Product.Id,
+                    Quantity = item.Quantity,
+                    UnitPrice = item.Product.Price.GetValueOrDefault(),
+                    Product = item.Product
                 })
             ]
         };

@@ -18,6 +18,7 @@ public class ProductResponse : CreateProductRequest, IFromMapper<ProductResponse
     #region Additional Properties
 
     public string? TypeName { get; set; }
+    public int Quantity { get; set; } = 1;
     public DateTime? CreatedDate { get; set; }
     public DateTime? UpdatedDate { get; set; }
 

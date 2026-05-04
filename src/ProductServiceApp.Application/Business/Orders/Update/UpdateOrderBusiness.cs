@@ -16,7 +16,7 @@ namespace ProductServiceApp.Application.Business.Orders.Update;
 
 public sealed record UpdateOrderToProcess(
     UpdateOrderCommand Input,
-    IReadOnlyCollection<ProductEntity> Products,
+    IReadOnlyCollection<OrderDiscountProduct> Products,
     OrderDiscountResult OrderCalculated,
     DateTime UpdatedDate);
 
@@ -50,7 +50,11 @@ public class UpdateOrderBusiness(
 
         await readRepository.GetByIdAsync(input.Id!.Value, ct);
 
-        var products = await loadProductsAsync.ExecuteAsync(input.ProductIds, ct);
+        var products = await loadProductsAsync.ExecuteAsync(input.Products.Select(item => item.ProductId), ct);
+        var quantities = input.Products.ToDictionary(item => item.ProductId, item => item.Quantity);
+        var orderProducts = products
+            .Select(product => new OrderDiscountProduct(product, quantities[product.Id]))
+            .ToArray();
         var rules = (await discountRuleRepository.GetActiveAsync(ct)).ToList();
 
         #endregion
@@ -59,7 +63,7 @@ public class UpdateOrderBusiness(
 
         var orderCalculated = await calculator.ExecuteAsync(new OrderDiscountRequest
         {
-            Products = products.ToFrozenSet(),
+            Products = orderProducts.ToFrozenSet(),
             Rules = rules.ToFrozenSet()
         }, ct);
 
@@ -67,7 +71,7 @@ public class UpdateOrderBusiness(
 
         #region Map
 
-        return new UpdateOrderToProcess(input, products, orderCalculated, DateTimeProvider.UtcNowAsUnspecified());
+        return new UpdateOrderToProcess(input, orderProducts, orderCalculated, DateTimeProvider.UtcNowAsUnspecified());
 
         #endregion
     }
@@ -114,12 +118,13 @@ public class UpdateOrderBusiness(
             DiscountPercentage = intermediate.OrderCalculated.DiscountPercentage,
             DiscountValue = intermediate.OrderCalculated.DiscountValue,
             OrderProducts = [.. intermediate.Products
-                .Select(product => new OrderProductEntity
+                .Select(item => new OrderProductEntity
                 {
                     Id = intermediate.Input.Id ?? 0L,
-                    ProductId = product.Id,
-                    UnitPrice = product.Price.GetValueOrDefault(),
-                    Product = product
+                    ProductId = item.Product.Id,
+                    Quantity = item.Quantity,
+                    UnitPrice = item.Product.Price.GetValueOrDefault(),
+                    Product = item.Product
                 })]
         };
     }

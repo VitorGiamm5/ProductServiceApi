@@ -14,7 +14,7 @@ public class OrderResponse : CreateOrderRequest, IFromMapper<OrderResponse, Orde
 
     #region Additional Properties
 
-    public List<ProductResponse> Products { get; set; } = [];
+    public new List<ProductResponse> Products { get; set; } = [];
     public DateTime? CreatedDate { get; set; }
     public decimal SubTotalValue { get; set; }
     public decimal TotalValue { get; set; }
@@ -33,13 +33,15 @@ public class OrderResponse : CreateOrderRequest, IFromMapper<OrderResponse, Orde
         }
 
         Id = input.Id;
-        ProductIds = [.. input.OrderProducts.Select(item => item.ProductId)];
         Products = [.. input.OrderProducts
             .Where(item => item.Product is not null)
             .Select(item =>
             {
                 item.Product!.Price = item.UnitPrice;
-                return new ProductResponse(item.Product);
+                return new ProductResponse(item.Product)
+                {
+                    Quantity = item.Quantity
+                };
             })];
         CreatedDate = input.OrdersAudit?.CreatedDate;
         SubTotalValue = input.SubTotalValue;

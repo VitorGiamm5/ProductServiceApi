@@ -61,6 +61,7 @@ public class OrderCommandRepository : BaseCommandRepository<OrderEntity>, IOrder
         foreach (var currentItem in existing.OrderProducts.Where(item => desiredItems.ContainsKey(item.ProductId)))
         {
             currentItem.UnitPrice = desiredItems[currentItem.ProductId].UnitPrice;
+            currentItem.Quantity = desiredItems[currentItem.ProductId].Quantity;
         }
 
         var currentProductIds = existing.OrderProducts
@@ -73,6 +74,7 @@ public class OrderCommandRepository : BaseCommandRepository<OrderEntity>, IOrder
             {
                 Id = existing.Id,
                 ProductId = newItem.ProductId,
+                Quantity = newItem.Quantity,
                 UnitPrice = newItem.UnitPrice
             });
         }

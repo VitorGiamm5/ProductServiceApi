@@ -1,7 +1,6 @@
 using FluentValidation;
 using ProductServiceApp.Application.Business.Base;
 using ProductServiceApp.Domain.Entities.Orders;
-using ProductServiceApp.Domain.Entities.Products;
 using ProductServiceApp.Domain.Enums.Products;
 using ProductServiceApp.Domain.Services.Orders.AdditionalFeaturesBusiness.OrderDiscount;
 using ProductServiceApp.Domain.Services.Orders.Business;
@@ -32,7 +31,7 @@ public class OrderDiscountCalculator(
 
     protected override async Task<OrderDiscountResult> ProcessAsync(OrderDiscountRequest input, CancellationToken ct)
     {
-        var subTotal = input.Products.Sum(product => product.Price.GetValueOrDefault());
+        var subTotal = input.Products.Sum(item => item.Product.Price.GetValueOrDefault() * item.Quantity);
         var rule = FindBestRule(input.Products, input.Rules);
         var discountPercentage = rule?.DiscountPercentage ?? decimal.Zero;
         var discountValue = decimal.Round(subTotal * discountPercentage / 100m, 2, MidpointRounding.AwayFromZero);
@@ -69,12 +68,12 @@ public class OrderDiscountCalculator(
     /// <param name="rules">Collection of active discount rules to be evaluated.</param>
     /// <returns>The discount rule with the highest applicable percentage for the order, or <c>null</c> if no compatible rule is found.</returns>
     private static OrderDiscountRuleEntity? FindBestRule(
-        IReadOnlyCollection<ProductEntity> products,
+        IReadOnlyCollection<OrderDiscountProduct> products,
         IReadOnlyCollection<OrderDiscountRuleEntity> rules)
     {
         var types = products
-            .Where(product => product.Type is not null)
-            .Select(product => product.Type!.Value)
+            .Where(item => item.Product.Type is not null)
+            .Select(item => item.Product.Type!.Value)
             .ToHashSet();
 
         var hasSandwich = types.Contains(ProductsTypeEnum.Sandwich);

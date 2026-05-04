@@ -4,7 +4,7 @@ namespace ProductServiceApp.Shared.Orders;
 
 public class OrderResponse : CreateOrderRequest
 {
-    public List<ProductResponse> Products { get; set; } = [];
+    public new List<ProductResponse> Products { get; set; } = [];
     public DateTime? CreatedDate { get; set; }
     public decimal SubTotalValue { get; set; }
     public decimal TotalValue { get; set; }

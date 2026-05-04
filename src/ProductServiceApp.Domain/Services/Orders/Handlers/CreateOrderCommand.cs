@@ -13,7 +13,7 @@ public class CreateOrderCommand : CreateOrderRequest,
         if (input is not null)
         {
             Id = input.Id;
-            ProductIds = input.ProductIds ?? [];
+            Products = input.Products ?? [];
             IsActive = input.IsActive;
             IsDeleted = input.IsDeleted;
         }

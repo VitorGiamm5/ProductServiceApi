@@ -14,6 +14,7 @@ using ProductServiceApp.Domain.Services.Orders.AdditionalFeaturesBusiness.OrderD
 using ProductServiceApp.Domain.Services.Orders.Business;
 using ProductServiceApp.Domain.Services.Orders.Dtos;
 using ProductServiceApp.Domain.Services.Orders.Handlers;
+using ProductServiceApp.Domain.Services.Products.Dtos;
 
 namespace ProductServiceApp.UnitTests.Orders;
 
@@ -44,7 +45,7 @@ public class CreateOrderBusinessTests
             .Setup(item => item.ValidateAsync(command, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());
         context.ProductRepository
-            .Setup(item => item.GetByIdsAsync(It.Is<IEnumerable<long>>(ids => ids.ToHashSet().SetEquals(command.ProductIds)), It.IsAny<CancellationToken>()))
+            .Setup(item => item.GetByIdsAsync(It.Is<IEnumerable<long>>(ids => ids.ToHashSet().SetEquals(command.Products.Select(product => product.ProductId))), It.IsAny<CancellationToken>()))
             .ReturnsAsync(products);
         context.DiscountRuleRepository
             .Setup(item => item.GetActiveAsync(It.IsAny<CancellationToken>()))
@@ -53,7 +54,7 @@ public class CreateOrderBusinessTests
             .Setup(item => item.ExecuteAsync(
                 It.Is<OrderDiscountRequest>(request =>
                     request.Products.Count == products.Count &&
-                    request.Products.All(products.Contains) &&
+                    request.Products.All(item => products.Contains(item.Product)) &&
                     request.Rules.Count == rules.Count &&
                     request.Rules.All(rules.Contains)),
                 It.IsAny<CancellationToken>()))
@@ -64,7 +65,7 @@ public class CreateOrderBusinessTests
         result.Should().BeEquivalentTo(new
         {
             Input = command,
-            Products = products,
+            Products = products.Select(product => new OrderDiscountProduct(product, command.Products.First(item => item.ProductId == product.Id).Quantity)),
             OrderCalculated = calculated
         });
         result.CreatedDate.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(10));
@@ -81,7 +82,7 @@ public class CreateOrderBusinessTests
         var context = TestContext.Create();
         context.Validator
             .Setup(item => item.ValidateAsync(command, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ValidationResult([new ValidationFailure(nameof(CreateOrderCommand.ProductIds), "Produto invalido.")]));
+            .ReturnsAsync(new ValidationResult([new ValidationFailure(nameof(CreateOrderCommand.Products), "Produto invalido.")]));
 
         var act = () => context.Business.PreProcessForTestAsync(command, CancellationToken.None);
 
@@ -133,7 +134,7 @@ public class CreateOrderBusinessTests
 
         var result = CreateOrderBusiness.MapToProcess(new CreateOrderToProcess(
             command,
-            products,
+            products.Select(product => new OrderDiscountProduct(product, command.Products.First(item => item.ProductId == product.Id).Quantity)).ToArray(),
             calculated,
             createdDate));
 
@@ -159,12 +160,14 @@ public class CreateOrderBusinessTests
         result.OrderProducts.ElementAt(0).Should().BeEquivalentTo(new
         {
             ProductId = 1L,
+            Quantity = 1,
             UnitPrice = 20m,
             Product = products[0]
         });
         result.OrderProducts.ElementAt(1).Should().BeEquivalentTo(new
         {
             ProductId = 2L,
+            Quantity = 1,
             UnitPrice = 10m,
             Product = products[1]
         });
@@ -176,7 +179,7 @@ public class CreateOrderBusinessTests
         var context = TestContext.Create();
         var input = new CreateOrderToProcess(
             Command([1], isActive: true, isDeleted: false),
-            [Product(1, ProductsTypeEnum.Sandwich, 20m)],
+            [new OrderDiscountProduct(Product(1, ProductsTypeEnum.Sandwich, 20m), 1)],
             new OrderDiscountResult
             {
                 SubTotalValue = 20m,
@@ -198,7 +201,8 @@ public class CreateOrderBusinessTests
                 entity.SubTotalValue == 20m &&
                 entity.TotalValue == 20m &&
                 entity.OrderProducts.Count == 1 &&
-                entity.OrderProducts.First().ProductId == 1),
+                entity.OrderProducts.First().ProductId == 1 &&
+                entity.OrderProducts.First().Quantity == 1),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -221,6 +225,7 @@ public class CreateOrderBusinessTests
                 new OrderProductEntity
                 {
                     ProductId = 1,
+                    Quantity = 1,
                     UnitPrice = 20m,
                     Product = Product(1, ProductsTypeEnum.Sandwich, 20m)
                 }
@@ -233,7 +238,13 @@ public class CreateOrderBusinessTests
         result.Should().BeEquivalentTo(new
         {
             Id = 123L,
-            ProductIds = new List<long> { 1 },
+            Products = new List<ProductResponse>
+            {
+                new(Product(1, ProductsTypeEnum.Sandwich, 20m))
+                {
+                    Quantity = 1
+                }
+            },
             IsActive = true,
             IsDeleted = false,
             SubTotalValue = 30m,
@@ -248,7 +259,11 @@ public class CreateOrderBusinessTests
     {
         return new CreateOrderCommand(new CreateOrderRequest
         {
-            ProductIds = productIds,
+            Products = [.. productIds.Select(productId => new OrderProductRequest
+            {
+                ProductId = productId,
+                Quantity = 1
+            })],
             IsActive = isActive,
             IsDeleted = isDeleted
         });

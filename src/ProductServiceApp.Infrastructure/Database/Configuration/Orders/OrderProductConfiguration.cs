@@ -18,6 +18,11 @@ public class OrderProductConfiguration : IEntityTypeConfiguration<OrderProductEn
         builder.Property(e => e.ProductId)
             .HasColumnName("product_id");
 
+        builder.Property(e => e.Quantity)
+            .HasColumnName("quantity")
+            .HasDefaultValue(1)
+            .IsRequired();
+
         builder.Property(e => e.UnitPrice)
             .HasColumnName("unit_price")
             .HasColumnType("numeric(10,2)")
