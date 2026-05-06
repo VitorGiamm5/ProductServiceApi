@@ -21,7 +21,7 @@ namespace ProductServiceApp.Infrastructure;
 
 public static class SetupInfrastructure
 {
-    private static readonly int _maxRetryCount = 3;
+    private static readonly int _maxRetryAttempts = 3;
     private static readonly int _maxRetryDelay = 2;
 
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
@@ -34,21 +34,17 @@ public static class SetupInfrastructure
 
         #region Polly Retry Policy
 
-        int retryCount = configuration.GetSection("RetryPolicy:DelayBetweenRetriesInSeconds").Value is not null
-            ? int.Parse(configuration.GetSection("RetryPolicy:DelayBetweenRetriesInSeconds").Value!)
-            : _maxRetryDelay;
+        var retryPolicySection = configuration.GetSection("RetryPolicy");
+        var retryDelaySeconds = GetPositiveInt(retryPolicySection, "DelayBetweenRetriesInSeconds", _maxRetryDelay);
+        var maxRetryAttempts = GetPositiveInt(retryPolicySection, "MaxRetryAttempts", _maxRetryAttempts);
 
-        int maxRetryCount = configuration.GetSection("RetryPolicy:MaxRetryCount").Value is not null
-            ? int.Parse(configuration.GetSection("RetryPolicy:MaxRetryCount").Value!)
-            : _maxRetryCount;
-
-        static RetryPolicy CreateRetryPolicy(int retryCount, int maxRetryCount, ILogger logger) =>
+        static RetryPolicy CreateRetryPolicy(int retryDelaySeconds, int maxRetryAttempts, ILogger logger) =>
             Policy
                 .Handle<Exception>()
                 .WaitAndRetry(
-                    retryCount: maxRetryCount,
+                    retryCount: maxRetryAttempts,
                     sleepDurationProvider: attempt =>
-                        TimeSpan.FromSeconds(Math.Pow(retryCount, attempt)),
+                        TimeSpan.FromSeconds(Math.Pow(retryDelaySeconds, attempt)),
                     onRetry: (exception, timespan, attempt, context) =>
                     {
                         logger.LogWarning(
@@ -68,7 +64,7 @@ public static class SetupInfrastructure
                 .GetRequiredService<ILoggerFactory>()
                 .CreateLogger(typeof(SetupInfrastructure).FullName!);
 
-            var retryPolicy = CreateRetryPolicy(retryCount, maxRetryCount, logger);
+            var retryPolicy = CreateRetryPolicy(retryDelaySeconds, maxRetryAttempts, logger);
 
             retryPolicy.Execute(() =>
             {
@@ -88,7 +84,7 @@ public static class SetupInfrastructure
                     .EnableDetailedErrors()
                     .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
                     .UseNpgsql(dataSourceBuilder.Build(), b => b
-                        .EnableRetryOnFailure(maxRetryCount, TimeSpan.FromSeconds(_maxRetryDelay), null)
+                        .EnableRetryOnFailure(maxRetryAttempts, TimeSpan.FromSeconds(_maxRetryDelay), null)
                         .MigrationsHistoryTable("__EFMigrationsHistory", "dbSchemaGoodHamburger")
                         .MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)
                     );
@@ -108,7 +104,7 @@ public static class SetupInfrastructure
                 .GetRequiredService<ILoggerFactory>()
                 .CreateLogger(typeof(SetupInfrastructure).FullName!);
 
-            var retryPolicy = CreateRetryPolicy(retryCount, maxRetryCount, logger);
+            var retryPolicy = CreateRetryPolicy(retryDelaySeconds, maxRetryAttempts, logger);
 
             retryPolicy.Execute(() =>
             {
@@ -116,7 +112,7 @@ public static class SetupInfrastructure
                     ?? throw new InvalidOperationException("Connection string 'PostgresRead' not found.");
 
                 options.UseNpgsql(connectionString, b =>
-                        b.EnableRetryOnFailure(maxRetryCount, TimeSpan.FromSeconds(_maxRetryDelay), null))
+                        b.EnableRetryOnFailure(maxRetryAttempts, TimeSpan.FromSeconds(_maxRetryDelay), null))
                        .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
 
                 var resilienceInterceptor = serviceProvider.GetRequiredService<ResilienceInterceptor>();
@@ -156,5 +152,14 @@ public static class SetupInfrastructure
     }
 
     #endregion
+
+    private static int GetPositiveInt(IConfiguration configuration, string key, int defaultValue)
+    {
+        var value = configuration[key];
+
+        return int.TryParse(value, out var parsedValue) && parsedValue > 0
+            ? parsedValue
+            : defaultValue;
+    }
 
 }

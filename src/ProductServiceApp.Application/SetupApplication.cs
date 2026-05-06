@@ -16,6 +16,7 @@ using ProductServiceApp.Application.Business.Orders.Update;
 using ProductServiceApp.Application.Cache.Orders;
 using ProductServiceApp.Application.Cache.Products;
 using ProductServiceApp.Application.Cache.Redis;
+using ProductServiceApp.Application.Cache.Warmup;
 using ProductServiceApp.Application.Handlers.Orders.Commands.Create;
 using ProductServiceApp.Application.Handlers.Orders.Commands.Delete;
 using ProductServiceApp.Application.Handlers.Orders.Commands.Update;
@@ -49,9 +50,13 @@ public static class SetupApplication
         #region Cache
 
         services.Configure<RedisCacheOptions>(configuration.GetSection("Redis"));
+        services.Configure<CacheWarmupOptions>(configuration.GetSection("CacheWarmup"));
 
         services.AddSingleton<IRedisCacheClient, RedisCacheClient>();
         services.AddHostedService<RedisCacheWarmupService>();
+        services.AddScoped<ICacheWarmupFeature, ProductsCacheWarmupFeature>();
+        services.AddScoped<ICacheWarmupFeature, OrdersCacheWarmupFeature>();
+        services.AddHostedService<CacheWarmupHostedService>();
         services.AddScoped<IProductCacheService, ProductCacheService>();
         services.AddScoped<IOrderCacheService, OrderCacheService>();
 
@@ -70,9 +75,12 @@ public static class SetupApplication
 
         #endregion
 
-        // Setup application
+        #region Setup applications (Business)
+
         SetupProductApplication(services, configuration);
         SetupOrderApplication(services, configuration);
+
+        #endregion
 
         return services;
     }
@@ -86,13 +94,13 @@ public static class SetupApplication
         var queueCapacity = configuration.GetSection("QueueCapacity");
 
         services.AddSingleton(Channel.CreateBounded<(CreateProductCommand, TaskCompletionSource<ProductResponse>, CancellationToken)>(
-            BoundedOptions(queueCapacity.GetValue<int>("QueueCreateProduct", _defaultQueueMessageQuantity))));
+            BoundedOptions(GetPositiveInt(queueCapacity, "QueueCreateProduct", _defaultQueueMessageQuantity))));
 
         services.AddSingleton(Channel.CreateBounded<(UpdateProductCommand, TaskCompletionSource<ProductResponse>, CancellationToken)>(
-            BoundedOptions(queueCapacity.GetValue<int>("QueueUpdateProduct", _defaultQueueMessageQuantity))));
+            BoundedOptions(GetPositiveInt(queueCapacity, "QueueUpdateProduct", _defaultQueueMessageQuantity))));
 
         services.AddSingleton(Channel.CreateBounded<(DeleteProductCommand, TaskCompletionSource<BooleanResponse>, CancellationToken)>(
-            BoundedOptions(queueCapacity.GetValue<int>("QueueDeleteProduct", _defaultQueueMessageQuantity))));
+            BoundedOptions(GetPositiveInt(queueCapacity, "QueueDeleteProduct", _defaultQueueMessageQuantity))));
 
         #endregion
 
@@ -108,11 +116,11 @@ public static class SetupApplication
 
         var workersReplicasSection = configuration.GetSection("WorkersReplicas");
 
-        services.AddWorkers<CreateProductCommandHandler>(workersReplicasSection.GetValue<int>("ReplicasCreateProduct", _defaultWorkersReplicas));
-        services.AddWorkers<UpdateProductCommandHandler>(workersReplicasSection.GetValue<int>("ReplicasUpdateProduct", _defaultWorkersReplicas));
-        services.AddWorkers<DeleteProductCommandHandler>(workersReplicasSection.GetValue<int>("ReplicasDeleteProduct", _defaultWorkersReplicas));
-        services.AddWorkers<GetAllProductQueryHandler>(workersReplicasSection.GetValue<int>("ReplicasGetAllProduct", _defaultWorkersReplicas));
-        services.AddWorkers<GetByIdProductQueryHandler>(workersReplicasSection.GetValue<int>("ReplicasGetByIdProduct", _defaultWorkersReplicas));
+        services.AddWorkers<CreateProductCommandHandler>(GetPositiveInt(workersReplicasSection, "ReplicasCreateProduct", _defaultWorkersReplicas));
+        services.AddWorkers<UpdateProductCommandHandler>(GetPositiveInt(workersReplicasSection, "ReplicasUpdateProduct", _defaultWorkersReplicas));
+        services.AddWorkers<DeleteProductCommandHandler>(GetPositiveInt(workersReplicasSection, "ReplicasDeleteProduct", _defaultWorkersReplicas));
+        services.AddWorkers<GetAllProductQueryHandler>(GetPositiveInt(workersReplicasSection, "ReplicasGetAllProduct", _defaultWorkersReplicas));
+        services.AddWorkers<GetByIdProductQueryHandler>(GetPositiveInt(workersReplicasSection, "ReplicasGetByIdProduct", _defaultWorkersReplicas));
 
         #endregion
 
@@ -139,13 +147,13 @@ public static class SetupApplication
         var queueCapacity = configuration.GetSection("QueueCapacity");
 
         services.AddSingleton(Channel.CreateBounded<(CreateOrderCommand, TaskCompletionSource<OrderResponse>, CancellationToken)>(
-            BoundedOptions(queueCapacity.GetValue<int>("QueueCreateOrder", _defaultQueueMessageQuantity))));
+            BoundedOptions(GetPositiveInt(queueCapacity, "QueueCreateOrder", _defaultQueueMessageQuantity))));
 
         services.AddSingleton(Channel.CreateBounded<(UpdateOrderCommand, TaskCompletionSource<OrderResponse>, CancellationToken)>(
-            BoundedOptions(queueCapacity.GetValue<int>("QueueUpdateOrder", _defaultQueueMessageQuantity))));
+            BoundedOptions(GetPositiveInt(queueCapacity, "QueueUpdateOrder", _defaultQueueMessageQuantity))));
 
         services.AddSingleton(Channel.CreateBounded<(DeleteOrderCommand, TaskCompletionSource<BooleanResponse>, CancellationToken)>(
-            BoundedOptions(queueCapacity.GetValue<int>("QueueDeleteOrder", _defaultQueueMessageQuantity))));
+            BoundedOptions(GetPositiveInt(queueCapacity, "QueueDeleteOrder", _defaultQueueMessageQuantity))));
 
         #endregion
 
@@ -161,11 +169,11 @@ public static class SetupApplication
 
         var workersReplicasSection = configuration.GetSection("WorkersReplicas");
 
-        services.AddWorkers<CreateOrderCommandHandler>(workersReplicasSection.GetValue<int>("ReplicasCreateOrder", _defaultWorkersReplicas));
-        services.AddWorkers<UpdateOrderCommandHandler>(workersReplicasSection.GetValue<int>("ReplicasUpdateOrder", _defaultWorkersReplicas));
-        services.AddWorkers<DeleteOrderCommandHandler>(workersReplicasSection.GetValue<int>("ReplicasDeleteOrder", _defaultWorkersReplicas));
-        services.AddWorkers<GetAllOrderQueryHandler>(workersReplicasSection.GetValue<int>("ReplicasGetAllOrder", _defaultWorkersReplicas));
-        services.AddWorkers<GetByIdOrderQueryHandler>(workersReplicasSection.GetValue<int>("ReplicasGetByIdOrder", _defaultWorkersReplicas));
+        services.AddWorkers<CreateOrderCommandHandler>(GetPositiveInt(workersReplicasSection, "ReplicasCreateOrder", _defaultWorkersReplicas));
+        services.AddWorkers<UpdateOrderCommandHandler>(GetPositiveInt(workersReplicasSection, "ReplicasUpdateOrder", _defaultWorkersReplicas));
+        services.AddWorkers<DeleteOrderCommandHandler>(GetPositiveInt(workersReplicasSection, "ReplicasDeleteOrder", _defaultWorkersReplicas));
+        services.AddWorkers<GetAllOrderQueryHandler>(GetPositiveInt(workersReplicasSection, "ReplicasGetAllOrder", _defaultWorkersReplicas));
+        services.AddWorkers<GetByIdOrderQueryHandler>(GetPositiveInt(workersReplicasSection, "ReplicasGetByIdOrder", _defaultWorkersReplicas));
 
         #endregion
 
@@ -191,6 +199,15 @@ public static class SetupApplication
         SingleReader = false,
         SingleWriter = false
     };
+
+    private static int GetPositiveInt(IConfiguration configuration, string key, int defaultValue)
+    {
+        var value = configuration[key];
+
+        return int.TryParse(value, out var parsedValue) && parsedValue > 0
+            ? parsedValue
+            : defaultValue;
+    }
 
     private static void AddWorkers<T>(this IServiceCollection services, int count)
         where T : class, IHostedService

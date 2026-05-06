@@ -103,4 +103,38 @@ public static class AppMetrics
             {
                 Buckets = [0.005, 0.01, 0.025, 0.05, 0.1, 0.3, 0.5, 1]
             });
+
+    public static readonly Histogram CacheWarmupDuration = Prometheus.Metrics
+        .CreateHistogram(
+            "productservice_cache_warmup_duration_seconds",
+            "Cache warmup duration in seconds",
+            labelNames: ["feature"],
+            new HistogramConfiguration
+            {
+                Buckets = [0.1, 0.5, 1, 3, 5, 10, 20, 60]
+            });
+
+    public static readonly Counter CacheWarmupSuccessTotal = Prometheus.Metrics
+        .CreateCounter(
+            "productservice_cache_warmup_success_total",
+            "Total cache warmup feature executions completed successfully",
+            labelNames: ["feature"]);
+
+    public static readonly Counter CacheWarmupErrorTotal = Prometheus.Metrics
+        .CreateCounter(
+            "productservice_cache_warmup_error_total",
+            "Total cache warmup feature executions that failed",
+            labelNames: ["feature", "reason"]);
+
+    public static readonly Counter CacheWarmupItemsTotal = Prometheus.Metrics
+        .CreateCounter(
+            "productservice_cache_warmup_items_total",
+            "Total items processed by cache warmup",
+            labelNames: ["feature", "stage"]);
+
+    public static readonly Counter CacheWarmupSkippedTotal = Prometheus.Metrics
+        .CreateCounter(
+            "productservice_cache_warmup_skipped_total",
+            "Total cache warmup features skipped",
+            labelNames: ["feature", "reason"]);
 }
