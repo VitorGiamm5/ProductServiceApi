@@ -61,15 +61,33 @@ services:
     container_name: 6137_redis
     restart: always
     ports:
-      - "6379:6379"
-    command: redis-server --appendonly yes
+      - "127.0.0.1:6379:6379"
+    command: redis-server /usr/local/etc/redis/redis.conf
     volumes:
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - ./redis/users.acl:/usr/local/etc/redis/users.acl:ro
       - 6137_redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "--user", "productservice_admin", "-a", "productservice_admin_XLR", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - 6137_webnet
+
+  redis_exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: 6137_redis_exporter
+    restart: always
+    command:
+      - "--redis.addr=redis://redis:6379"
+      - "--redis.user=productservice_metrics"
+      - "--redis.password=productservice_metrics_XLR"
+    ports:
+      - "127.0.0.1:9121:9121"
+    depends_on:
+      redis:
+        condition: service_healthy
     networks:
       - 6137_webnet
 
@@ -90,10 +108,20 @@ services:
       - DOTNET_RUNNING_IN_CONTAINER=true
       - ConnectionStrings__PostgresWrite=Server=6137_postgres_primary;Port=5432;Database=dbproducts;Username=randandan;Password=randandan_XLR;SSL Mode=Disable;
       - ConnectionStrings__PostgresRead=Server=6137_postgres_replica;Port=5433;Database=dbproducts;Username=read_randandan;Password=read_randandan_XLR;SSL Mode=Disable;
-      - Redis__ConnectionString=redis:6379
+      - Redis__ConnectionString=redis:6379,user=productservice_write,password=productservice_write_XLR,abortConnect=false,connectTimeout=500,asyncTimeout=100,syncTimeout=100,connectRetry=1
+      - Redis__ReadConnectionString=redis:6379,user=productservice_read,password=productservice_read_XLR,abortConnect=false,connectTimeout=500,asyncTimeout=100,syncTimeout=100,connectRetry=1
+      - Redis__WriteConnectionString=redis:6379,user=productservice_write,password=productservice_write_XLR,abortConnect=false,connectTimeout=500,asyncTimeout=100,syncTimeout=100,connectRetry=1
       - "Redis__InstanceName=ProductServiceApp:"
+      - Redis__MaxCachePayloadBytes=262144
+      - Redis__OperationTimeoutMilliseconds=100
+      - Redis__CircuitBreakerFailureRatio=0.5
+      - Redis__CircuitBreakerMinimumThroughput=3
+      - Redis__CircuitBreakerSamplingSeconds=30
+      - Redis__CircuitBreakerBreakSeconds=15
       - Redis__ProductsAbsoluteExpirationMinutes=10
       - Redis__ProductsSlidingExpirationMinutes=2
+      - Redis__OrdersAbsoluteExpirationMinutes=10
+      - Redis__OrdersSlidingExpirationMinutes=2
       - DatabaseSettings__EnableLoadBalancing=true
       - WorkersReplicas__ReplicasCreateProduct=1
       - WorkersReplicas__ReplicasUpdateProduct=1
@@ -155,6 +183,7 @@ services:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     depends_on:
       - 6137_api_product_service
+      - redis_exporter
     networks:
       - 6137_webnet
 

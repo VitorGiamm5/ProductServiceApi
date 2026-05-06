@@ -15,6 +15,7 @@ using ProductServiceApp.Application.Business.Orders.GetById;
 using ProductServiceApp.Application.Business.Orders.Update;
 using ProductServiceApp.Application.Cache.Orders;
 using ProductServiceApp.Application.Cache.Products;
+using ProductServiceApp.Application.Cache.Redis;
 using ProductServiceApp.Application.Handlers.Orders.Commands.Create;
 using ProductServiceApp.Application.Handlers.Orders.Commands.Delete;
 using ProductServiceApp.Application.Handlers.Orders.Commands.Update;
@@ -47,14 +48,10 @@ public static class SetupApplication
     {
         #region Cache
 
-        services.AddStackExchangeRedisCache(options =>
-        {
-            options.Configuration = configuration.GetValue<string>("Redis:ConnectionString")
-                ?? "localhost:6379";
-            options.InstanceName = configuration.GetValue<string>("Redis:InstanceName")
-                ?? "ProductServiceApp:";
-        });
+        services.Configure<RedisCacheOptions>(configuration.GetSection("Redis"));
 
+        services.AddSingleton<IRedisCacheClient, RedisCacheClient>();
+        services.AddHostedService<RedisCacheWarmupService>();
         services.AddScoped<IProductCacheService, ProductCacheService>();
         services.AddScoped<IOrderCacheService, OrderCacheService>();
 

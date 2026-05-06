@@ -1,6 +1,7 @@
-using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using ProductServiceApp.Application.Cache.Redis;
 using ProductServiceApp.Domain.Entities.Orders;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -8,11 +9,12 @@ using System.Text.Json.Serialization;
 namespace ProductServiceApp.Application.Cache.Orders;
 
 public class OrderCacheService(
-    IDistributedCache cache,
-    IConfiguration configuration,
+    IRedisCacheClient cache,
+    IOptions<RedisCacheOptions> options,
     ILogger<OrderCacheService> logger)
     : IOrderCacheService
 {
+    private const string Feature = "orders";
     private const string AllOrdersKey = "orders:all";
     private const string OrderByIdKeyPrefix = "orders:id:";
 
@@ -21,27 +23,23 @@ public class OrderCacheService(
         ReferenceHandler = ReferenceHandler.IgnoreCycles
     };
 
-    private readonly DistributedCacheEntryOptions _cacheOptions = new()
-    {
-        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(
-            configuration.GetValue<int>("Redis:OrdersAbsoluteExpirationMinutes", 10)),
-        SlidingExpiration = TimeSpan.FromMinutes(
-            configuration.GetValue<int>("Redis:OrdersSlidingExpirationMinutes", 2))
-    };
+    private readonly RedisCacheEntryOptions _cacheOptions = new(
+        AbsoluteExpirationRelativeToNow: TimeSpan.FromMinutes(options.Value.OrdersAbsoluteExpirationMinutes),
+        SlidingExpiration: TimeSpan.FromMinutes(options.Value.OrdersSlidingExpirationMinutes));
 
     public async Task<OrderEntity[]?> GetAllAsync(CancellationToken cancellationToken)
     {
-        return await TryGetAsync<OrderEntity[]>(AllOrdersKey, cancellationToken);
+        return await TryGetAsync<OrderEntity[]>("get_all", AllOrdersKey, cancellationToken);
     }
 
     public async Task SetAllAsync(IEnumerable<OrderEntity> orders, CancellationToken cancellationToken)
     {
-        await TrySetAsync(AllOrdersKey, orders.ToArray(), cancellationToken);
+        await TrySetAsync("set_all", AllOrdersKey, orders.ToArray(), cancellationToken);
     }
 
     public async Task<OrderEntity?> GetByIdAsync(long id, CancellationToken cancellationToken)
     {
-        return await TryGetAsync<OrderEntity>(OrderByIdKey(id), cancellationToken);
+        return await TryGetAsync<OrderEntity>("get_by_id", OrderByIdKey(id), cancellationToken);
     }
 
     public async Task SetByIdAsync(OrderEntity order, CancellationToken cancellationToken)
@@ -49,26 +47,26 @@ public class OrderCacheService(
         if (order.Id <= 0)
             return;
 
-        await TrySetAsync(OrderByIdKey(order.Id), order, cancellationToken);
+        await TrySetAsync("set_by_id", OrderByIdKey(order.Id), order, cancellationToken);
     }
 
     public async Task InvalidateAllAsync(CancellationToken cancellationToken)
     {
-        await TryRemoveAsync(AllOrdersKey, cancellationToken);
+        await TryRemoveAsync("invalidate_all", AllOrdersKey, cancellationToken);
     }
 
     public async Task InvalidateByIdAsync(long id, CancellationToken cancellationToken)
     {
-        await TryRemoveAsync(OrderByIdKey(id), cancellationToken);
+        await TryRemoveAsync("invalidate_by_id", OrderByIdKey(id), cancellationToken);
     }
 
     private static string OrderByIdKey(long id) => $"{OrderByIdKeyPrefix}{id}";
 
-    private async Task<T?> TryGetAsync<T>(string key, CancellationToken cancellationToken)
+    private async Task<T?> TryGetAsync<T>(string operation, string key, CancellationToken cancellationToken)
     {
         try
         {
-            var payload = await cache.GetStringAsync(key, cancellationToken);
+            var payload = await cache.GetStringAsync(Feature, operation, key, cancellationToken);
             return string.IsNullOrWhiteSpace(payload)
                 ? default
                 : JsonSerializer.Deserialize<T>(payload, JsonOptions);
@@ -80,12 +78,12 @@ public class OrderCacheService(
         }
     }
 
-    private async Task TrySetAsync<T>(string key, T value, CancellationToken cancellationToken)
+    private async Task TrySetAsync<T>(string operation, string key, T value, CancellationToken cancellationToken)
     {
         try
         {
             var payload = JsonSerializer.Serialize(value, JsonOptions);
-            await cache.SetStringAsync(key, payload, _cacheOptions, cancellationToken);
+            await cache.SetStringAsync(Feature, operation, key, payload, _cacheOptions, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -93,11 +91,11 @@ public class OrderCacheService(
         }
     }
 
-    private async Task TryRemoveAsync(string key, CancellationToken cancellationToken)
+    private async Task TryRemoveAsync(string operation, string key, CancellationToken cancellationToken)
     {
         try
         {
-            await cache.RemoveAsync(key, cancellationToken);
+            await cache.RemoveAsync(Feature, operation, key, cancellationToken);
         }
         catch (Exception ex)
         {

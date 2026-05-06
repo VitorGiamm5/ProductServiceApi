@@ -35,4 +35,72 @@ public static class AppMetrics
             "app_errors_total",
             "Total number of errors",
             labelNames: ["type", "endpoint"]);
+
+    public static readonly Counter CacheReadTotal = Prometheus.Metrics
+        .CreateCounter(
+            "productservice_cache_read_total",
+            "Total Redis cache read operations",
+            labelNames: ["feature", "operation"]);
+
+    public static readonly Counter CacheHitTotal = Prometheus.Metrics
+        .CreateCounter(
+            "productservice_cache_hit_total",
+            "Total Redis cache hits",
+            labelNames: ["feature", "operation"]);
+
+    public static readonly Counter CacheMissTotal = Prometheus.Metrics
+        .CreateCounter(
+            "productservice_cache_miss_total",
+            "Total Redis cache misses",
+            labelNames: ["feature", "operation"]);
+
+    public static readonly Counter CacheWriteTotal = Prometheus.Metrics
+        .CreateCounter(
+            "productservice_cache_write_total",
+            "Total Redis cache write operations",
+            labelNames: ["feature", "operation"]);
+
+    public static readonly Counter CacheWriteSkippedTotal = Prometheus.Metrics
+        .CreateCounter(
+            "productservice_cache_write_skipped_total",
+            "Total Redis cache writes skipped by application policy",
+            labelNames: ["feature", "operation", "reason"]);
+
+    public static readonly Counter CacheReadErrorTotal = Prometheus.Metrics
+        .CreateCounter(
+            "productservice_cache_read_error_total",
+            "Total Redis cache read errors",
+            labelNames: ["feature", "operation", "reason"]);
+
+    public static readonly Counter CacheWriteErrorTotal = Prometheus.Metrics
+        .CreateCounter(
+            "productservice_cache_write_error_total",
+            "Total Redis cache write errors",
+            labelNames: ["feature", "operation", "reason"]);
+
+    public static readonly Counter CacheCircuitOpenTotal = Prometheus.Metrics
+        .CreateCounter(
+            "productservice_cache_circuit_open_total",
+            "Total Redis cache operations skipped because circuit breaker is open",
+            labelNames: ["feature", "operation", "dependency_operation"]);
+
+    public static readonly Histogram CachePayloadBytes = Prometheus.Metrics
+        .CreateHistogram(
+            "productservice_cache_payload_bytes",
+            "Serialized Redis cache payload size in bytes",
+            labelNames: ["feature", "operation"],
+            new HistogramConfiguration
+            {
+                Buckets = [1024, 4096, 16_384, 65_536, 262_144, 1_048_576]
+            });
+
+    public static readonly Histogram CacheOperationDuration = Prometheus.Metrics
+        .CreateHistogram(
+            "productservice_cache_operation_duration_seconds",
+            "Redis cache operation duration in seconds",
+            labelNames: ["feature", "operation", "dependency_operation"],
+            new HistogramConfiguration
+            {
+                Buckets = [0.005, 0.01, 0.025, 0.05, 0.1, 0.3, 0.5, 1]
+            });
 }

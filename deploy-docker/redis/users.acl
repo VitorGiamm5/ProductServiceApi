@@ -1,0 +1,5 @@
+user default off
+user productservice_read on >productservice_read_XLR ~ProductServiceApp:* +ping +echo +client|getname +client|setname +client|setinfo +get +mget +exists +ttl +pttl +type +scan +strlen
+user productservice_write on >productservice_write_XLR ~ProductServiceApp:* +ping +echo +client|getname +client|setname +client|setinfo +get +mget +exists +ttl +pttl +type +scan +strlen +set +setex +psetex +del +unlink +expire +pexpire
+user productservice_metrics on >productservice_metrics_XLR ~* +ping +echo +info +config|get +client|getname +client|setname +client|setinfo
+user productservice_admin on >productservice_admin_XLR ~* +@all

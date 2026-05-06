@@ -34,11 +34,6 @@ public class GetAllOrderBusiness(
         var orders = (await repository.GetAllAsync(ct)).ToArray();
         await cache.SetAllAsync(orders, ct);
 
-        foreach (var order in orders)
-        {
-            await cache.SetByIdAsync(order, ct);
-        }
-
         return orders;
     }
 

@@ -43,11 +43,6 @@ public class GetAllProductBusiness(
         var products = (await repository.GetAllAsync(ct)).ToArray();
         await cache.SetAllAsync(products, ct);
 
-        foreach (var product in products)
-        {
-            await cache.SetByIdAsync(product, ct);
-        }
-
         return MapToPostProcess(products);
     }
 
