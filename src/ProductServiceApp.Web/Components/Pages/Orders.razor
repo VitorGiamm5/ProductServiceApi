@@ -131,6 +131,8 @@
                             <p class="field-warning">@DuplicateMessage</p>
                         }
 
+                        <p class="@DiscountMessageCss">@DiscountMessage</p>
+
                         @if (!IsViewMode && CanAddProductRow)
                         {
                             <button class="secondary-action add-row-action" type="button" @onclick="AddProductRow">
@@ -167,6 +169,16 @@
     private string? DuplicateMessage { get; set; }
     private bool IsViewMode => ActiveModal == OrderModal.View;
     private bool CanAddProductRow => Draft.Products.Count < 3 && Draft.Products.All(product => product.ProductId > 0);
+    private string DiscountMessage => BuildDiscountMessage();
+    private string DiscountMessageCss => GetApplicableDiscountRule() is null
+        ? "discount-message"
+        : "discount-message discount-message-applied";
+    private static readonly IReadOnlyCollection<OrderDiscountPreviewRule> DiscountRules =
+    [
+        new(ProductsType.Sandwich, ProductsType.Fries, ProductsType.Refreshment, 20m),
+        new(ProductsType.Sandwich, ProductsType.Refreshment, 15m),
+        new(ProductsType.Sandwich, ProductsType.Fries, 10m)
+    ];
 
     protected override async Task OnInitializedAsync()
     {
@@ -366,6 +378,51 @@
             : $"O pedido não pode ter mais de um produto do tipo {GetTypeLabel(duplicatedType)}.";
     }
 
+    private string BuildDiscountMessage()
+    {
+        var rule = GetApplicableDiscountRule();
+        if (rule is null)
+        {
+            return "Nenhum desconto aplicado";
+        }
+
+        return $"Desconto aplicado: {FormatWithFinalConjunction(rule.Types.Select(type => GetTypeLabel(type)))} com {FormatPercentage(rule.DiscountPercentage)}";
+    }
+
+    private OrderDiscountPreviewRule? GetApplicableDiscountRule()
+    {
+        var selectedTypes = Draft.Products
+            .Select(row => Products.FirstOrDefault(product => product.Id == row.ProductId)?.Type)
+            .Where(type => type is not null and not ProductsType.Default)
+            .Select(type => type!.Value)
+            .ToHashSet();
+
+        return DiscountRules
+            .Where(rule => rule.Types.SetEquals(selectedTypes))
+            .OrderByDescending(rule => rule.DiscountPercentage)
+            .FirstOrDefault();
+    }
+
+    private static string FormatWithFinalConjunction(IEnumerable<string> values)
+    {
+        var items = values
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .ToList();
+
+        return items.Count switch
+        {
+            0 => string.Empty,
+            1 => items[0],
+            2 => string.Join(" e ", items),
+            _ => $"{string.Join(", ", items.Take(items.Count - 1))} e {items[^1]}"
+        };
+    }
+
+    private static string FormatPercentage(decimal percentage)
+    {
+        return $"{percentage.ToString("0.##", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))}%";
+    }
+
     private string GetModalTitle() => ActiveModal switch
     {
         OrderModal.Create => "Adicionar novo pedido",
@@ -403,7 +460,7 @@
     private static string GetTypeLabel(ProductsType? type) => type switch
     {
         ProductsType.Sandwich => "Sanduíche",
-        ProductsType.Fries => "Batata",
+        ProductsType.Fries => "Batata frita",
         ProductsType.Refreshment => "Refrigerante",
         _ => "Não definido"
     };
@@ -484,5 +541,27 @@
         public Guid RowId { get; } = Guid.NewGuid();
         public long ProductId { get; set; }
         public int Quantity { get; set; } = 1;
+    }
+
+    private sealed record OrderDiscountPreviewRule
+    {
+        public OrderDiscountPreviewRule(ProductsType firstType, ProductsType secondType, decimal discountPercentage)
+            : this([firstType, secondType], discountPercentage)
+        {
+        }
+
+        public OrderDiscountPreviewRule(ProductsType firstType, ProductsType secondType, ProductsType thirdType, decimal discountPercentage)
+            : this([firstType, secondType, thirdType], discountPercentage)
+        {
+        }
+
+        private OrderDiscountPreviewRule(IReadOnlyCollection<ProductsType> types, decimal discountPercentage)
+        {
+            Types = types.ToHashSet();
+            DiscountPercentage = discountPercentage;
+        }
+
+        public HashSet<ProductsType> Types { get; }
+        public decimal DiscountPercentage { get; }
     }
 }
