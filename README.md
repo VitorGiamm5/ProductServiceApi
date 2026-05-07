@@ -144,12 +144,15 @@ CRUD Products
 - 6137_postgres_primary
 - 6137_postgres_replica
 - 6137_redis
+- 6137_redis_exporter
 - 6137_api_product_service
 - 6137_web_product_service
+- 6137_bff_product_service
 - 6137_prometheus
 - 6137_loki
 - 6137_promtail
 - 6137_grafana
+- 6137_keycloak
 
 ### 3. (Optional) If Run local application,
 - To run in Visual Studio the application, there are two profiles:
@@ -214,6 +217,10 @@ senha: admin123
 realm master
 usuário: admin
 senha: admin
+
+### Web portal
+``http://localhost:9010/login``
+-default login user: operator, key: operator123
 
 
 ### Redis Cache

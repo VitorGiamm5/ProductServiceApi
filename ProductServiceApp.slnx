@@ -1,7 +1,9 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/ProductServiceApp.AppHost/ProductServiceApp.AppHost.csproj" />
-    <Project Path="src/ProductServiceApp.Bff/ProductServiceApp.Bff.csproj" />
+    <Project Path="src/ProductServiceApp.Bff/ProductServiceApp.Bff.csproj">
+      <Build Solution="Debug|*" Project="false" />
+    </Project>
     <Project Path="src/ProductServiceApp.ServiceDefaults/ProductServiceApp.ServiceDefaults.csproj" />
     <Project Path="src/ProductServiceApp.Shared/ProductServiceApp.Shared.csproj" />
     <Project Path="src/ProductServiceApp.Web/ProductServiceApp.Web.csproj" />
