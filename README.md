@@ -229,14 +229,14 @@ Step by step:
 
 1. In Host, enter 127.0.0.1
 2. In Port, keep 6379
-3. Leave Password empty
-4. Leave Username empty
-5. In Connection Name, enter ProductServiceApp Redis
+3. Leave Password productservice_admin_XLR
+4. Leave Username productservice_admin
+5. In Connection Name, enter ProductServiceApp Redis Admin
 6. In Separator, keep :
 7. Do not check any checkbox
 8. Click OK
 
-- Metrics
+- Metrics and logs
 ``http://127.0.0.1:9121/metrics``
 
 ## Tests

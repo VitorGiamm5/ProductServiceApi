@@ -43,7 +43,7 @@
 </div>
 
 @code {
-    private bool IsLoginRoute => IsCurrentRoute("/") || IsCurrentRoute("/login");
+    private bool IsLoginRoute => IsCurrentRoute("/") || IsCurrentRoute("/login") || IsCurrentRoute("/logout");
 
     protected override void OnInitialized()
     {

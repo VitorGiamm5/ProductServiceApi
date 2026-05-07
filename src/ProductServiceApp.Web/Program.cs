@@ -28,7 +28,7 @@ builder.Services
     .AddAuthentication(options =>
     {
         options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
     })
     .AddCookie(options =>
     {
@@ -36,6 +36,8 @@ builder.Services
         options.Cookie.HttpOnly = true;
         options.Cookie.SameSite = SameSiteMode.Lax;
         options.SlidingExpiration = true;
+        options.LoginPath = "/login";
+        options.AccessDeniedPath = "/login";
     })
     .AddOpenIdConnect(options =>
     {
@@ -118,7 +120,7 @@ app.MapGet("/auth/login", (string? returnUrl) => Results.Challenge(
     },
     [OpenIdConnectDefaults.AuthenticationScheme]));
 
-app.MapGet("/logout", async (
+app.MapGet("/auth/logout", async (
     HttpContext context,
     IConfiguration configuration,
     IHttpClientFactory httpClientFactory,
@@ -127,11 +129,9 @@ app.MapGet("/logout", async (
     await RevokeKeycloakTokensAsync(context, configuration, httpClientFactory, loggerFactory);
 
     return Results.SignOut(
-        new AuthenticationProperties { RedirectUri = "/login" },
+        new AuthenticationProperties { RedirectUri = "/logout" },
         [CookieAuthenticationDefaults.AuthenticationScheme]);
 });
-
-app.MapGet("/auth/logout", () => Results.Redirect("/logout"));
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()

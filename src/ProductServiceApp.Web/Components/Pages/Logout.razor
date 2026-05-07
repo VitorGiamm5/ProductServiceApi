@@ -1,0 +1,15 @@
+@page "/logout"
+@attribute [AllowAnonymous]
+@using Microsoft.AspNetCore.Authorization
+
+<PageTitle>Logout</PageTitle>
+
+<section class="login-shell">
+    <div class="login-panel">
+        <p class="eyebrow">Sessão encerrada</p>
+        <h1>Você saiu da conta</h1>
+        <p class="login-copy">Sua sessão local foi encerrada com segurança.</p>
+
+        <a class="primary-action" href="/login" data-enhance-nav="false">Entrar novamente</a>
+    </div>
+</section>
