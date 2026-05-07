@@ -1,0 +1,36 @@
+@page "/login"
+@rendermode InteractiveServer
+@attribute [AllowAnonymous]
+@using Microsoft.AspNetCore.Authorization
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+
+<PageTitle>Login</PageTitle>
+
+<section class="login-shell">
+    <div class="login-panel">
+        <p class="eyebrow">Acesso seguro</p>
+        <h1>Product Service</h1>
+        <p class="login-copy">Entre com sua conta para acessar o backoffice operacional.</p>
+
+        <button class="primary-action" type="button" @onclick="StartLogin">Entrar com Keycloak</button>
+    </div>
+</section>
+
+@code {
+    [SupplyParameterFromQuery]
+    public string? ReturnUrl { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (authenticationState.User.Identity?.IsAuthenticated == true)
+            Navigation.NavigateTo("/products", replace: true);
+    }
+
+    private void StartLogin()
+    {
+        var returnUrl = string.IsNullOrWhiteSpace(ReturnUrl) ? "/products" : ReturnUrl;
+        Navigation.NavigateTo($"/auth/login?returnUrl={Uri.EscapeDataString(returnUrl)}", forceLoad: true);
+    }
+}

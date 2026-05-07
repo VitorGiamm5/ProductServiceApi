@@ -151,10 +151,11 @@ public sealed class RedisCacheClient : IRedisCacheClient, IAsyncDisposable
 
         try
         {
-            using var timeoutCts = new CancellationTokenSource(_options.OperationTimeout);
-            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
+            if (cancellationToken.IsCancellationRequested)
+                return default;
+
             var database = connection.GetDatabase();
-            var result = await executeAsync(database).WaitAsync(linkedCts.Token);
+            var result = await executeAsync(database);
 
             circuitBreaker.ReportSuccess();
             ObserveSuccess(feature, operation, dependencyOperation, result);
@@ -187,10 +188,16 @@ public sealed class RedisCacheClient : IRedisCacheClient, IAsyncDisposable
 
     private string BuildKey(string key) => $"{_options.InstanceName}{key}";
 
-    private static ConfigurationOptions ParseConfiguration(string connectionString)
+    private ConfigurationOptions ParseConfiguration(string connectionString)
     {
         var configuration = ConfigurationOptions.Parse(connectionString);
+        var operationTimeoutMilliseconds = Math.Max(1, _options.OperationTimeoutMilliseconds);
+
         configuration.AbortOnConnectFail = false;
+        configuration.AsyncTimeout = Math.Max(configuration.AsyncTimeout, operationTimeoutMilliseconds);
+        configuration.SyncTimeout = Math.Max(configuration.SyncTimeout, operationTimeoutMilliseconds);
+        configuration.ConnectTimeout = Math.Max(configuration.ConnectTimeout, operationTimeoutMilliseconds);
+
         return configuration;
     }
 
@@ -221,9 +228,12 @@ public sealed class RedisCacheClient : IRedisCacheClient, IAsyncDisposable
         string dependencyOperation,
         Exception exception)
     {
-        var reason = exception is OperationCanceledException
-            ? "timeout"
-            : "redis_error";
+        var reason = exception switch
+        {
+            RedisTimeoutException => "timeout",
+            OperationCanceledException => "canceled",
+            _ => "redis_error"
+        };
 
         if (dependencyOperation == "read")
             AppMetrics.CacheReadErrorTotal.WithLabels(feature, operation, reason).Inc();

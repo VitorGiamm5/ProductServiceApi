@@ -1,6 +1,8 @@
 using Asp.Versioning;
+using ProductServiceApp.Api.Auth;
 using ProductServiceApp.Api.Conveters;
 using ProductServiceApp.Application;
+using ProductServiceApp.Domain.Security;
 using ProductServiceApp.Application.Metrics;
 using ProductServiceApp.Application.Middlewares;
 using ProductServiceApp.Infrastructure;
@@ -122,6 +124,13 @@ builder.Services.AddCors(options =>
 #region Context Acessor
 
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserContext, HttpCurrentUserContext>();
+
+#endregion
+
+#region Authentication / Authorization
+
+builder.Services.AddProductServiceAuth(builder.Configuration);
 
 #endregion
 
@@ -176,6 +185,7 @@ app.UseMiddleware<ExceptionMiddleware>();
 
 app.UseCors("AllowAll");
 
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.MapDefaultEndpoints();

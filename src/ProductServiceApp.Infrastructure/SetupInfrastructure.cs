@@ -10,6 +10,7 @@ using ProductServiceApp.Domain.Entities.Orders;
 using ProductServiceApp.Domain.Entities.Products;
 using ProductServiceApp.Domain.Repositories.Orders;
 using ProductServiceApp.Domain.Repositories.Products;
+using ProductServiceApp.Domain.Security;
 using ProductServiceApp.Infrastructure.Database.Contexts;
 using ProductServiceApp.Infrastructure.Database.Interceptors;
 using ProductServiceApp.Infrastructure.Database.Repositories.Orders.Commands;
@@ -28,6 +29,7 @@ public static class SetupInfrastructure
     {
         #region Interceptors
 
+        services.TryAddScoped<ICurrentUserContext, SystemCurrentUserContext>();
         services.AddSingleton<ResilienceInterceptor>();
 
         #endregion

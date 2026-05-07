@@ -201,6 +201,21 @@ CRUD Products
 ### Prometheus
 ``http://localhost:9090/query``
 
+### Keycloack
+- http://localhost:8081/admin (Console administrative)
+``http://localhost:8081/``
+``admin / admin``
+==
+API/BFF User
+realm productservice
+usuário: admin
+senha: admin123
+==
+realm master
+usuário: admin
+senha: admin
+
+
 ### Redis Cache
 (Windows) Using **Another Redis Desktop Manager**.
 Step by step:
@@ -213,6 +228,9 @@ Step by step:
 6. In Separator, keep :
 7. Do not check any checkbox
 8. Click OK
+
+- Metrics
+``http://127.0.0.1:9121/metrics``
 
 ## Tests
 The repository has a `tests/` folder aligned with `src/`:

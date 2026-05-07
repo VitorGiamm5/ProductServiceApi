@@ -5,13 +5,14 @@
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": true,
-      "applicationUrl": "http://localhost:9010",
+      "applicationUrl": "http://localhost:9020",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "Kestrel__Port": "9010",
+        "Kestrel__Port": "9020",
         "Auth__Authority": "http://localhost:8081/realms/productservice",
         "Auth__BrowserAuthority": "http://localhost:8081/realms/productservice",
-        "Auth__ClientId": "productservice-dev-blazor",
+        "Auth__ClientId": "productservice-bff",
+        "Auth__ClientSecret": "productservice-bff-secret",
         "Auth__RequireHttpsMetadata": "false",
         "ProductApi__BaseAddress": "http://localhost:9005"
       }
@@ -20,13 +21,14 @@
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": true,
-      "applicationUrl": "https://localhost:7038;http://localhost:9010",
+      "applicationUrl": "http://localhost:9020",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "Kestrel__Port": "9010",
+        "Kestrel__Port": "9020",
         "Auth__Authority": "http://localhost:8081/realms/productservice",
         "Auth__BrowserAuthority": "http://localhost:8081/realms/productservice",
-        "Auth__ClientId": "productservice-dev-blazor",
+        "Auth__ClientId": "productservice-bff",
+        "Auth__ClientSecret": "productservice-bff-secret",
         "Auth__RequireHttpsMetadata": "false",
         "ProductApi__BaseAddress": "http://localhost:9005"
       }

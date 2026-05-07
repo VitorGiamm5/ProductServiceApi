@@ -1,14 +1,16 @@
-@page "/"
+@page "/products"
 @rendermode InteractiveServer
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
 @inject ProductApiClient ProductsClient
 
-<PageTitle>Menu</PageTitle>
+<PageTitle>Produtos</PageTitle>
 
 <section class="menu-shell">
     <div class="menu-heading">
         <div>
             <p class="eyebrow">Backoffice</p>
-            <h1>Menu</h1>
+            <h1>Produtos</h1>
         </div>
 
         <button class="primary-action" type="button" @onclick="OpenCreateModal">

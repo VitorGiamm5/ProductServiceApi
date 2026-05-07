@@ -1,16 +1,24 @@
 @inherits LayoutComponentBase
 @implements IDisposable
 @inject LoadingState Loading
+@inject NavigationManager Navigation
 
 <div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+    @if (!IsLoginRoute)
+    {
+        <div class="sidebar">
+            <NavMenu />
+        </div>
+    }
 
     <main>
-        <div class="top-row px-4">
-            <span>Product Service Backoffice</span>
-        </div>
+        @if (!IsLoginRoute)
+        {
+            <div class="top-row px-4">
+                <span>Product Service Backoffice</span>
+                <LoginDisplay />
+            </div>
+        }
 
         <article class="content px-4">
             @Body
@@ -35,9 +43,12 @@
 </div>
 
 @code {
+    private bool IsLoginRoute => IsCurrentRoute("/") || IsCurrentRoute("/login");
+
     protected override void OnInitialized()
     {
         Loading.Changed += OnLoadingChanged;
+        Navigation.LocationChanged += OnLocationChanged;
     }
 
     private void OnLoadingChanged()
@@ -45,8 +56,22 @@
         _ = InvokeAsync(StateHasChanged);
     }
 
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs args)
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private bool IsCurrentRoute(string route)
+    {
+        var currentPath = new Uri(Navigation.Uri).AbsolutePath.TrimEnd('/');
+        var routePath = route.TrimEnd('/');
+
+        return string.Equals(currentPath, routePath, StringComparison.OrdinalIgnoreCase);
+    }
+
     public void Dispose()
     {
         Loading.Changed -= OnLoadingChanged;
+        Navigation.LocationChanged -= OnLocationChanged;
     }
 }

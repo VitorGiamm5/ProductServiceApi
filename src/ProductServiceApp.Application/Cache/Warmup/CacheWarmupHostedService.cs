@@ -41,13 +41,14 @@ internal sealed class CacheWarmupHostedService(
                 TimeSpan.FromSeconds(Math.Max(1, _options.TimeoutSeconds)));
             using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken, timeoutCts.Token);
 
-            await using var scope = serviceProvider.CreateAsyncScope();
-            var features = scope.ServiceProvider
+            await using var discoveryScope = serviceProvider.CreateAsyncScope();
+            var featureNames = discoveryScope.ServiceProvider
                 .GetServices<ICacheWarmupFeature>()
+                .Select(feature => feature.FeatureName)
                 .Where(IsFeatureEnabled)
                 .ToArray();
 
-            if (features.Length == 0)
+            if (featureNames.Length == 0)
             {
                 logger.LogInformation("Cache warmup found no enabled features.");
                 return;
@@ -59,9 +60,9 @@ internal sealed class CacheWarmupHostedService(
                 MaxDegreeOfParallelism = Math.Max(1, _options.MaxDegreeOfParallelism)
             };
 
-            await Parallel.ForEachAsync(features, parallelOptions, async (feature, ct) =>
+            await Parallel.ForEachAsync(featureNames, parallelOptions, async (featureName, ct) =>
             {
-                await WarmupFeatureAsync(feature, ct);
+                await WarmupFeatureAsync(featureName, ct);
             });
         }
         catch (OperationCanceledException) when (!stoppingToken.IsCancellationRequested)
@@ -74,12 +75,12 @@ internal sealed class CacheWarmupHostedService(
         }
     }
 
-    private bool IsFeatureEnabled(ICacheWarmupFeature feature)
+    private bool IsFeatureEnabled(string featureName)
     {
-        if (!_options.Features.TryGetValue(feature.FeatureName, out var featureOptions) || !featureOptions.Enabled)
+        if (!_options.Features.TryGetValue(featureName, out var featureOptions) || !featureOptions.Enabled)
         {
             AppMetrics.CacheWarmupSkippedTotal
-                .WithLabels(feature.FeatureName, "disabled")
+                .WithLabels(featureName, "disabled")
                 .Inc();
 
             return false;
@@ -88,9 +89,24 @@ internal sealed class CacheWarmupHostedService(
         return true;
     }
 
-    private async Task WarmupFeatureAsync(ICacheWarmupFeature feature, CancellationToken cancellationToken)
+    private async Task WarmupFeatureAsync(string featureName, CancellationToken cancellationToken)
     {
-        var featureOptions = _options.Features[feature.FeatureName];
+        await using var scope = serviceProvider.CreateAsyncScope();
+        var feature = scope.ServiceProvider
+            .GetServices<ICacheWarmupFeature>()
+            .SingleOrDefault(candidate => candidate.FeatureName == featureName);
+
+        if (feature is null)
+        {
+            AppMetrics.CacheWarmupSkippedTotal
+                .WithLabels(featureName, "not_registered")
+                .Inc();
+
+            logger.LogWarning("Cache warmup skipped for feature {CacheFeature} because it is not registered.", featureName);
+            return;
+        }
+
+        var featureOptions = _options.Features[featureName];
         var stopwatch = Stopwatch.StartNew();
 
         try
