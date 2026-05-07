@@ -1,4 +1,7 @@
-﻿using Asp.Versioning;
+using Asp.Versioning;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using ProductServiceApp.Api.Auth;
 using ProductServiceApp.Api.Controllers.Base;
 using ProductServiceApp.Domain.Services.Base.Dtos;
 using ProductServiceApp.Domain.Services.Products.Dtos;
@@ -27,6 +30,21 @@ public class ProductController(
         getAllChannel,
         getByIdChannel)
 {
+    [Authorize(Policy = AuthPolicies.ProductsRead)]
+    public override Task<IActionResult> GetAll(CancellationToken ct) => base.GetAll(ct);
+
+    [Authorize(Policy = AuthPolicies.ProductsRead)]
+    public override Task<IActionResult> GetById(long id, CancellationToken ct) => base.GetById(id, ct);
+
+    [Authorize(Policy = AuthPolicies.ProductsWrite)]
+    public override Task<IActionResult> Create(CreateProductRequest request, CancellationToken ct) => base.Create(request, ct);
+
+    [Authorize(Policy = AuthPolicies.ProductsWrite)]
+    public override Task<IActionResult> Update(long id, UpdateProductRequest request, CancellationToken ct) => base.Update(id, request, ct);
+
+    [Authorize(Policy = AuthPolicies.ProductsWrite)]
+    public override Task<IActionResult> Delete(long id, CancellationToken ct) => base.Delete(id, ct);
+
     protected override GetAllProductQuery BuildGetAllQuery()
     {
         return new();
