@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 @attribute [AllowAnonymous]
 @using Microsoft.AspNetCore.Authorization
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation
 
 <PageTitle>Login</PageTitle>
@@ -20,9 +21,16 @@
     [SupplyParameterFromQuery]
     public string? ReturnUrl { get; set; }
 
+    protected override async Task OnInitializedAsync()
+    {
+        var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (authenticationState.User.Identity?.IsAuthenticated == true)
+            Navigation.NavigateTo("/products", replace: true);
+    }
+
     private void StartLogin()
     {
-        var returnUrl = string.IsNullOrWhiteSpace(ReturnUrl) ? "/" : ReturnUrl;
+        var returnUrl = string.IsNullOrWhiteSpace(ReturnUrl) ? "/products" : ReturnUrl;
         Navigation.NavigateTo($"/auth/login?returnUrl={Uri.EscapeDataString(returnUrl)}", forceLoad: true);
     }
 }

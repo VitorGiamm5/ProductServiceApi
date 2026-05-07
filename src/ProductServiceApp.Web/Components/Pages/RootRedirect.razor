@@ -1,0 +1,18 @@
+@page "/"
+@rendermode InteractiveServer
+@attribute [AllowAnonymous]
+@using Microsoft.AspNetCore.Authorization
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var target = authenticationState.User.Identity?.IsAuthenticated == true
+            ? "/products"
+            : "/login";
+
+        Navigation.NavigateTo(target, replace: true);
+    }
+}

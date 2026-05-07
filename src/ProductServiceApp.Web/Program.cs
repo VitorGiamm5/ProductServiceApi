@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
+using System.Net.Http.Headers;
 using ProductServiceApp.ServiceDefaults;
 using ProductServiceApp.Web.Auth;
 using ProductServiceApp.Web.Components;
@@ -75,6 +76,7 @@ builder.Services
                     context.ProtocolMessage.IssuerAddress,
                     options.Authority,
                     builder.Configuration["Auth:BrowserAuthority"]);
+                context.ProtocolMessage.PostLogoutRedirectUri = BuildBlazorRootUrl(context.HttpContext);
 
                 return Task.CompletedTask;
             }
@@ -83,6 +85,7 @@ builder.Services
 
 builder.Services.AddScoped<LoadingState>();
 builder.Services.AddTransient<AuthenticatedApiHandler>();
+builder.Services.AddHttpClient("keycloak-token-management");
 builder.Services.AddHttpClient<ProductApiClient>(client =>
 {
     client.BaseAddress = new Uri(GetProductApiBaseAddress(builder.Configuration));
@@ -111,13 +114,24 @@ app.UseAntiforgery();
 app.MapGet("/auth/login", (string? returnUrl) => Results.Challenge(
     new AuthenticationProperties
     {
-        RedirectUri = string.IsNullOrWhiteSpace(returnUrl) ? "/" : returnUrl
+        RedirectUri = string.IsNullOrWhiteSpace(returnUrl) ? "/products" : returnUrl
     },
     [OpenIdConnectDefaults.AuthenticationScheme]));
 
-app.MapGet("/auth/logout", () => Results.SignOut(
-    new AuthenticationProperties { RedirectUri = "/login" },
-    [CookieAuthenticationDefaults.AuthenticationScheme, OpenIdConnectDefaults.AuthenticationScheme]));
+app.MapGet("/logout", async (
+    HttpContext context,
+    IConfiguration configuration,
+    IHttpClientFactory httpClientFactory,
+    ILoggerFactory loggerFactory) =>
+{
+    await RevokeKeycloakTokensAsync(context, configuration, httpClientFactory, loggerFactory);
+
+    return Results.SignOut(
+        new AuthenticationProperties { RedirectUri = "/login" },
+        [CookieAuthenticationDefaults.AuthenticationScheme]);
+});
+
+app.MapGet("/auth/logout", () => Results.Redirect("/logout"));
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
@@ -148,4 +162,67 @@ static string UseBrowserAuthority(string issuerAddress, string authority, string
         return issuerAddress;
 
     return issuerAddress.Replace(authority, browserAuthority, StringComparison.OrdinalIgnoreCase);
+}
+
+static string BuildBlazorRootUrl(HttpContext context)
+{
+    return $"{context.Request.Scheme}://{context.Request.Host}/";
+}
+
+static async Task RevokeKeycloakTokensAsync(
+    HttpContext context,
+    IConfiguration configuration,
+    IHttpClientFactory httpClientFactory,
+    ILoggerFactory loggerFactory)
+{
+    var logger = loggerFactory.CreateLogger("KeycloakLogout");
+    var tokens = new[]
+    {
+        new { Value = await context.GetTokenAsync("access_token"), Hint = "access_token" },
+        new { Value = await context.GetTokenAsync("refresh_token"), Hint = "refresh_token" }
+    };
+
+    var authority = configuration["Auth:Authority"] ?? "http://localhost:8081/realms/productservice";
+    var revokeEndpoint = $"{authority.TrimEnd('/')}/protocol/openid-connect/revoke";
+    var clientId = configuration["Auth:ClientId"] ?? "productservice-dev-blazor";
+    var clientSecret = configuration["Auth:ClientSecret"];
+    var httpClient = httpClientFactory.CreateClient("keycloak-token-management");
+
+    foreach (var token in tokens)
+    {
+        if (string.IsNullOrWhiteSpace(token.Value))
+            continue;
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, revokeEndpoint)
+        {
+            Content = new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["client_id"] = clientId,
+                ["token"] = token.Value,
+                ["token_type_hint"] = token.Hint
+            })
+        };
+
+        if (!string.IsNullOrWhiteSpace(clientSecret))
+        {
+            var credentials = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"{clientId}:{clientSecret}"));
+            request.Headers.Authorization = new AuthenticationHeaderValue("Basic", credentials);
+        }
+
+        try
+        {
+            using var response = await httpClient.SendAsync(request, context.RequestAborted);
+            if (!response.IsSuccessStatusCode)
+            {
+                logger.LogWarning(
+                    "Keycloak token revocation returned {StatusCode} for {TokenTypeHint}.",
+                    response.StatusCode,
+                    token.Hint);
+            }
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            logger.LogWarning(ex, "Keycloak token revocation failed for {TokenTypeHint}.", token.Hint);
+        }
+    }
 }
