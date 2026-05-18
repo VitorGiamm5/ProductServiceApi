@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 
+#region Builder
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.WebHost.ConfigureKestrel(options =>
@@ -74,10 +76,18 @@ builder.Services.AddHttpClient("product-api", client =>
         ?? "http://localhost:9005");
 });
 
+#endregion
+
+#region App builder
+
 var app = builder.Build();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+#endregion
+
+#region Endpoints
 
 app.MapGet("/login", () => Results.Challenge(
     authenticationSchemes: [OpenIdConnectDefaults.AuthenticationScheme]));
@@ -97,6 +107,8 @@ app.MapGet("/me", (HttpContext context) =>
 
 app.MapMethods("/api/{**path}", ["GET", "POST", "PUT", "DELETE"], ProxyApiAsync)
     .RequireAuthorization();
+
+#endregion
 
 await app.RunAsync();
 
