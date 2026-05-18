@@ -43,6 +43,9 @@ builder.Services
     {
         options.Authority = builder.Configuration["Auth:Authority"]
             ?? "http://localhost:8081/realms/productservice";
+        var metadataAddress = builder.Configuration["Auth:MetadataAddress"];
+        if (!string.IsNullOrWhiteSpace(metadataAddress))
+            options.MetadataAddress = metadataAddress;
         options.ClientId = builder.Configuration["Auth:ClientId"]
             ?? "productservice-dev-blazor";
         options.ResponseType = "code";
@@ -56,7 +59,13 @@ builder.Services
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidIssuer = builder.Configuration["Auth:BrowserAuthority"]
-                ?? builder.Configuration["Auth:Authority"]
+                ?? builder.Configuration["Auth:Authority"],
+            ValidIssuers = new[]
+                {
+                    builder.Configuration["Auth:Authority"],
+                    builder.Configuration["Auth:BrowserAuthority"]
+                }
+                .Where(value => !string.IsNullOrWhiteSpace(value))
         };
         options.Scope.Add("openid");
         options.Scope.Add("profile");

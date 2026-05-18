@@ -29,6 +29,8 @@ public static class SetupAuth
             .AddJwtBearer(options =>
             {
                 options.Authority = authOptions.Authority;
+                if (!string.IsNullOrWhiteSpace(authOptions.MetadataAddress))
+                    options.MetadataAddress = authOptions.MetadataAddress;
                 options.Audience = authOptions.Audience;
                 options.RequireHttpsMetadata = authOptions.RequireHttpsMetadata;
                 options.TokenValidationParameters = new TokenValidationParameters
@@ -38,7 +40,13 @@ public static class SetupAuth
                     ValidateAudience = false,
                     ValidIssuer = string.IsNullOrWhiteSpace(authOptions.BrowserAuthority)
                         ? authOptions.Authority
-                        : authOptions.BrowserAuthority
+                        : authOptions.BrowserAuthority,
+                    ValidIssuers = new[]
+                        {
+                            authOptions.Authority,
+                            authOptions.BrowserAuthority
+                        }
+                        .Where(value => !string.IsNullOrWhiteSpace(value))
                 };
                 options.Events = new JwtBearerEvents
                 {

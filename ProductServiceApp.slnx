@@ -9,6 +9,7 @@
     <Project Path="src/ProductServiceApp.Web/ProductServiceApp.Web.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/ProductServiceApp.EdgeTests/ProductServiceApp.EdgeTests.csproj" />
     <Project Path="tests/ProductServiceApp.FunctionalTests/ProductServiceApp.FunctionalTests.csproj" Id="8bd5db51-0a73-42c7-9e47-6fd50fd3c79d" />
     <Project Path="tests/ProductServiceApp.IntegrationTests/ProductServiceApp.IntegrationTests.csproj" Id="3a2671a8-dbb5-475c-9346-b34ef6a6e1a6" />
     <Project Path="tests/ProductServiceApp.UnitTests/ProductServiceApp.UnitTests.csproj" Id="86f9f2d6-8ec5-4f0a-b4dc-29f3307bfe8f" />

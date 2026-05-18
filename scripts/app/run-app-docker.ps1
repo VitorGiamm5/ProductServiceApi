@@ -5,7 +5,8 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$composeFile = Join-Path $PSScriptRoot "deploy-docker\docker-compose.yml"
+$repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..")
+$composeFile = Join-Path $repoRoot "deploy-docker\docker-compose.yml"
 
 function Test-DockerAvailable {
     try {

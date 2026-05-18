@@ -23,6 +23,9 @@ Use Portuguese for explanations to the project owner.
 - Before changing auth, Redis, Docker, or migrations, inspect the current files first.
 - Treat local Docker and Visual Studio processes as possibly running at the same time.
 - If a port is busy, report which service likely owns it instead of killing processes automatically.
+- Keep local Docker files under `deploy-docker` and production-oriented Docker files under `docker-deploy-prod`.
+- Keep reusable day-to-day scripts under `scripts`, `deploy-docker/scripts-local-infrastructure`, or `docker-deploy-prod/scripts-prod-infrastructure`.
+- Do not put real production secrets in the repository. Use `docker-deploy-prod/.env.production` and `docker-deploy-prod/redis/users.acl`, both ignored by Git.
 
 ## Verification
 
@@ -32,6 +35,7 @@ Prefer these checks after relevant changes:
 - `dotnet build src/ProductServiceApp.Application/ProductServiceApp.Application.csproj`
 - `dotnet build ProductServiceApp.slnx` when local processes are not locking files.
 - `docker compose -f deploy-docker/docker-compose.yml config --quiet`
+- `docker compose --env-file docker-deploy-prod/.env.production -f docker-deploy-prod/docker-compose.prod.yml config --quiet` when a local production env file exists.
 - `docker compose -f deploy-docker/docker-compose.yml up -d --build <service>`
 
 If `dotnet build ProductServiceApp.slnx` fails because Visual Studio or an app process locks files, say that clearly.

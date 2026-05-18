@@ -17,6 +17,18 @@ Main components:
 - `grafana`: dashboards on `localhost:3000`.
 - `loki` and `promtail`: local logging stack.
 
+Production-oriented deployment lives separately in `docker-deploy-prod`.
+
+Production target:
+
+- Hostinger KVM 4: 4 vCPU, 16 GB RAM, 200 GB NVMe, 16 TB bandwidth.
+- Ubuntu Server.
+- Docker Compose.
+- Caddy as public reverse proxy.
+- PostgreSQL and Redis internal-only.
+- No PostgreSQL replica on the same VPS for the first production footprint unless there is a specific read-load experiment.
+- No Kubernetes/K3s in the initial deployment.
+
 ## Authentication Flow
 
 Keycloak realm:

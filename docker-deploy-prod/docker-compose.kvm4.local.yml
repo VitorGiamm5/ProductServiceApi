@@ -1,0 +1,184 @@
+services:
+  caddy:
+    container_name: productservice_kvm4_caddy
+    ports:
+      - "8080:80"
+      - "8443:443"
+    cpus: 0.25
+    mem_limit: 256m
+    mem_reservation: 128m
+
+  api:
+    container_name: productservice_kvm4_api
+    ports:
+      - "127.0.0.1:9005:9005"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Production"
+      DOTNET_ENVIRONMENT: "Production"
+      Auth__Authority: "http://keycloak:8080/realms/productservice"
+      Auth__MetadataAddress: ""
+      Auth__BrowserAuthority: "http://localhost:8081/realms/productservice"
+      Auth__RequireHttpsMetadata: "false"
+      DatabaseSettings__EnableLoadBalancing: "true"
+      WorkersReplicas__ReplicasCreateProduct: 2
+      WorkersReplicas__ReplicasUpdateProduct: 2
+      WorkersReplicas__ReplicasDeleteProduct: 1
+      WorkersReplicas__ReplicasGetAllProduct: 2
+      WorkersReplicas__ReplicasGetByIdProduct: 2
+      WorkersReplicas__ReplicasCreateOrder: 2
+      WorkersReplicas__ReplicasUpdateOrder: 2
+      WorkersReplicas__ReplicasDeleteOrder: 1
+      WorkersReplicas__ReplicasGetAllOrder: 2
+      WorkersReplicas__ReplicasGetByIdOrder: 2
+      QueueCapacity__QueueCreateProduct: 500
+      QueueCapacity__QueueUpdateProduct: 500
+      QueueCapacity__QueueDeleteProduct: 250
+      QueueCapacity__QueueCreateOrder: 500
+      QueueCapacity__QueueUpdateOrder: 500
+      QueueCapacity__QueueDeleteOrder: 250
+    cpus: 1.50
+    mem_limit: 2048m
+    mem_reservation: 768m
+
+  web:
+    container_name: productservice_kvm4_web
+    ports:
+      - "127.0.0.1:9011:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Production"
+      DOTNET_ENVIRONMENT: "Production"
+      Auth__Authority: "http://keycloak:8080/realms/productservice"
+      Auth__MetadataAddress: ""
+      Auth__BrowserAuthority: "http://localhost:8081/realms/productservice"
+      Auth__RequireHttpsMetadata: "false"
+    cpus: 0.75
+    mem_limit: 1024m
+    mem_reservation: 384m
+
+  postgres:
+    container_name: productservice_kvm4_postgres
+    ports:
+      - "127.0.0.1:5432:5432"
+    command:
+      - "postgres"
+      - "-c"
+      - "config_file=/etc/postgresql/primary/postgresql.conf"
+      - "-c"
+      - "hba_file=/etc/postgresql/primary/pg_hba.conf"
+      - "-c"
+      - "shared_buffers=4GB"
+      - "-c"
+      - "effective_cache_size=10GB"
+      - "-c"
+      - "work_mem=16MB"
+      - "-c"
+      - "maintenance_work_mem=512MB"
+      - "-c"
+      - "max_connections=120"
+      - "-c"
+      - "checkpoint_completion_target=0.9"
+    cpus: 1.25
+    mem_limit: 6144m
+    mem_reservation: 4096m
+
+  postgres_replica:
+    container_name: productservice_kvm4_postgres_replica
+    ports:
+      - "127.0.0.1:5433:5432"
+    cpus: 0.75
+    mem_limit: 4096m
+    mem_reservation: 2048m
+
+  redis:
+    container_name: productservice_kvm4_redis
+    ports:
+      - "127.0.0.1:6379:6379"
+    cpus: 0.25
+    mem_limit: 1024m
+    mem_reservation: 384m
+
+  redis_exporter:
+    container_name: productservice_kvm4_redis_exporter
+    cpus: 0.10
+    mem_limit: 128m
+    mem_reservation: 64m
+
+  keycloak:
+    container_name: productservice_kvm4_keycloak
+    ports:
+      - "127.0.0.1:8081:8080"
+    command:
+      - start-dev
+      - --import-realm
+    environment:
+      KC_HOSTNAME: "http://keycloak:8080"
+      KC_HOSTNAME_STRICT: "false"
+    cpus: 0.75
+    mem_limit: 2048m
+    mem_reservation: 1024m
+
+  prometheus:
+    container_name: productservice_kvm4_prometheus
+    ports:
+      - "127.0.0.1:9090:9090"
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.retention.time=1d"
+      - "--storage.tsdb.retention.size=1GB"
+    cpus: 0.25
+    mem_limit: 1024m
+    mem_reservation: 384m
+
+  grafana:
+    container_name: productservice_kvm4_grafana
+    ports:
+      - "127.0.0.1:3000:3000"
+    cpus: 0.25
+    mem_limit: 512m
+    mem_reservation: 256m
+
+  node_exporter:
+    image: prom/node-exporter:latest
+    container_name: productservice_kvm4_node_exporter
+    command:
+      - "--path.rootfs=/host"
+    pid: host
+    volumes:
+      - "/:/host:ro"
+    networks:
+      - productservice_private
+    cpus: 0.10
+    mem_limit: 128m
+    mem_reservation: 64m
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: productservice_kvm4_cadvisor
+    privileged: true
+    devices:
+      - "/dev/kmsg:/dev/kmsg"
+    volumes:
+      - "/:/rootfs:ro"
+      - "/var/run:/var/run:ro"
+      - "/sys:/sys:ro"
+      - "/var/lib/docker/:/var/lib/docker:ro"
+    networks:
+      - productservice_private
+    cpus: 0.20
+    mem_limit: 256m
+    mem_reservation: 128m
+
+  k6:
+    container_name: productservice_kvm4_k6
+    environment:
+      BASE_URL: http://api:9005
+      AUTH_URL: http://keycloak:8080
+      AUTH_REALM: productservice
+      AUTH_CLIENT_ID: productservice-dev-blazor
+      AUTH_USERNAME: admin
+      AUTH_PASSWORD: admin123
+    volumes:
+      - ./load-tests:/scripts:ro
+    cpus: 0.50
+    mem_limit: 512m
+    mem_reservation: 128m

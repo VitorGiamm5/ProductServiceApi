@@ -3,7 +3,8 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$env:DOTNET_CLI_HOME = $PSScriptRoot
+$repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..")
+$env:DOTNET_CLI_HOME = $repoRoot
 $env:DOTNET_SKIP_FIRST_TIME_EXPERIENCE = "1"
 $env:DOTNET_CLI_TELEMETRY_OPTOUT = "1"
 $env:DOTNET_ADD_GLOBAL_TOOLS_TO_PATH = "0"
@@ -13,7 +14,7 @@ function Stop-WorkspaceDotnetProcesses {
     Get-CimInstance Win32_Process -Filter "Name = 'dotnet.exe'" |
         Where-Object {
             $commandLine = $_.CommandLine
-            $commandLine -and $commandLine.Contains($PSScriptRoot)
+            $commandLine -and $commandLine.Contains($repoRoot)
         } |
         ForEach-Object {
             Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue
@@ -43,7 +44,7 @@ function Wait-HttpOk {
 
 Stop-WorkspaceDotnetProcesses
 
-$logsDirectory = Join-Path $PSScriptRoot "TestResults"
+$logsDirectory = Join-Path $repoRoot "TestResults"
 New-Item -ItemType Directory -Force -Path $logsDirectory | Out-Null
 
 $apiOut = Join-Path $logsDirectory "run-app-local-api.out.log"
@@ -59,13 +60,13 @@ $env:ConnectionStrings__PostgresWrite = "Server=localhost;Port=9000;Database=dbp
 $env:ConnectionStrings__PostgresRead = "Server=localhost;Port=9001;Database=dbproducts;Username=read_randandan;Password=read_randandan_XLR;SSL Mode=Disable;"
 $env:Redis__ConnectionString = "localhost:6379"
 
-$apiProject = Join-Path $PSScriptRoot "src\ProductServiceApp.Api\ProductServiceApp.Api.csproj"
+$apiProject = Join-Path $repoRoot "src\ProductServiceApp.Api\ProductServiceApp.Api.csproj"
 $apiArguments = "run --project `"$apiProject`" --launch-profile http"
 
 $apiProcess = Start-Process `
     -FilePath "dotnet" `
     -ArgumentList $apiArguments `
-    -WorkingDirectory $PSScriptRoot `
+    -WorkingDirectory $repoRoot `
     -RedirectStandardOutput $apiOut `
     -RedirectStandardError $apiErr `
     -PassThru `
@@ -76,13 +77,13 @@ Wait-HttpOk -Url "http://localhost:9005/health"
 Write-Host "Starting Web at http://localhost:5260 ..."
 $env:ProductApi__BaseAddress = "http://localhost:9005"
 
-$webProject = Join-Path $PSScriptRoot "src\ProductServiceApp.Web\ProductServiceApp.Web.csproj"
+$webProject = Join-Path $repoRoot "src\ProductServiceApp.Web\ProductServiceApp.Web.csproj"
 $webArguments = "run --project `"$webProject`" --launch-profile http"
 
 $webProcess = Start-Process `
     -FilePath "dotnet" `
     -ArgumentList $webArguments `
-    -WorkingDirectory $PSScriptRoot `
+    -WorkingDirectory $repoRoot `
     -RedirectStandardOutput $webOut `
     -RedirectStandardError $webErr `
     -PassThru `

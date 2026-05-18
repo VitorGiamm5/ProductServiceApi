@@ -137,7 +137,7 @@ CRUD Products
 ### 2. Create local infrastructure:
 - Check if Docker is running in your environment
 - This step will download docker images, and put it into run
-``./local-infrastructure/start.sh`` (Windows script)
+``./deploy-docker/scripts-local-infrastructure/start.sh`` (Docker local script)
 - Check health of containers
 ``docker ps``
 - Container list should have:
@@ -172,7 +172,7 @@ CRUD Products
 
 (WINDOWS):
 - Use this file script to create migration, apply migrations and delete migrations
-``.\run-local-migrate.ps1`` (Windows script)
+``.\scripts\database\run-local-migrate.ps1`` (Windows script)
 
 (LINUX):
 - Run manully
@@ -222,6 +222,35 @@ senha: admin
 ``http://localhost:9010/login``
 -default login user: operator, key: operator123
 
+### Edge validation with Playwright
+Use Playwright as the browser validation layer for dev, KVM4 local, release, and production checks.
+
+```powershell
+.\scripts\tests\edge-dev.ps1
+.\scripts\tests\edge-kvm4.ps1
+.\scripts\tests\edge-prod.ps1 -WebBaseUrl "https://app.example.com"
+```
+
+Install browsers once per machine or after Playwright upgrades:
+
+```powershell
+.\scripts\tests\edge-kvm4.ps1 -InstallBrowsers
+```
+
+### Load validation with k6
+k6 is available in the local Docker and production-style Docker environments.
+
+```bash
+./deploy-docker/scripts-local-infrastructure/run-loadtest.sh
+cd docker-deploy-prod
+./scripts-prod-infrastructure/run-kvm4-crud-load.sh
+./scripts-prod-infrastructure/run-prod-crud-load.sh
+```
+
+The production-style topology always includes PostgreSQL primary plus `postgres_replica`; write traffic uses primary and read traffic uses the replica.
+The default k6 identity is `admin/admin123`, because the CRUD load test needs write permissions for products and orders.
+By default the authenticated CRUD script runs a short smoke profile. Use `K6_PROFILE=stress` when the goal is to push the KVM4 limits.
+
 
 ### Redis Cache
 (Windows) Using **Another Redis Desktop Manager**.
@@ -248,49 +277,49 @@ The repository has a `tests/` folder aligned with `src/`:
 
 ### Run all tests
 ```powershell
-.\test.ps1
+.\scripts\tests\test.ps1
 ```
 
 If PowerShell script execution is blocked on Windows, use:
 ```cmd
-test.cmd
+.\scripts\tests\test.cmd
 ```
 
 Run tests by filter:
 ```powershell
-.\test.ps1 -Filter "FullyQualifiedName~Architecture"
+.\scripts\tests\test.ps1 -Filter "FullyQualifiedName~Architecture"
 ```
 
 ### TDD watch mode
 The default watch target is the unit test project because it is the fastest feedback loop:
 ```powershell
-.\test-watch.ps1
+.\scripts\tests\test-watch.ps1
 ```
 
 Windows wrapper:
 ```cmd
-test-watch.cmd
+.\scripts\tests\test-watch.cmd
 ```
 
 Watch another project:
 ```powershell
-.\test-watch.ps1 -Project ".\tests\ProductServiceApp.IntegrationTests\ProductServiceApp.IntegrationTests.csproj"
+.\scripts\tests\test-watch.ps1 -Project ".\tests\ProductServiceApp.IntegrationTests\ProductServiceApp.IntegrationTests.csproj"
 ```
 
 ### Coverage report
 Generate a Cobertura file and an HTML report:
 ```powershell
-.\coverage.ps1
+.\scripts\tests\coverage.ps1
 ```
 
 Windows wrapper:
 ```cmd
-coverage.cmd
+.\scripts\tests\coverage.cmd
 ```
 
 After the first restore, you can skip restore for a faster local loop:
 ```cmd
-coverage.cmd -NoRestore
+.\scripts\tests\coverage.cmd -NoRestore
 ```
 
 Open the report at:
@@ -303,6 +332,13 @@ Use the coverage summary to prioritize missing tests in low-covered application 
 ### Functional tests against a running API
 ```powershell
 $env:PRODUCT_SERVICE_BASE_URL = "http://localhost:9005"
-.\test.ps1 -Filter "FullyQualifiedName~FunctionalTests"
+.\scripts\tests\test.ps1 -Filter "FullyQualifiedName~FunctionalTests"
 Remove-Item Env:\PRODUCT_SERVICE_BASE_URL
+```
+
+### Edge tests with Playwright
+```powershell
+.\scripts\tests\edge.ps1 -InstallBrowsers
+.\scripts\tests\edge.ps1 -WebBaseUrl "http://localhost:9011"
+.\scripts\tests\edge.ps1 -WebBaseUrl "http://localhost:9011" -Headed
 ```

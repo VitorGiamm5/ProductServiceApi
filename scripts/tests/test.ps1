@@ -4,7 +4,8 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$env:DOTNET_CLI_HOME = $PSScriptRoot
+$repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..")
+$env:DOTNET_CLI_HOME = $repoRoot
 $env:DOTNET_SKIP_FIRST_TIME_EXPERIENCE = "1"
 $env:DOTNET_CLI_TELEMETRY_OPTOUT = "1"
 $env:DOTNET_ADD_GLOBAL_TOOLS_TO_PATH = "0"
@@ -19,7 +20,7 @@ $projects = @(
 foreach ($project in $projects) {
     $arguments = @(
         "test",
-        (Join-Path $PSScriptRoot $project),
+        (Join-Path $repoRoot $project),
         "--configuration", "Debug",
         "-m:1",
         "-p:UseSharedCompilation=false"

@@ -14,6 +14,8 @@ param (
     [string]$databaseWrite = "Server=localhost;Port=9000;Database=dbproducts;Username=randandan;Password=randandan_XLR;"
 )
 
+$repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..")
+
 # Define a variável de ambiente caso tenha sido informada na linha de comando.
 if (-not [string]::IsNullOrWhiteSpace($databaseWrite)) {
     $Env:FLEET_DATABASE_WRITE = $databaseWrite
@@ -32,21 +34,21 @@ try
 			Write-Host "Operações de Entity Framework do tipo Add precisam de um nome" 
 			$(throw "Erro") 
 		}
-        cd src
+        Push-Location (Join-Path $repoRoot "src")
 		dotnet ef migrations add $name -p ./ProductServiceApp.Infrastructure/ -s ./ProductServiceApp.Api/ --context ApplicationDbContext --verbose
-		cd ..
+		Pop-Location
     } elseif ($operation.ToLower() -eq "remove") {
-		cd src
+		Push-Location (Join-Path $repoRoot "src")
 		dotnet ef migrations remove -p ./ProductServiceApp.Infrastructure/ -s ./ProductServiceApp.Api/ --context ApplicationDbContext --verbose
-		cd ..
+		Pop-Location
     } else {
-        cd src
+        Push-Location (Join-Path $repoRoot "src")
 		if ([bool][string]::IsNullOrWhitespace($name)) { 
 			dotnet ef database update -p ./ProductServiceApp.Infrastructure/ -s ./ProductServiceApp.Api/ --context ApplicationDbContext --verbose
 		} else {
 			dotnet ef database update $name -p ./ProductServiceApp.Infrastructure/ -s ./ProductServiceApp.Api/ --context ApplicationDbContext --verbose
 		}
-		cd ..
+		Pop-Location
     }
 
 }

@@ -24,6 +24,8 @@ public static class SetupInfrastructure
 {
     private static readonly int _maxRetryAttempts = 3;
     private static readonly int _maxRetryDelay = 2;
+    private const string WriteDataSourceKey = "postgres-write";
+    private const string ReadDataSourceKey = "postgres-read";
 
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
@@ -31,6 +33,10 @@ public static class SetupInfrastructure
 
         services.TryAddScoped<ICurrentUserContext, SystemCurrentUserContext>();
         services.AddSingleton<ResilienceInterceptor>();
+        services.TryAddKeyedSingleton<NpgsqlDataSource>(WriteDataSourceKey, (_, _) =>
+            BuildPostgresDataSource(configuration, "PostgresWrite"));
+        services.TryAddKeyedSingleton<NpgsqlDataSource>(ReadDataSourceKey, (_, _) =>
+            BuildPostgresDataSource(configuration, "PostgresRead"));
 
         #endregion
 
@@ -70,22 +76,12 @@ public static class SetupInfrastructure
 
             retryPolicy.Execute(() =>
             {
-                var connectionString = configuration.GetConnectionString("PostgresWrite")
-                    ?? throw new InvalidOperationException("Connection string 'PostgresWrite' not found.");
-
-                var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString)
-                {
-                    ConnectionStringBuilder =
-                    {
-                        IncludeErrorDetail = true,
-                        Timeout = 100
-                    }
-                };
+                var dataSource = serviceProvider.GetRequiredKeyedService<NpgsqlDataSource>(WriteDataSourceKey);
 
                 options
                     .EnableDetailedErrors()
                     .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
-                    .UseNpgsql(dataSourceBuilder.Build(), b => b
+                    .UseNpgsql(dataSource, b => b
                         .EnableRetryOnFailure(maxRetryAttempts, TimeSpan.FromSeconds(_maxRetryDelay), null)
                         .MigrationsHistoryTable("__EFMigrationsHistory", "dbSchemaGoodHamburger")
                         .MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)
@@ -110,10 +106,9 @@ public static class SetupInfrastructure
 
             retryPolicy.Execute(() =>
             {
-                var connectionString = configuration.GetConnectionString("PostgresRead")
-                    ?? throw new InvalidOperationException("Connection string 'PostgresRead' not found.");
+                var dataSource = serviceProvider.GetRequiredKeyedService<NpgsqlDataSource>(ReadDataSourceKey);
 
-                options.UseNpgsql(connectionString, b =>
+                options.UseNpgsql(dataSource, b =>
                         b.EnableRetryOnFailure(maxRetryAttempts, TimeSpan.FromSeconds(_maxRetryDelay), null))
                        .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
 
@@ -162,6 +157,23 @@ public static class SetupInfrastructure
         return int.TryParse(value, out var parsedValue) && parsedValue > 0
             ? parsedValue
             : defaultValue;
+    }
+
+    private static NpgsqlDataSource BuildPostgresDataSource(IConfiguration configuration, string connectionName)
+    {
+        var connectionString = configuration.GetConnectionString(connectionName)
+            ?? throw new InvalidOperationException($"Connection string '{connectionName}' not found.");
+
+        var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString)
+        {
+            ConnectionStringBuilder =
+            {
+                IncludeErrorDetail = true,
+                Timeout = 100
+            }
+        };
+
+        return dataSourceBuilder.Build();
     }
 
 }

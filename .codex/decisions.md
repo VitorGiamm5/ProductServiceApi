@@ -46,6 +46,15 @@
 ## Local Infrastructure Direction
 
 - Keep Docker Compose for current local orchestration.
-- Future Kubernetes can be introduced after the local stack stabilizes.
+- Keep local Docker orchestration in `deploy-docker`.
+- Keep production-oriented Docker orchestration in `docker-deploy-prod`.
+- Prefer Ubuntu + Docker Compose for the first Hostinger KVM 4 production deployment.
+- Do not introduce Kubernetes/K3s for the initial KVM 4 deployment.
 - SOPS + Age is the preferred direction for local encrypted secrets.
 - Avoid SaaS dependency for CI/CD.
+
+## Root Repository Organization
+
+- Keep solution, README, `.editorconfig`, `.dockerignore`, `.gitignore`, and `tests.runsettings` at the repository root.
+- Keep PowerShell/CMD helper scripts under `scripts/app`, `scripts/tests`, and `scripts/database`.
+- Keep generated logs under `logs` or `TestResults`.

@@ -38,6 +38,11 @@ bld/
 
 # Visual Studio 2015 cache/options directory
 .vs/
+
+# Production deployment secrets
+docker-deploy-prod/.env.production
+docker-deploy-prod/.env.kvm4.local
+docker-deploy-prod/redis/users.acl
 # Uncomment if you have tasks that create the project's static files in wwwroot
 #wwwroot/
 

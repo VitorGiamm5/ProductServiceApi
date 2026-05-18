@@ -4,7 +4,8 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$env:DOTNET_CLI_HOME = $PSScriptRoot
+$repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..")
+$env:DOTNET_CLI_HOME = $repoRoot
 $env:DOTNET_SKIP_FIRST_TIME_EXPERIENCE = "1"
 $env:DOTNET_CLI_TELEMETRY_OPTOUT = "1"
 $env:DOTNET_ADD_GLOBAL_TOOLS_TO_PATH = "0"
@@ -17,13 +18,15 @@ $projects = @(
 )
 
 if (-not $NoRestore) {
+    Push-Location $repoRoot
     dotnet tool restore
+    Pop-Location
     if ($LASTEXITCODE -ne 0) {
         exit $LASTEXITCODE
     }
 }
 
-$resultsDirectory = Join-Path $PSScriptRoot "TestResults"
+$resultsDirectory = Join-Path $repoRoot "TestResults"
 if (Test-Path $resultsDirectory) {
     Remove-Item -LiteralPath $resultsDirectory -Recurse -Force
 }
@@ -31,7 +34,7 @@ if (Test-Path $resultsDirectory) {
 foreach ($project in $projects) {
     $testArguments = @(
         "test",
-        (Join-Path $PSScriptRoot $project),
+        (Join-Path $repoRoot $project),
         "--configuration", "Debug",
         "-m:1",
         "-p:UseSharedCompilation=false"
@@ -55,9 +58,9 @@ foreach ($project in $projects) {
 }
 
 dotnet reportgenerator `
-    "-reports:TestResults/*.coverage.cobertura.xml" `
-    "-targetdir:TestResults/CoverageReport" `
+    "-reports:$resultsDirectory/*.coverage.cobertura.xml" `
+    "-targetdir:$resultsDirectory/CoverageReport" `
     "-reporttypes:Html;TextSummary" `
     "-assemblyfilters:+ProductServiceApp.*;-ProductServiceApp.*Tests"
 
-Get-Content (Join-Path $PSScriptRoot "TestResults\CoverageReport\Summary.txt")
+Get-Content (Join-Path $repoRoot "TestResults\CoverageReport\Summary.txt")
