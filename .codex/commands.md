@@ -91,3 +91,31 @@ http://localhost:9010/logout
 http://localhost:9010/products
 http://localhost:9010/orders
 ```
+
+## n8n Local (Dedicated Stack)
+
+Start:
+
+```powershell
+Copy-Item deploy-n8n/.env.example deploy-n8n/.env -Force
+docker compose -f deploy-n8n/docker-compose.yml --env-file deploy-n8n/.env up -d
+docker compose -f deploy-n8n/docker-compose.yml --env-file deploy-n8n/.env ps
+```
+
+Open:
+
+```text
+http://localhost:5678/
+```
+
+Stop:
+
+```powershell
+docker compose -f deploy-n8n/docker-compose.yml --env-file deploy-n8n/.env down
+```
+
+First flow to import:
+
+```text
+tests/n8n/workflows/first-scenario-keycloak-operator-login.json
+```
