@@ -172,7 +172,7 @@ CRUD Products
 
 (WINDOWS):
 - Use this file script to create migration, apply migrations and delete migrations
-``.\run-local-migrate.ps1`` (Windows script)
+``.\scripts\database\run-local-migrate.ps1`` (Windows script)
 
 (LINUX):
 - Run manully
@@ -248,49 +248,49 @@ The repository has a `tests/` folder aligned with `src/`:
 
 ### Run all tests
 ```powershell
-.\test.ps1
+.\scripts\test\test.ps1
 ```
 
 If PowerShell script execution is blocked on Windows, use:
 ```cmd
-test.cmd
+scripts\test\test.cmd
 ```
 
 Run tests by filter:
 ```powershell
-.\test.ps1 -Filter "FullyQualifiedName~Architecture"
+.\scripts\test\test.ps1 -Filter "FullyQualifiedName~Architecture"
 ```
 
 ### TDD watch mode
 The default watch target is the unit test project because it is the fastest feedback loop:
 ```powershell
-.\test-watch.ps1
+.\scripts\test\test-watch.ps1
 ```
 
 Windows wrapper:
 ```cmd
-test-watch.cmd
+scripts\test\test-watch.cmd
 ```
 
 Watch another project:
 ```powershell
-.\test-watch.ps1 -Project ".\tests\ProductServiceApp.IntegrationTests\ProductServiceApp.IntegrationTests.csproj"
+.\scripts\test\test-watch.ps1 -Project ".\tests\ProductServiceApp.IntegrationTests\ProductServiceApp.IntegrationTests.csproj"
 ```
 
 ### Coverage report
 Generate a Cobertura file and an HTML report:
 ```powershell
-.\coverage.ps1
+.\scripts\test\coverage.ps1
 ```
 
 Windows wrapper:
 ```cmd
-coverage.cmd
+scripts\test\coverage.cmd
 ```
 
 After the first restore, you can skip restore for a faster local loop:
 ```cmd
-coverage.cmd -NoRestore
+scripts\test\coverage.cmd -NoRestore
 ```
 
 Open the report at:
@@ -303,6 +303,6 @@ Use the coverage summary to prioritize missing tests in low-covered application 
 ### Functional tests against a running API
 ```powershell
 $env:PRODUCT_SERVICE_BASE_URL = "http://localhost:9005"
-.\test.ps1 -Filter "FullyQualifiedName~FunctionalTests"
+.\scripts\test\test.ps1 -Filter "FullyQualifiedName~FunctionalTests"
 Remove-Item Env:\PRODUCT_SERVICE_BASE_URL
 ```
