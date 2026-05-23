@@ -5,6 +5,7 @@ namespace ProductServiceApp.Domain.Services.Products.Dtos;
 /// <summary>
 /// Data Transfer Object (DTO) for creating a new product, encapsulating the necessary information for product creation.
 /// </summary>
+[Serializable]
 public class CreateProductRequest
 {
     public long? Id { get; set; } = 0L;

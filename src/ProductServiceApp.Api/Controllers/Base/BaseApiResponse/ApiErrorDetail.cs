@@ -1,5 +1,6 @@
 ﻿namespace ProductServiceApp.Api.Controllers.Base.BaseApiResponse;
 
+[Serializable]
 public sealed class ApiErrorDetail
 {
     public Int16 Code { get; set; }

@@ -1,8 +1,10 @@
 using Asp.Versioning;
+using IdempotentAPI.Filters;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProductServiceApp.Api.Auth;
 using ProductServiceApp.Api.Controllers.Base;
+using ProductServiceApp.Api.Filters;
 using ProductServiceApp.Domain.Services.Base.Dtos;
 using ProductServiceApp.Domain.Services.Orders.Dtos;
 using ProductServiceApp.Domain.Services.Orders.Handlers;
@@ -30,6 +32,8 @@ public class OrdersController(
         getAllChannel,
         getByIdChannel)
 {
+    private const double IdempotencyKeyRetentionMilliseconds = 24 * 60 * 60 * 1000;
+
     [Authorize(Policy = AuthPolicies.OrdersViewAll)]
     public override Task<IActionResult> GetAll(CancellationToken ct) => base.GetAll(ct);
 
@@ -37,6 +41,12 @@ public class OrdersController(
     public override Task<IActionResult> GetById(long id, CancellationToken ct) => base.GetById(id, ct);
 
     [Authorize(Policy = AuthPolicies.OrdersWrite)]
+    [RequireIdempotencyKey]
+    [Idempotent(
+        ExpiresInMilliseconds = IdempotencyKeyRetentionMilliseconds,
+        HeaderKeyName = "IdempotencyKey",
+        DistributedCacheKeysPrefix = "orders:idempotency:",
+        CacheOnlySuccessResponses = true)]
     public override Task<IActionResult> Create(CreateOrderRequest request, CancellationToken ct) => base.Create(request, ct);
 
     [Authorize(Policy = AuthPolicies.OrdersWrite)]

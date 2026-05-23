@@ -4,9 +4,14 @@ using ProductServiceApp.Domain.Services.Products.Dtos;
 
 namespace ProductServiceApp.Domain.Services.Orders.Dtos;
 
+[Serializable]
 public class OrderResponse : CreateOrderRequest, IFromMapper<OrderResponse, OrderEntity>
 {
     #region Constructors
+
+    public OrderResponse()
+    {
+    }
 
     public OrderResponse(OrderEntity input) => MapFrom(input);
 

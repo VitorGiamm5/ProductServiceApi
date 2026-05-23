@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace ProductServiceApp.Domain.Services.Orders.Dtos;
 
+[Serializable]
 public class CreateOrderRequest
 {
     public long? Id { get; set; } = 0L;

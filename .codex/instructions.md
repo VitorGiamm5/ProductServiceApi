@@ -15,6 +15,7 @@ Use Portuguese for explanations to the project owner.
 - Prefer explicit configuration over hidden defaults.
 - Avoid unrelated refactors.
 - Use structured configuration binding instead of ad hoc parsing when possible.
+- For write operations, retries, events, or background workers, evaluate idempotency and duplicate side effects before implementing.
 - Keep comments rare and useful.
 
 ## Safety

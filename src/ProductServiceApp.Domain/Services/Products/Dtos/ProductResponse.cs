@@ -7,9 +7,14 @@ namespace ProductServiceApp.Domain.Services.Products.Dtos;
 /// <summary>
 /// Data Transfer Object (DTO) for representing product information in responses, extending the CreateProductRequest with additional properties for response purposes.
 /// </summary>
+[Serializable]
 public class ProductResponse : CreateProductRequest, IFromMapper<ProductResponse, ProductEntity>
 {
     #region Constructors
+
+    public ProductResponse()
+    {
+    }
 
     public ProductResponse(ProductEntity input) => MapFrom(input);
 

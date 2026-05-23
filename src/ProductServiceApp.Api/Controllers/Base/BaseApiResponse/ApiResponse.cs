@@ -1,5 +1,6 @@
 ﻿namespace ProductServiceApp.Api.Controllers.Base.BaseApiResponse;
 
+[Serializable]
 public class ApiResponse<T>
 {
     public T Data { get; set; } = default!;

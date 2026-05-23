@@ -2,10 +2,23 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 
 WORKDIR /source
 
-COPY src/ src/
+COPY src/ProductServiceApp.Api/ProductServiceApp.Api.csproj src/ProductServiceApp.Api/
+COPY src/ProductServiceApp.Application/ProductServiceApp.Application.csproj src/ProductServiceApp.Application/
+COPY src/ProductServiceApp.Domain/ProductServiceApp.Domain.csproj src/ProductServiceApp.Domain/
+COPY src/ProductServiceApp.Infrastructure/ProductServiceApp.Infrastructure.csproj src/ProductServiceApp.Infrastructure/
+COPY src/ProductServiceApp.ServiceDefaults/ProductServiceApp.ServiceDefaults.csproj src/ProductServiceApp.ServiceDefaults/
+
+RUN dotnet restore src/ProductServiceApp.Api/ProductServiceApp.Api.csproj
+
+COPY src/ProductServiceApp.Api/ src/ProductServiceApp.Api/
+COPY src/ProductServiceApp.Application/ src/ProductServiceApp.Application/
+COPY src/ProductServiceApp.Domain/ src/ProductServiceApp.Domain/
+COPY src/ProductServiceApp.Infrastructure/ src/ProductServiceApp.Infrastructure/
+COPY src/ProductServiceApp.ServiceDefaults/ src/ProductServiceApp.ServiceDefaults/
 
 RUN dotnet publish src/ProductServiceApp.Api/ProductServiceApp.Api.csproj \
     -c Release \
+    --no-restore \
     -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime

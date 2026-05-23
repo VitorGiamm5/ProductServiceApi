@@ -16,12 +16,15 @@
   <ItemGroup>
     <PackageReference Include="Asp.Versioning.Mvc" Version="10.0.0" />
     <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" Version="10.0.0" />
+    <PackageReference Include="IdempotentAPI" Version="2.6.0" />
+    <PackageReference Include="IdempotentAPI.Cache.DistributedCache" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.7" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.7" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.7">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="10.0.7" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.23.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="prometheus-net" Version="8.2.1" />
@@ -41,7 +44,6 @@
     <ProjectReference Include="..\ProductServiceApp.Domain\ProductServiceApp.Domain.csproj" />
     <ProjectReference Include="..\ProductServiceApp.Infrastructure\ProductServiceApp.Infrastructure.csproj" />
     <ProjectReference Include="..\ProductServiceApp.ServiceDefaults\ProductServiceApp.ServiceDefaults.csproj" />
-    <ProjectReference Include="..\ProductServiceApp.Shared\ProductServiceApp.Shared.csproj" />
   </ItemGroup>
 
 </Project>

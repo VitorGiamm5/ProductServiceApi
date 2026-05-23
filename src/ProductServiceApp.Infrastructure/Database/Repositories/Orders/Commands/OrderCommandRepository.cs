@@ -36,6 +36,13 @@ public class OrderCommandRepository : BaseCommandRepository<OrderEntity>, IOrder
             .FirstOrDefaultAsync(order => order.Id == id, cancellationToken)
             ?? throw new NotFoundException(nameof(OrderEntity), id);
 
+        var desiredItems = entity.OrderProducts.ToDictionary(item => item.ProductId);
+
+        if (!HasBusinessChanges(existing, entity, desiredItems))
+        {
+            return await LoadOrderAsync(existing.Id, cancellationToken);
+        }
+
         existing.UpdatedDate = entity.UpdatedDate;
         existing.UpdatedByUserId = entity.UpdatedByUserId;
         existing.IsActive = entity.IsActive;
@@ -51,7 +58,6 @@ public class OrderCommandRepository : BaseCommandRepository<OrderEntity>, IOrder
             existing.OrdersAudit.UpdatedByUserId = entity.UpdatedByUserId;
         }
 
-        var desiredItems = entity.OrderProducts.ToDictionary(item => item.ProductId);
         var removedItems = existing.OrderProducts
             .Where(item => !desiredItems.ContainsKey(item.ProductId))
             .ToList();
@@ -87,10 +93,16 @@ public class OrderCommandRepository : BaseCommandRepository<OrderEntity>, IOrder
     public async Task<OrderEntity> SoftDeleteAsync(long id, CancellationToken cancellationToken)
     {
         var existing = await _context.Set<OrderEntity>()
+            .IgnoreQueryFilters()
             .AsTracking()
             .Include(order => order.OrdersAudit)
             .FirstOrDefaultAsync(order => order.Id == id, cancellationToken)
             ?? throw new NotFoundException(nameof(OrderEntity), id);
+
+        if (existing.IsDeleted == true)
+        {
+            return existing;
+        }
 
         var now = DateTimeProvider.UtcNowAsUnspecified();
 
@@ -110,6 +122,43 @@ public class OrderCommandRepository : BaseCommandRepository<OrderEntity>, IOrder
         await _context.SaveChangesAsync(cancellationToken);
 
         return existing;
+    }
+
+    private static bool HasBusinessChanges(
+        OrderEntity existing,
+        OrderEntity desired,
+        IReadOnlyDictionary<long, OrderProductEntity> desiredItems)
+    {
+        if (existing.IsActive != desired.IsActive ||
+            existing.IsDeleted != desired.IsDeleted ||
+            existing.SubTotalValue != desired.SubTotalValue ||
+            existing.TotalValue != desired.TotalValue ||
+            existing.DiscountPercentage != desired.DiscountPercentage ||
+            existing.DiscountValue != desired.DiscountValue)
+        {
+            return true;
+        }
+
+        if (existing.OrderProducts.Count != desiredItems.Count)
+        {
+            return true;
+        }
+
+        foreach (var currentItem in existing.OrderProducts)
+        {
+            if (!desiredItems.TryGetValue(currentItem.ProductId, out var desiredItem))
+            {
+                return true;
+            }
+
+            if (currentItem.Quantity != desiredItem.Quantity ||
+                currentItem.UnitPrice != desiredItem.UnitPrice)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private async Task<OrderEntity> LoadOrderAsync(long id, CancellationToken cancellationToken)

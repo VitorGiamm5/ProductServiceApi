@@ -1,6 +1,9 @@
 using Asp.Versioning;
+using IdempotentAPI.Cache.DistributedCache.Extensions.DependencyInjection;
+using IdempotentAPI.Extensions.DependencyInjection;
 using ProductServiceApp.Api.Auth;
 using ProductServiceApp.Api.Conveters;
+using ProductServiceApp.Api.Filters;
 using ProductServiceApp.Application;
 using ProductServiceApp.Domain.Security;
 using ProductServiceApp.Application.Metrics;
@@ -10,6 +13,7 @@ using ProductServiceApp.Infrastructure.Database.Services;
 using ProductServiceApp.ServiceDefaults;
 using Prometheus;
 using Serilog;
+using Microsoft.OpenApi;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -63,6 +67,7 @@ builder.WebHost
 builder.Services.AddControllers(mvc =>
 {
     mvc.SuppressAsyncSuffixInActionNames = false;
+    mvc.Filters.Add<IdempotencyConflictResultFilter>();
 })
     .AddJsonOptions(options =>
     {
@@ -102,7 +107,26 @@ builder.Services.AddApiVersioning(options =>
 
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Description = "Informe apenas o token JWT. O prefixo Bearer sera aplicado automaticamente.",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT"
+    });
+
+    options.AddSecurityRequirement(_ => new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecuritySchemeReference("Bearer"),
+            []
+        }
+    });
+});
 
 #endregion
 
@@ -118,6 +142,22 @@ builder.Services.AddCors(options =>
             .WithMethods("GET", "POST", "PUT", "DELETE");
     });
 });
+
+#endregion
+
+#region Idempotency
+
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration["Redis:WriteConnectionString"]
+        ?? builder.Configuration["Redis:ConnectionString"]
+        ?? throw new InvalidOperationException("Redis:WriteConnectionString ou Redis:ConnectionString nao configurada.");
+
+    options.InstanceName = builder.Configuration["Redis:InstanceName"] ?? "ProductServiceApp:";
+});
+
+builder.Services.AddIdempotentAPI();
+builder.Services.AddIdempotentAPIUsingDistributedCache();
 
 #endregion
 
