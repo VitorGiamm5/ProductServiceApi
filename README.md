@@ -186,16 +186,20 @@ CRUD Products
 - You must Check if dotnet-ef is installed
 ``dotnet tool install --global dotnet-ef``
 
-(WINDOWS):
-- Use this file script to create migration, apply migrations and delete migrations
-``.\scripts\database\run-local-migrate.ps1`` (Windows script)
+Use the Linux-friendly helper to create, apply and remove migrations:
 
-(LINUX):
-- Run manully
+```bash
+bash ./scripts/database/run-local-migrate.sh --operation update
+bash ./scripts/database/run-local-migrate.sh --operation add --name InitialBase
+bash ./scripts/database/run-local-migrate.sh --operation remove
+```
 
-``dotnet ef migrations add InitialBase -s .\src\ProductServiceApp.Api -p .\src\ProductServiceApp.Infrastructure``
+Manual equivalent:
 
-``dotnet ef database update -s .\src\ProductServiceApp.Api -p .\src\ProductServiceApp.Infrastructure``
+```bash
+dotnet ef migrations add InitialBase -s ./src/ProductServiceApp.Api -p ./src/ProductServiceApp.Infrastructure
+dotnet ef database update -s ./src/ProductServiceApp.Api -p ./src/ProductServiceApp.Infrastructure
+```
 
 ## Connections
 ### PosgreSQL (Database)
@@ -263,50 +267,45 @@ The repository has a `tests/` folder aligned with `src/`:
 - `ProductServiceApp.FunctionalTests`: E2E HTTP tests with a hybrid client. Set `PRODUCT_SERVICE_BASE_URL` to test an already running API, or leave it empty to boot the app with `WebApplicationFactory` and PostgreSQL Testcontainers.
 
 ### Run all tests
-```powershell
-.\scripts\test\test.ps1
-```
-
-If PowerShell script execution is blocked on Windows, use:
-```cmd
-scripts\test\test.cmd
+```bash
+bash ./scripts/test/test.sh
 ```
 
 Run tests by filter:
-```powershell
-.\scripts\test\test.ps1 -Filter "FullyQualifiedName~Architecture"
+```bash
+bash ./scripts/test/test.sh --filter "FullyQualifiedName~Architecture"
 ```
 
 ### TDD watch mode
 The default watch target is the unit test project because it is the fastest feedback loop:
-```powershell
-.\scripts\test\test-watch.ps1
-```
-
-Windows wrapper:
-```cmd
-scripts\test\test-watch.cmd
+```bash
+bash ./scripts/test/test-watch.sh
 ```
 
 Watch another project:
-```powershell
-.\scripts\test\test-watch.ps1 -Project ".\tests\ProductServiceApp.IntegrationTests\ProductServiceApp.IntegrationTests.csproj"
+```bash
+bash ./scripts/test/test-watch.sh --project "./tests/ProductServiceApp.IntegrationTests/ProductServiceApp.IntegrationTests.csproj"
 ```
 
 ### Coverage report
-Generate a Cobertura file and an HTML report:
-```powershell
-.\scripts\test\coverage.ps1
+Generate a focused Cobertura file and an HTML report for unit-test improvement. The default profile is `application`, which reports only `ProductServiceApp.Application` from the unit test project:
+```bash
+bash ./scripts/test/coverage.sh
 ```
 
-Windows wrapper:
-```cmd
-scripts\test\coverage.cmd
+Available profiles:
+```bash
+bash ./scripts/test/coverage.sh --profile application
+bash ./scripts/test/coverage.sh --profile business
+bash ./scripts/test/coverage.sh --profile domain
+bash ./scripts/test/coverage.sh --profile core
+bash ./scripts/test/coverage.sh --profile unit
+bash ./scripts/test/coverage.sh --profile full
 ```
 
 After the first restore, you can skip restore for a faster local loop:
-```cmd
-scripts\test\coverage.cmd -NoRestore
+```bash
+bash ./scripts/test/coverage.sh --profile application --no-restore
 ```
 
 Open the report at:
@@ -316,9 +315,21 @@ TestResults/CoverageReport/index.html
 
 Use the coverage summary to prioritize missing tests in low-covered application services, handlers, controllers and infrastructure components.
 
+### Unit test quality standard
+When increasing unit coverage, prefer behavior-focused tests over coverage-only execution. For `ProductServiceApp.Application.Business.*`, each business workflow should cover:
+
+- Create/Update/Delete/GetById/GetAll success paths for the target aggregate.
+- Validator success and failure paths.
+- Cache hit and cache miss behavior when the business class uses cache.
+- Exceptions and validation failures, including the relevant message.
+- Repository, cache and calculator calls, including dependencies that must not run after a failure.
+- Mapping contracts for process/intermediate/post-process records and response DTOs when downstream code depends on those fields.
+
+Use `Bogus` for incidental data, but keep behavior-driving values explicit in the test arrange step.
+
 ### Functional tests against a running API
-```powershell
-$env:PRODUCT_SERVICE_BASE_URL = "http://localhost:9005"
-.\scripts\test\test.ps1 -Filter "FullyQualifiedName~FunctionalTests"
-Remove-Item Env:\PRODUCT_SERVICE_BASE_URL
+```bash
+export PRODUCT_SERVICE_BASE_URL="http://localhost:9005"
+bash ./scripts/test/test.sh --filter "FullyQualifiedName~FunctionalTests"
+unset PRODUCT_SERVICE_BASE_URL
 ```
