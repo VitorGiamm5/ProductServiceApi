@@ -1,4 +1,4 @@
-﻿namespace ProductServiceApp.Domain.Mappers;
+namespace ProductServiceApp.Domain.Mappers;
 
 public interface IToMapper<out TInput> where TInput : class
 {

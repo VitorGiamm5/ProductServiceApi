@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using ProductServiceApp.Domain.Entities.Products;
 using ProductServiceApp.Domain.Repositories.Products;
 using ProductServiceApp.Domain.Services.Products.Handlers;

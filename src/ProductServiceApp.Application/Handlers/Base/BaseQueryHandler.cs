@@ -1,5 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
 using System.Threading.Channels;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ProductServiceApp.Application.Handlers.Base;
 

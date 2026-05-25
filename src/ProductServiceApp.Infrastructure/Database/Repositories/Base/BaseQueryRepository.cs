@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using ProductServiceApp.Domain.Exceptions;
 using ProductServiceApp.Domain.Repositories.Base;
 using ProductServiceApp.Infrastructure.Database.Contexts;
@@ -22,7 +22,8 @@ public abstract class BaseQueryRepository<T> : IBaseQueryRepository<T> where T :
 
     public async Task<T> GetByIdAsync(long id, CancellationToken cancellationToken)
     {
-        if (id <= 0) throw new ArgumentException("Id inválido.", nameof(id));
+        if (id <= 0)
+            throw new ArgumentException("Id inválido.", nameof(id));
 
         return await _context.Set<T>()
             .FirstOrDefaultAsync(e => EF.Property<long>(e, "Id") == id, cancellationToken)

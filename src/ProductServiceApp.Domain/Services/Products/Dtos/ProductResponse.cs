@@ -1,4 +1,4 @@
-﻿using ProductServiceApp.Domain.Entities.Products;
+using ProductServiceApp.Domain.Entities.Products;
 using ProductServiceApp.Domain.Enums.Products;
 using ProductServiceApp.Domain.Mappers;
 

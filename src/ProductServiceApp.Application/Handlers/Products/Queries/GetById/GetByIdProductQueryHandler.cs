@@ -1,9 +1,9 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using System.Threading.Channels;
+using Microsoft.Extensions.DependencyInjection;
 using ProductServiceApp.Application.Handlers.Base;
 using ProductServiceApp.Domain.Services.Products.Business;
 using ProductServiceApp.Domain.Services.Products.Dtos;
 using ProductServiceApp.Domain.Services.Products.Handlers;
-using System.Threading.Channels;
 
 namespace ProductServiceApp.Application.Handlers.Products.Queries.GetById;
 

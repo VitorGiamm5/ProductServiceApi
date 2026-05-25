@@ -1,10 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore.Diagnostics;
+using System.Data.Common;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using Polly;
 using Polly.Retry;
 using ProductServiceApp.Infrastructure.Database.Metrics;
-using System.Data.Common;
 
 namespace ProductServiceApp.Infrastructure.Database.Interceptors;
 

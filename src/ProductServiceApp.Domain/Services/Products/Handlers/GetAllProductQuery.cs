@@ -1,4 +1,4 @@
-﻿namespace ProductServiceApp.Domain.Services.Products.Handlers;
+namespace ProductServiceApp.Domain.Services.Products.Handlers;
 
 public class GetAllProductQuery
 {

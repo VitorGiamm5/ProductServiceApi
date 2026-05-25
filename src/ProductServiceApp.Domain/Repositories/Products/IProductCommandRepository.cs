@@ -1,4 +1,4 @@
-﻿using ProductServiceApp.Domain.Repositories.Base;
+using ProductServiceApp.Domain.Repositories.Base;
 
 namespace ProductServiceApp.Domain.Repositories.Products;
 

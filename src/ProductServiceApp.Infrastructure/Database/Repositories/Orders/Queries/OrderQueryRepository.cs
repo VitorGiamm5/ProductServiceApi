@@ -25,7 +25,8 @@ public class OrderQueryRepository : BaseQueryRepository<OrderEntity>, IOrderQuer
 
     public new async Task<OrderEntity> GetByIdAsync(long id, CancellationToken cancellationToken)
     {
-        if (id <= 0) throw new ArgumentException("Id invalido.", nameof(id));
+        if (id <= 0)
+            throw new ArgumentException("Id invalido.", nameof(id));
 
         return await _context.Set<OrderEntity>()
             .Include(order => order.OrdersAudit)

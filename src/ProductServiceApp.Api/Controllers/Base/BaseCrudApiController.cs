@@ -1,5 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
 using System.Threading.Channels;
+using Microsoft.AspNetCore.Mvc;
 
 namespace ProductServiceApp.Api.Controllers.Base;
 

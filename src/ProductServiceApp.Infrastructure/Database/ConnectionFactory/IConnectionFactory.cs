@@ -1,4 +1,4 @@
-﻿using Npgsql;
+using Npgsql;
 
 namespace ProductServiceApp.Infrastructure.Database.ConnectionFactory;
 

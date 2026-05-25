@@ -1,4 +1,4 @@
-﻿using ProductServiceApp.Domain.Exceptions;
+using ProductServiceApp.Domain.Exceptions;
 using ProductServiceApp.Domain.Repositories.Base;
 using ProductServiceApp.Infrastructure.Database.Contexts;
 

@@ -1,8 +1,8 @@
-﻿using Microsoft.Extensions.Hosting;
+using System.Threading.Channels;
+using Microsoft.Extensions.Hosting;
 using ProductServiceApp.Domain.Services.Base.Dtos;
 using ProductServiceApp.Domain.Services.Products.Dtos;
 using ProductServiceApp.Domain.Services.Products.Handlers;
-using System.Threading.Channels;
 
 namespace ProductServiceApp.Application.Metrics;
 

@@ -1,7 +1,7 @@
-﻿using ProductServiceApp.Domain.Entities.Base;
+using System.ComponentModel.DataAnnotations;
+using ProductServiceApp.Domain.Entities.Base;
 using ProductServiceApp.Domain.Enums.Products;
 using ProductServiceApp.Domain.Identifications;
-using System.ComponentModel.DataAnnotations;
 
 namespace ProductServiceApp.Domain.Entities.Products;
 

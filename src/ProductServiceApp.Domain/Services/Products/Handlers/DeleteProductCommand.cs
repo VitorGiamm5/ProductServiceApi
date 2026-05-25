@@ -1,5 +1,5 @@
-﻿using ProductServiceApp.Domain.Identifications;
 using System.ComponentModel.DataAnnotations;
+using ProductServiceApp.Domain.Identifications;
 
 namespace ProductServiceApp.Domain.Services.Products.Handlers;
 

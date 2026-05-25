@@ -1,4 +1,4 @@
-﻿namespace ProductServiceApp.Domain.Services.Base.Dtos;
+namespace ProductServiceApp.Domain.Services.Base.Dtos;
 
 [Serializable]
 public sealed class BooleanResponse

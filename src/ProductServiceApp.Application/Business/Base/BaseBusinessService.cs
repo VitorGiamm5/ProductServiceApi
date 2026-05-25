@@ -1,4 +1,4 @@
-﻿using ProductServiceApp.Domain.Services.Base;
+using ProductServiceApp.Domain.Services.Base;
 
 namespace ProductServiceApp.Application.Business.Base;
 
@@ -11,8 +11,8 @@ namespace ProductServiceApp.Application.Business.Base;
 /// Outbox = TOutObject (dados que saem)
 /// </summary>
 public abstract class BaseBusinessService<
-        TInObject, 
-        TInIntermediate, 
+        TInObject,
+        TInIntermediate,
         TOutIntermediate,
         TOutObject>
     : IBaseBusinessService<TInObject, TOutObject>
@@ -28,7 +28,7 @@ public abstract class BaseBusinessService<
     {
         // 1 Inbox — pré-processamento (validação, enriquecimento, sanitização, etc.)
         var processedInput = await PreProcessAsync(input, ct);
-        
+
         // 2️ PROCESSO — opera no intermediário
         var outIntermediate = await ProcessAsync(processedInput, ct);
 

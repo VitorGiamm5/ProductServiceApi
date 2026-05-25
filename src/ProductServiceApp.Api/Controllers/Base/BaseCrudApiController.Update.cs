@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using ProductServiceApp.Api.Controllers.Base.BaseApiResponse;
 
 namespace ProductServiceApp.Api.Controllers.Base.BaseCrudApiController;

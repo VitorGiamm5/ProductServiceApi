@@ -1,4 +1,4 @@
-﻿namespace ProductServiceApp.Domain.Repositories.Base;
+namespace ProductServiceApp.Domain.Repositories.Base;
 
 public interface IBaseCommandRepository<TEntity> : IBaseRepository where TEntity : class
 {

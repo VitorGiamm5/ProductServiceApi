@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using ProductServiceApp.Domain.Services.Products.Handlers;
 
 namespace ProductServiceApp.Application.Business.Products.Create;

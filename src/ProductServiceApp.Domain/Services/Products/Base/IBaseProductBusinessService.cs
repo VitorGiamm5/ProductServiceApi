@@ -1,4 +1,4 @@
-﻿using ProductServiceApp.Domain.Services.Base;
+using ProductServiceApp.Domain.Services.Base;
 
 namespace ProductServiceApp.Domain.Services.Products.Base;
 

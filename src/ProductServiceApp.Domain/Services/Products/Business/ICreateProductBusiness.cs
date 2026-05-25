@@ -1,4 +1,4 @@
-﻿using ProductServiceApp.Domain.Services.Products.Base;
+using ProductServiceApp.Domain.Services.Products.Base;
 using ProductServiceApp.Domain.Services.Products.Dtos;
 using ProductServiceApp.Domain.Services.Products.Handlers;
 

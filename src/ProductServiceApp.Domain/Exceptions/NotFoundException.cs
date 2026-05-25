@@ -1,4 +1,4 @@
-﻿namespace ProductServiceApp.Domain.Exceptions;
+namespace ProductServiceApp.Domain.Exceptions;
 
 public class NotFoundException : Exception
 {

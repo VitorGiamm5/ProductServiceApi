@@ -1,20 +1,20 @@
+using System.Text.Json.Serialization;
 using Asp.Versioning;
 using IdempotentAPI.Cache.DistributedCache.Extensions.DependencyInjection;
 using IdempotentAPI.Extensions.DependencyInjection;
+using Microsoft.OpenApi;
 using ProductServiceApp.Api.Auth;
 using ProductServiceApp.Api.Conveters;
 using ProductServiceApp.Api.Filters;
 using ProductServiceApp.Application;
-using ProductServiceApp.Domain.Security;
 using ProductServiceApp.Application.Metrics;
 using ProductServiceApp.Application.Middlewares;
+using ProductServiceApp.Domain.Security;
 using ProductServiceApp.Infrastructure;
 using ProductServiceApp.Infrastructure.Database.Services;
 using ProductServiceApp.ServiceDefaults;
 using Prometheus;
 using Serilog;
-using Microsoft.OpenApi;
-using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 

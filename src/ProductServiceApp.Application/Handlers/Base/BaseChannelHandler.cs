@@ -1,8 +1,8 @@
-﻿using FluentValidation;
+using System.Threading.Channels;
+using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using System.Threading.Channels;
 
 namespace ProductServiceApp.Application.Handlers.Base;
 
@@ -37,21 +37,21 @@ public abstract class BaseChannelHandler<TQuery, TResponse> : BackgroundService
                 var result = await HandleAsync(query, scope.ServiceProvider, cts.Token);
                 tcs.TrySetResult(result);
             }
-            catch (OperationCanceledException ex) 
-            { 
+            catch (OperationCanceledException ex)
+            {
                 tcs.TrySetCanceled(ex.CancellationToken);
             }
-            catch (ValidationException ex) 
+            catch (ValidationException ex)
             {
-                tcs.TrySetException(ex); 
+                tcs.TrySetException(ex);
             }
-            catch (KeyNotFoundException ex) 
+            catch (KeyNotFoundException ex)
             {
-                tcs.TrySetException(ex); 
+                tcs.TrySetException(ex);
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
-                tcs.TrySetException(ex); 
+                tcs.TrySetException(ex);
             }
         }
     }

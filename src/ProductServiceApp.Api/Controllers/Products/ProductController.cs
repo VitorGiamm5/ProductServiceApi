@@ -1,3 +1,4 @@
+using System.Threading.Channels;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -6,7 +7,6 @@ using ProductServiceApp.Api.Controllers.Base;
 using ProductServiceApp.Domain.Services.Base.Dtos;
 using ProductServiceApp.Domain.Services.Products.Dtos;
 using ProductServiceApp.Domain.Services.Products.Handlers;
-using System.Threading.Channels;
 
 namespace ProductServiceApp.Api.Controllers.Products;
 

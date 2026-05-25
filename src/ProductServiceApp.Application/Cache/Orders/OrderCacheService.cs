@@ -1,10 +1,10 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ProductServiceApp.Application.Cache.Redis;
 using ProductServiceApp.Domain.Entities.Orders;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace ProductServiceApp.Application.Cache.Orders;
 

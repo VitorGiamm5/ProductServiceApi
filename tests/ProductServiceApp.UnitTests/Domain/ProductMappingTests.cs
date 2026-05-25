@@ -1,8 +1,8 @@
 using Bogus;
 using FluentAssertions;
-using ProductServiceApp.Domain.Services.Products.Handlers;
 using ProductServiceApp.Domain.Enums.Products;
 using ProductServiceApp.Domain.Services.Products.Dtos;
+using ProductServiceApp.Domain.Services.Products.Handlers;
 
 namespace ProductServiceApp.UnitTests.Domain;
 

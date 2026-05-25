@@ -1,4 +1,4 @@
-﻿namespace ProductServiceApp.Domain.Services.Base;
+namespace ProductServiceApp.Domain.Services.Base;
 
 /// <summary>
 /// Business layer contract with Inbox/Outbox pipeline.

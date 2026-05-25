@@ -1,7 +1,7 @@
-using ProductServiceApp.Shared.Api;
-using ProductServiceApp.Shared.Products;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using ProductServiceApp.Shared.Api;
+using ProductServiceApp.Shared.Products;
 
 namespace ProductServiceApp.Web.Clients;
 

@@ -1,4 +1,4 @@
-﻿using ProductServiceApp.Domain.Enums.Products;
+using ProductServiceApp.Domain.Enums.Products;
 
 namespace ProductServiceApp.Domain.Services.Products.Dtos;
 

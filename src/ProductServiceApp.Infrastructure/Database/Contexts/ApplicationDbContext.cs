@@ -1,9 +1,9 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata;
 using ProductServiceApp.Domain.Entities.Audit;
 using ProductServiceApp.Domain.Security;
-using System.Text.Json;
 
 namespace ProductServiceApp.Infrastructure.Database.Contexts;
 

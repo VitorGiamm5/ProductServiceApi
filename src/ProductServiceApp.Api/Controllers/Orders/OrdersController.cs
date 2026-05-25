@@ -1,3 +1,4 @@
+using System.Threading.Channels;
 using Asp.Versioning;
 using IdempotentAPI.Filters;
 using Microsoft.AspNetCore.Authorization;
@@ -8,7 +9,6 @@ using ProductServiceApp.Api.Filters;
 using ProductServiceApp.Domain.Services.Base.Dtos;
 using ProductServiceApp.Domain.Services.Orders.Dtos;
 using ProductServiceApp.Domain.Services.Orders.Handlers;
-using System.Threading.Channels;
 
 namespace ProductServiceApp.Api.Controllers.Orders;
 

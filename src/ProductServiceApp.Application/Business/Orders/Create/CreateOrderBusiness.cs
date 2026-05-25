@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using FluentValidation;
 using ProductServiceApp.Application.Business.Base;
 using ProductServiceApp.Application.Business.Products.GetByIdList;
@@ -10,7 +11,6 @@ using ProductServiceApp.Domain.Services.Orders.AdditionalFeaturesBusiness.OrderD
 using ProductServiceApp.Domain.Services.Orders.Business;
 using ProductServiceApp.Domain.Services.Orders.Dtos;
 using ProductServiceApp.Domain.Services.Orders.Handlers;
-using System.Collections.Frozen;
 
 namespace ProductServiceApp.Application.Business.Orders.Create;
 

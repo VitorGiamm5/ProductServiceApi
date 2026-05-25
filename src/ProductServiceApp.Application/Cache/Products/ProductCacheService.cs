@@ -1,9 +1,9 @@
+using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ProductServiceApp.Application.Cache.Redis;
 using ProductServiceApp.Domain.Entities.Products;
-using System.Text.Json;
 
 namespace ProductServiceApp.Application.Cache.Products;
 

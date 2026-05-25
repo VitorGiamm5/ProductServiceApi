@@ -1,7 +1,7 @@
-﻿using Asp.Versioning;
+using System.Threading.Channels;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using ProductServiceApp.Api.Controllers.Base.Contracts;
-using System.Threading.Channels;
 
 namespace ProductServiceApp.Api.Controllers.Base;
 

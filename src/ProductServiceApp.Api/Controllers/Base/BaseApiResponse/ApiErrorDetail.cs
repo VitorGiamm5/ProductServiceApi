@@ -1,4 +1,4 @@
-﻿namespace ProductServiceApp.Api.Controllers.Base.BaseApiResponse;
+namespace ProductServiceApp.Api.Controllers.Base.BaseApiResponse;
 
 [Serializable]
 public sealed class ApiErrorDetail
