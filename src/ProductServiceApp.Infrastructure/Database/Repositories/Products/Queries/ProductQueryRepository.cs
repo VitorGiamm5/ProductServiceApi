@@ -6,12 +6,8 @@ using ProductServiceApp.Infrastructure.Database.Repositories.Base;
 
 namespace ProductServiceApp.Infrastructure.Database.Repositories.Products.Queries;
 
-public class ProductQueryRepository : BaseQueryRepository<ProductEntity>, IProductQueryRepository<ProductEntity>
+public class ProductQueryRepository(ReadOnlyDbContext context) : BaseQueryRepository<ProductEntity>(context), IProductQueryRepository<ProductEntity>
 {
-    public ProductQueryRepository(ReadOnlyDbContext context) : base(context)
-    {
-    }
-
     public async Task<List<ProductEntity>> GetByIdsAsync(IEnumerable<long> ids, CancellationToken cancellationToken)
     {
         var idsSet = ids.ToHashSet();

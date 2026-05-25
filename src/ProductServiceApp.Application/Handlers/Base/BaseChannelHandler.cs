@@ -6,18 +6,13 @@ using Microsoft.Extensions.Logging;
 
 namespace ProductServiceApp.Application.Handlers.Base;
 
-public abstract class BaseChannelHandler<TQuery, TResponse> : BackgroundService
+public abstract class BaseChannelHandler<TQuery, TResponse>(
+    Channel<(TQuery, TaskCompletionSource<TResponse>, CancellationToken)> channel,
+    IServiceScopeFactory scopeFactory
+        ) : BackgroundService
 {
-    private readonly Channel<(TQuery, TaskCompletionSource<TResponse>, CancellationToken)> _channel;
-    protected readonly IServiceScopeFactory ScopeFactory;
-    protected BaseChannelHandler(
-        Channel<(TQuery, TaskCompletionSource<TResponse>, CancellationToken)> channel,
-        IServiceScopeFactory scopeFactory
-        )
-    {
-        _channel = channel;
-        ScopeFactory = scopeFactory;
-    }
+    private readonly Channel<(TQuery, TaskCompletionSource<TResponse>, CancellationToken)> _channel = channel;
+    protected readonly IServiceScopeFactory ScopeFactory = scopeFactory;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {

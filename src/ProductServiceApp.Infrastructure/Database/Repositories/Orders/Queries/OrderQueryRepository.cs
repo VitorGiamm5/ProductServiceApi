@@ -7,12 +7,8 @@ using ProductServiceApp.Infrastructure.Database.Repositories.Base;
 
 namespace ProductServiceApp.Infrastructure.Database.Repositories.Orders.Queries;
 
-public class OrderQueryRepository : BaseQueryRepository<OrderEntity>, IOrderQueryRepository
+public class OrderQueryRepository(ReadOnlyDbContext context) : BaseQueryRepository<OrderEntity>(context), IOrderQueryRepository
 {
-    public OrderQueryRepository(ReadOnlyDbContext context) : base(context)
-    {
-    }
-
     public new async Task<IEnumerable<OrderEntity>> GetAllAsync(CancellationToken cancellationToken)
     {
         return await _context.Set<OrderEntity>()

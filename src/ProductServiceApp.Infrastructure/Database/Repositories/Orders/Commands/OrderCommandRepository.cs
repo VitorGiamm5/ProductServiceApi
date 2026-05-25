@@ -8,12 +8,8 @@ using ProductServiceApp.Infrastructure.Database.Repositories.Base;
 
 namespace ProductServiceApp.Infrastructure.Database.Repositories.Orders.Commands;
 
-public class OrderCommandRepository : BaseCommandRepository<OrderEntity>, IOrderCommandRepository
+public class OrderCommandRepository(ApplicationDbContext context) : BaseCommandRepository<OrderEntity>(context), IOrderCommandRepository
 {
-    public OrderCommandRepository(ApplicationDbContext context) : base(context)
-    {
-    }
-
     public new async Task<OrderEntity> CreateAsync(OrderEntity entity, CancellationToken cancellationToken)
     {
         foreach (var item in entity.OrderProducts)

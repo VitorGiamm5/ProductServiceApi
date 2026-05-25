@@ -4,14 +4,10 @@ using ProductServiceApp.Domain.Security;
 namespace ProductServiceApp.Infrastructure.Database.Contexts;
 
 // Contexto dedicado para leitura — aponta para a réplica
-public class ReadOnlyDbContext : ApplicationDbContext
+public class ReadOnlyDbContext(
+    DbContextOptions<ReadOnlyDbContext> options,
+    ICurrentUserContext currentUserContext) : ApplicationDbContext(options, currentUserContext)
 {
-    public ReadOnlyDbContext(
-        DbContextOptions<ReadOnlyDbContext> options,
-        ICurrentUserContext currentUserContext) : base(options, currentUserContext)
-    {
-    }
-
     public override int SaveChanges()
         => throw new InvalidOperationException("ReadOnlyDbContext não permite escrita.");
 

@@ -4,15 +4,10 @@ using ProductServiceApp.Infrastructure.Database.Contexts;
 
 namespace ProductServiceApp.Infrastructure.Database.Repositories.Base;
 
-public abstract class BaseCommandRepository<T> : IBaseCommandRepository<T> where T : class
+public abstract class BaseCommandRepository<T>(ApplicationDbContext context) : IBaseCommandRepository<T> where T : class
 {
 
-    public readonly ApplicationDbContext _context;
-
-    protected BaseCommandRepository(ApplicationDbContext context)
-    {
-        _context = context;
-    }
+    public readonly ApplicationDbContext _context = context;
 
     public virtual async Task<T> CreateAsync(T entity, CancellationToken cancellationToken)
     {

@@ -3,14 +3,9 @@ using System.Text.Json.Serialization;
 
 namespace ProductServiceApp.Api.Conveters;
 
-public class CustomDateTimeConverter : JsonConverter<DateTime?>
+public class CustomDateTimeConverter(string dateFormat) : JsonConverter<DateTime?>
 {
-    private readonly string _dateFormat;
-
-    public CustomDateTimeConverter(string dateFormat)
-    {
-        _dateFormat = dateFormat;
-    }
+    private readonly string _dateFormat = dateFormat;
 
     public override void Write(Utf8JsonWriter writer, DateTime? date, JsonSerializerOptions options)
     {

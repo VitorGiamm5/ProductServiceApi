@@ -5,14 +5,9 @@ using ProductServiceApp.Infrastructure.Database.Contexts;
 
 namespace ProductServiceApp.Infrastructure.Database.Repositories.Base;
 
-public abstract class BaseQueryRepository<T> : IBaseQueryRepository<T> where T : class
+public abstract class BaseQueryRepository<T>(ReadOnlyDbContext context) : IBaseQueryRepository<T> where T : class
 {
-    protected readonly ReadOnlyDbContext _context;
-
-    protected BaseQueryRepository(ReadOnlyDbContext context)
-    {
-        _context = context;
-    }
+    protected readonly ReadOnlyDbContext _context = context;
 
     public async Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken)
     {

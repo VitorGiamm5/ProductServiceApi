@@ -5,16 +5,10 @@ using Microsoft.Extensions.Hosting;
 
 namespace ProductServiceApp.Application.Middlewares;
 
-public class ExceptionMiddleware
+public class ExceptionMiddleware(RequestDelegate next, IHostEnvironment env)
 {
-    private readonly RequestDelegate _next;
-    private readonly IHostEnvironment _env;
-
-    public ExceptionMiddleware(RequestDelegate next, IHostEnvironment env)
-    {
-        _next = next;
-        _env = env;
-    }
+    private readonly RequestDelegate _next = next;
+    private readonly IHostEnvironment _env = env;
 
     public async Task InvokeAsync(HttpContext context)
     {

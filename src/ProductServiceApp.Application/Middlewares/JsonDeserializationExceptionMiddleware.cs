@@ -4,14 +4,9 @@ using Microsoft.AspNetCore.Http;
 
 namespace ProductServiceApp.Application.Middlewares;
 
-public class JsonDeserializationExceptionMiddleware
+public class JsonDeserializationExceptionMiddleware(RequestDelegate next)
 {
-    private readonly RequestDelegate _next;
-
-    public JsonDeserializationExceptionMiddleware(RequestDelegate next)
-    {
-        _next = next;
-    }
+    private readonly RequestDelegate _next = next;
 
     public async Task InvokeAsync(HttpContext context)
     {

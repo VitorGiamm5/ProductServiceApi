@@ -3,13 +3,8 @@ using ProductServiceApp.Domain.Identifications;
 
 namespace ProductServiceApp.Domain.Services.Products.Handlers;
 
-public class DeleteProductCommand : IIdentifiableLong
+public class DeleteProductCommand(long id) : IIdentifiableLong
 {
-    public DeleteProductCommand(long id)
-    {
-        Id = id;
-    }
-
     [Required]
-    public long Id { get; set; }
+    public long Id { get; set; } = id;
 }

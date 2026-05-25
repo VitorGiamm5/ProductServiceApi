@@ -3,11 +3,9 @@ using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace ProductServiceApp.Api.Controllers.Base.BaseApiResponse;
 
-public class ApiResponseFilter : IAsyncResultFilter
+public class ApiResponseFilter(IHostEnvironment env) : IAsyncResultFilter
 {
-    private readonly IHostEnvironment _env;
-
-    public ApiResponseFilter(IHostEnvironment env) => _env = env;
+    private readonly IHostEnvironment _env = env;
 
     public async Task OnResultExecutionAsync(ResultExecutingContext context, ResultExecutionDelegate next)
     {

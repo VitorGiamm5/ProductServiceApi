@@ -7,12 +7,8 @@ using ProductServiceApp.Infrastructure.Database.Repositories.Base;
 
 namespace ProductServiceApp.Infrastructure.Database.Repositories.Products.Commands;
 
-public class ProductCommandRepository : BaseCommandRepository<ProductEntity>, IProductCommandRepository<ProductEntity>
+public class ProductCommandRepository(ApplicationDbContext context) : BaseCommandRepository<ProductEntity>(context), IProductCommandRepository<ProductEntity>
 {
-    public ProductCommandRepository(ApplicationDbContext context) : base(context)
-    {
-    }
-
     public override async Task<ProductEntity> UpdateAsync(ProductEntity entity, long id, CancellationToken cancellationToken)
     {
         var existing = await _context.Set<ProductEntity>()
