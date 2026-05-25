@@ -1,5 +1,5 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
  
 echo ">>> Waiting for primary to be ready..."
 until pg_isready -h 6137_postgres_primary -p 5432 -U randandan; do

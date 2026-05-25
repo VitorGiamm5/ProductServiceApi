@@ -6,8 +6,8 @@ This stack is isolated from the main `deploy-docker` setup and uses its own Post
 
 From repository root:
 
-```powershell
-Copy-Item deploy-n8n/.env.example deploy-n8n/.env -Force
+```bash
+cp -f deploy-n8n/.env.example deploy-n8n/.env
 docker compose -f deploy-n8n/docker-compose.yml --env-file deploy-n8n/.env up -d
 docker compose -f deploy-n8n/docker-compose.yml --env-file deploy-n8n/.env ps
 ```
@@ -30,7 +30,7 @@ Expected result in final node: `status = PASS`.
 
 ## 3. Stop
 
-```powershell
+```bash
 docker compose -f deploy-n8n/docker-compose.yml --env-file deploy-n8n/.env down
 ```
 
